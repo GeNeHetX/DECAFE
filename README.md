@@ -8,12 +8,15 @@
 DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentially expressed genes and annotating them with functional information.<br>
 
   <ins>Principal Component Analysis (PCA)<ins><br>
+  
   PCA is a statistical method used to explore relationships between variables in a dataset and reduce its dimensionality.<br>
 
   <ins>Differential Expression Analysis by DESeq2<ins><br>
+  
   DESeq2 is a method used in genomics for identifying genes with significantly different expression levels between sample groups, particularly suited for RNA-Seq datasets.<br>
 
   <ins>Gene Set Enrichment Analysis (GSEA)<ins><br>
+  
   GSEA is a bioinformatics method used to interpret functional genomics studies by comparing sets of functionally related genes for coordinated expression changes.<br>
 
 
