@@ -23,7 +23,7 @@ DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentia
 ## Upload data
 **Count matrix:** You need to upload the entire RNA-Seq count matrix with Sample_ID as column names and GeneName as row names.<br>
 
-**Annotation file:** The annotation file should contain only the samples to be studied, with Sample_ID in the first column and other columns for annotations used to create groups in the analysis.<br>
+**Annotation file:** it should contain only the samples to be studied, with Sample_ID in the first column and other columns for annotations used to create groups in the analysis.<br>
 
 ___________________________________
 ### DECAFE GitHub Download 
