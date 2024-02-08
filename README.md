@@ -5,21 +5,21 @@
 **Contact:** [audrey1.beaufils@inserm.fr](mailto:audrey1.beaufils@inserm.fr), [camille.pignolet@inserm.fr](mailto:camille.pignolet@inserm.fr)  
 
 ## Overview
-DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentially expressed genes and annotating them with functional information.
+DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentially expressed genes and annotating them with functional information.<br>
 
-  **Principal Component Analysis (PCA)**
-  Principal Component Analysis (PCA) is a statistical method used to explore relationships between variables in a dataset and reduce its dimensionality.
+  **Principal Component Analysis (PCA)**<br>
+  Principal Component Analysis (PCA) is a statistical method used to explore relationships between variables in a dataset and reduce its dimensionality.<br>
 
-  **Differential Expression Analysis by DESeq2**
-  DESeq2 is a method used in genomics for identifying genes with significantly different expression levels between sample groups, particularly suited for RNA-Seq datasets.
+  **Differential Expression Analysis by DESeq2**<br>
+  DESeq2 is a method used in genomics for identifying genes with significantly different expression levels between sample groups, particularly suited for RNA-Seq datasets.<br>
 
-  **Gene Set Enrichment Analysis (GSEA)**
-  GSEA is a bioinformatics method used to interpret functional genomics studies by comparing sets of functionally related genes for coordinated expression changes.
+  **Gene Set Enrichment Analysis (GSEA)**<br>
+  GSEA is a bioinformatics method used to interpret functional genomics studies by comparing sets of functionally related genes for coordinated expression changes.<br>
 
 
 ## Upload data
-**Count matrix:** You need to upload the entire RNA-Seq count matrix with Sample_ID as column names and GeneName as row names.
-**Annotation file:** The annotation file should contain only the samples to be studied, with Sample_ID in the first column and other columns for annotations used to create groups in the analysis.
+**Count matrix:** You need to upload the entire RNA-Seq count matrix with Sample_ID as column names and GeneName as row names.<br>
+**Annotation file:** The annotation file should contain only the samples to be studied, with Sample_ID in the first column and other columns for annotations used to create groups in the analysis.<br>
 
 
 ### DECAFE GitHub Download 
