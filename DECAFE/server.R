@@ -8,7 +8,7 @@
 #
 packages <- c("shiny", "DT","shinydashboard","shinycssloaders","BiocManager", "ggplot2", "plotly", "reshape2", "factoextra", "FactoMineR", "devtools", "ggupset", "fgsea","DESeq2","ggpubr")
 new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
-#if(length(new_packages)) install.packages(new_packages)
+if(length(new_packages)) install.packages(new_packages)
 if (!require("BiocManager", quietly = TRUE) && "BiocManager" %in% new_packages)
   install.packages("BiocManager")
 BiocManager::install(new_packages,update=FALSE)
@@ -102,7 +102,10 @@ output$annot_Image <- renderImage({
   
   countFile <-reactive({
     req(input$file)
+    notif <<- showNotification("Opening count matrix in progress", duration = 0)
     count= read.delim(input$file$datapath, sep='\t', row.names = 1, header=T,as.is=T)
+    removeNotification(notif)
+    return(count)
   })
   annot_process <- reactive({
 
@@ -213,30 +216,78 @@ output$annot_Image <- renderImage({
 
 
 
-gene_target_plot <-reactive({
-    req(input$'file')
-    count = countFile()
-    annot = annotFile()
+annotationName <- reactive({
+
+
+ 
+    annot = annot_process()
     annot_name_cond1 = unique(annot_process()$name)[as.numeric(input$cond1)]
     annot_name_cond2 = unique(annot_process()$name)[as.numeric(input$cond2)]
+    annot_gp1 = rownames(annot)[which(annot$name == annot_name_cond1)]
+    annot_gp2 = rownames(annot)[which(annot$name == annot_name_cond2)]
+
+return(list(annotName1=annot_name_cond1,annotName2= annot_name_cond2, annotGP1 = annot_gp1,annotGP2 = annot_gp2))
 
 
-    count_intersect = count[, intersect(rownames(annot), colnames(count))]
 
 
-    annot_intersect= as.data.frame(annot[intersect(rownames(annot), colnames(count)), ])
+
+
+})
+
+
+intersection <- reactive({
+      count = countFile()
+    annot = annotFile()
+  count_intersect = count[, intersect(rownames(annot), colnames(count))]
+
+
+  annot_intersect= as.data.frame(annot[intersect(rownames(annot), colnames(count)), ])
 
      annot_intersect$condshiny = apply(annot_intersect,1,function(x) paste(colnames(annot_intersect),"_",x,collapse=','))
+   
 
+
+
+
+   print(head(annot_intersect))
+  return(list(annot_intersect=annot_intersect, count_intersect=count_intersect))
+
+
+})
+
+
+vst_normalization <- reactive({
+
+intersect = intersection()
+count_intersect = intersect$count_intersect
+annot_intersect = intersect$annot_intersect
+     notif <<- showNotification("Count normalization in progress", duration = 0)
     dds <- DESeqDataSetFromMatrix(countData = count_intersect,
                                     colData = annot_intersect,
                                     design = ~condshiny)
 
     normalized_counts =  assay(vst(dds))
 
-    annot_gp1 = rownames(annot_process())[which(annot_process()$name == annot_name_cond1)]
-    annot_gp2 = rownames(annot_process())[which(annot_process()$name == annot_name_cond2)]
+ removeNotification(notif)
+return(normalized_counts)
 
+
+
+})
+
+gene_target_plot <-reactive({
+
+
+
+    normalized_counts =  vst_normalization()
+    print(dim(normalized_counts))
+    annotName = annotationName()
+    print(annotName)
+    annot_name_cond1 = annotName$annotName1
+    annot_name_cond2 = annotName$annotName2
+    annot_gp1 = annotName$annotGP1
+    annot_gp2 = annotName$annotGP2
 
     norm_1 = normalized_counts[as.numeric(input$geneTarget),intersect(annot_gp1,colnames(normalized_counts))]
     norm_2 = normalized_counts[as.numeric(input$geneTarget),intersect(annot_gp2,colnames(normalized_counts))]
@@ -248,6 +299,7 @@ gene_target_plot <-reactive({
       count = c(norm1_rm,norm2_rm),
       condition = c(rep(annot_name_cond1,length(norm1_rm)), rep(annot_name_cond2,length(norm2_rm)))
     )
+    print(head(res))
   return(res)
     })
 
@@ -268,31 +320,44 @@ output$hist_geneTarget <- renderPlot({
   
 })
 
-#PCA
-pcaVSD <- reactive({
+intersectionCondition <-reactive({
+  annotName = annotationName()
+   
+annot_gp1 = annotName$annotGP1
+annot_gp2 = annotName$annotGP2
 
-  count = countFile()
+count = countFile()
 annot = annot_process()
+    annotName = annotationName()
 
-annot_name_cond1 = unique(annot_process()$name)[as.numeric(input$cond1)]
-annot_name_cond2 = unique(annot_process()$name)[as.numeric(input$cond2)]
-annot_gp1 = rownames(annot)[which(annot$name == annot_name_cond1)]
-annot_gp2 = rownames(annot)[which(annot$name == annot_name_cond2)]
+    annot_name_cond1 = annotName$annotName1
+    annot_name_cond2 = annotName$annotName2
+    annot_gp1 = annotName$annotGP1
+    annot_gp2 = annotName$annotGP2
 
+    
 all_row = c(annot_gp1,annot_gp2)
 annot = annot[all_row,]
 
 count_intersect = count[, intersect(rownames(annot), colnames(count))]
 annot_intersect= as.data.frame(annot[intersect(rownames(annot), colnames(count)), ])
 
-dds <- DESeqDataSetFromMatrix(countData = count_intersect,
-                                colData = annot_intersect,
-                                design = ~name)
+
+return(list(annot=annot_intersect,count=count_intersect))
+})
+
+#PCA
+pcaVSD <- reactive({
 
 
 
-        dds =  vst(dds)
-vst = assay(dds)
+vst = vst_normalization()
+
+intersect = intersectionCondition()
+
+
+count_intersect = intersect$count
+annot_intersect= intersect$annot
 
 # center by gene 
 vst = t(scale(t(vst), scale=F))
@@ -306,24 +371,29 @@ mostvargenes <- order(gvar, decreasing=TRUE)[1:as.numeric(input$nb_gene)]
 # res_pca <- PCA(t(vst[mostvargenes,]), graph = F)
 res_pca <- prcomp(t(vst[mostvargenes,]), scale. = TRUE)
 coordinates= get_pca_ind(res_pca)$coord[,1:5]
+print(res_pca)
+print(dim(res_pca))
+
 res_pca$sample = rownames(annot_intersect)
 pca_df = as.data.frame(cbind(coordinates,rownames(annot_intersect),annot_intersect$name))
-print(head(pca_df))
+
 colnames(pca_df)=c(paste0("Dim",1:5),"Sample","Group")
 eig = get_eig(res_pca)[1:5,2]
-print(eig)
+
 
   return(list(pca_ind=pca_df,pca=res_pca,eig =eig ,name=annot_intersect$name, name_samp = rownames(annot_intersect),name_gene= rownames(count_intersect)))
 
 })
 
 pcaGraph <- reactive({
-  data= pcaVSD()$pca_ind
-  eig = round(pcaVSD()$eig,2)
+  pca = pcaVSD()
+  data= pca$pca_ind
+  eig = round(pca$eig,2)
   data_sub = data[c(as.numeric(input$dim1),as.numeric(input$dim2),6,7)]
   colnames(data_sub)= c("x","y","Sample","Group")
   data_sub$x = as.numeric(data_sub$x)
   data_sub$y = as.numeric(data_sub$y)
+  print(head(data_sub))
   plot=ggplot(data=data_sub, aes(x=x, y=y, col=Group, tooltip=Sample)) +
     geom_point(size=1) + theme_minimal() +
     labs(x = paste0("Dimension ", input$dim1," (",eig[as.numeric(input$dim1)],"%)"),y = paste0("Dimension ", input$dim2," (",eig[as.numeric(input$dim2)],"%)")) + 
@@ -500,19 +570,13 @@ gene2 <- reactive({
 
 res_deseq <- reactive({
   req(input$file)
-count = countFile()
-annot = annot_process()
 
-annot_name_cond1 = unique(annot_process()$name)[as.numeric(input$cond1)]
-annot_name_cond2 = unique(annot_process()$name)[as.numeric(input$cond2)]
-annot_gp1 = rownames(annot)[which(annot$name == annot_name_cond1)]
-annot_gp2 = rownames(annot)[which(annot$name == annot_name_cond2)]
+intersect = intersectionCondition()
 
-all_row = c(annot_gp1,annot_gp2)
-annot = annot[all_row,]
 
-count_intersect = count[, intersect(rownames(annot), colnames(count))]
-annot_intersect= as.data.frame(annot[intersect(rownames(annot), colnames(count)), ])
+count_intersect = intersect$count
+annot_intersect= intersect$annot
+
 zero_threshold = as.numeric(input$zero_threshold)
 countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
 
