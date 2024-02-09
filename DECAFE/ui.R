@@ -186,10 +186,14 @@ library(plotly)
             ),
             column(width = 3,
 
-              uiOutput('cond_1'),
-              uiOutput('cond_2')
+              uiOutput('cond1'),
+              uiOutput('cond2')
              
 
+            ),
+            column(width =3,
+              numericInput('nb_thread', 'Provide the number of CPU to use', 1, min = 1, max = (parallel::detectCores()-1)), 
+              p(icon('circle-info'),paste0(" You have ",parallel::detectCores(), " CPU")),
             )
 
           )
@@ -205,7 +209,7 @@ library(plotly)
         column(width=8,
                 box(width=12, status = 'success', solidHeader = TRUE, title = h3("Overview of condition", icon('chart-simple')),
                 br(), br(),
-          withSpinner(plotOutput('barplot'), type = 8, color = "#CDCDE6", size = 1), br(), br(),
+          withSpinner(plotOutput('upsetPlot'), type = 8, color = "#CDCDE6", size = 1), br(), br(),
         )
         )
 
@@ -216,13 +220,13 @@ library(plotly)
 
         column(width=6,
         box(width=12, status = 'success', solidHeader = TRUE, title = h3("Gene Target Histogram", icon('chart-simple')),
-          withSpinner(plotOutput('hist_geneTarget'), type = 8, color = "#CDCDE6", size = 1)
+          withSpinner(plotOutput('histGeneTarget'), type = 8, color = "#CDCDE6", size = 1)
         )
         ),
         column(width=6,
         box(width=12, status = 'success', solidHeader = TRUE, title = h3("Gene Target Boxplot", icon('chart-simple')),
             
-          withSpinner(plotOutput('bp_geneTarget'), type = 8, color = "#CDCDE6", size = 1)
+          withSpinner(plotOutput('bpGeneTarget'), type = 8, color = "#CDCDE6", size = 1)
         )
         )
 
@@ -243,7 +247,7 @@ library(plotly)
             #
             ),
             column(width=9, 
-          withSpinner(plotlyOutput("pcaVsd"), type = 8, color = "#CDCDE6", size = 1)
+          withSpinner(plotlyOutput("pcaVST"), type = 8, color = "#CDCDE6", size = 1)
         )
         ),
 
@@ -304,9 +308,16 @@ library(plotly)
         column(width=12,
         box(width=NULL,status='info',title = h1('Table of GSEA results',icon('table')),solidHeader = TRUE, 
         withSpinner(DT::dataTableOutput("gsea"), type = 8, color = "#CDCDE6", size = 1)
-      ))
+      ))),
+      fluidRow(
+        column(width=12,
+           box(width=NULL,status='success',title = h1('Barplot',icon('chart-simple')),solidHeader = TRUE, 
+        withSpinner(plotOutput("barplotGsea"), type = 8, color = "#CDCDE6", size = 1)
 
-    )),id="tabBox",
+
+        )
+
+    ))),id="tabBox",
 
     width = 12
 
