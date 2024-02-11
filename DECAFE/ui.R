@@ -35,7 +35,7 @@ library(plotly)
     sidebarMenu(
       menuItem("Home", tabName = "home",icon=shiny::icon('home')),
      
-      menuItem("Differential Analysis", tabName = "tab1",icon=icon('arrows-rotate'))
+      menuItem("Analysis", tabName = "tab1",icon=icon('arrows-rotate'))
       
     )
   ),
@@ -98,21 +98,52 @@ library(plotly)
                        strong("Authors :"), "Audrey Beaufils & Camille Pignolet (GeNeHetX)", br(),
                        strong("Date :"), "February 2024", br(),
                        strong("Contact :"), "audrey1.beaufils@inserm.fr, camille.pignolet@inserm.fr", br(),
-                       strong("GitHub :"), a("GeNeHetX", href = "https://github.com/GeNeHetX/"), br()))),
+                       strong("GitHub :"), a("GeNeHetX", href = "https://github.com/GeNeHetX/"), br(), br(),
+
+                      "RNA-Seq analysis is a multi-step process used to extract meaningful information from raw sequencing data:", br(), br(),
+                      column(width = 12, align = "center",
+                        imageOutput("rna_Image")),
+                       
+                      strong("Quality Control (QC):"),"This initial step is akin to performing a thorough inspection of the raw sequencing data, known as Fastq files. 
+                      QC procedures assess various parameters such as sequencing depth, read quality scores, and potential biases to ensure the reliability and integrity of the data. 
+                      Any anomalies or discrepancies detected during this phase are flagged for subsequent correction.", br(),br(),
+                      
+                      strong("Preprocessing:"),"these steps are implemented to prepare the data for downstream analyses. This involves trimming adapter sequences 
+                      and removing low-quality bases that may skew the accuracy of subsequent analyses. By refining the data in this manner, 
+                      researchers mitigate the risk of false-positive results and enhance the robustness of the analysis pipeline.", br(),br(),
+
+                      strong("Alignment:"),"the next step involves aligning the sequencing reads to a reference genome or transcriptome. This alignment process 
+                      involves mapping each read to its corresponding genomic location, facilitating the identification of gene transcripts and their regulatory elements.
+                      Accurate alignment is crucial for accurately quantifying gene expression levels and discerning subtle variations across different experimental conditions.", br(), br(),
+
+                      strong("Quantification:"),"Once the reads have been aligned, their abundance is quantified by enumerating the number of reads that map to each gene or transcript. 
+                      This quantitative measure serves as a proxy for gene expression levels, allowing researchers to assess the relative abundance of transcripts across samples. 
+                      By quantifying gene expression in this manner, researchers can identify genes that exhibit significant changes in expression under different experimental conditions.", br(),br(),
+
+                      strong("Analysis:"),"Differential expression analysis is help to identify genes exhibiting statistically significant changes in expression levels between different experimental conditions.
+                      Following the identification of differentially expressed genes, functional annotation is performed to elucidate the biological roles and significance of these genes. This involves annotating genes with
+                      functional information derived from specialized databases such as Gene Ontology (GO) or Kyoto Encyclopedia of Genes and Genomes (KEGG). By annotating differentially expressed genes 
+                      with functional metadata, researchers gain deeper insights into the molecular pathways and biological processes implicated in the observed expression changes. In addition, functional enrichment analysis
+                       is conducted to identify overrepresented biological processes, pathways, or gene sets among the differentially expressed genes.", br(),br(),
+
+                      strong("Visualization and Interpretation:"),"The final step of RNA-Seq analysis involves visualizing and interpreting the results. This may involve generating 
+                      visual representations such as heatmaps, volcano plots, or pathway diagrams to illustrate the patterns and relationships within the data. Through 
+                      careful interpretation of the results in the context of existing biological knowledge, researchers can derive valuable insights into the underlying molecular 
+                      mechanisms driving the observed expression changes.", br(),br(), align="justify"))),
 
         
                        
-        box(width = 12, title = h2('RNA-Seq analysis', icon('dna')), status = 'success', solidHeader = TRUE, collapsible = TRUE,
-              fluidRow(
-                column(width = 12,                 
-                       "RNA-Seq analysis is a multi-step process used to extract meaningful information from raw sequencing data. It begins with quality control to assess 
-                       the quality of the Fastq files, followed by preprocessing steps to trim adapters or low-quality bases. The reads are then aligned to a reference genome 
-                       or transcriptome, and their abundance is quantified by counting the aligned reads. Differential expression analysis is performed to identify genes with 
-                       significant expression changes between different conditions. These differentially expressed genes are annotated with functional information using databases 
-                       like Gene Ontology (GO) or Kyoto Encyclopedia of Genes and Genomes (KEGG). Finally, functional enrichment analysis is conducted to identify overrepresented 
-                       biological processes, pathways, or gene sets among the differentially expressed genes. The results are visualized and interpreted to gain insights into the biological significance of the gene expression changes.", align="justify"),
-                        column(width = 12, align = "center",
-                        imageOutput("rna_Image")))),
+        # box(width = 12, title = h2('RNA-Seq analysis', icon('dna')), status = 'success', solidHeader = TRUE, collapsible = TRUE,
+        #       fluidRow(
+        #         column(width = 12,                 
+        #                "RNA-Seq analysis is a multi-step process used to extract meaningful information from raw sequencing data. It begins with quality control to assess 
+        #                the quality of the Fastq files, followed by preprocessing steps to trim adapters or low-quality bases. The reads are then aligned to a reference genome 
+        #                or transcriptome, and their abundance is quantified by counting the aligned reads. Differential expression analysis is performed to identify genes with 
+        #                significant expression changes between different conditions. These differentially expressed genes are annotated with functional information using databases 
+        #                like Gene Ontology (GO) or Kyoto Encyclopedia of Genes and Genomes (KEGG). Finally, functional enrichment analysis is conducted to identify overrepresented 
+        #                biological processes, pathways, or gene sets among the differentially expressed genes. The results are visualized and interpreted to gain insights into the biological significance of the gene expression changes.", align="justify"),br(),
+        #                 column(width = 12, align = "center",
+        #                 imageOutput("rna_Image")))),
                      
 
         box(width = 12, title = h2('Principal Component Analysis (PCA)', icon('slack')), status = 'success', solidHeader = TRUE, collapsible = TRUE,
@@ -122,9 +153,29 @@ library(plotly)
                        Its main objective is to transform a set of correlated variables into a set of uncorrelated variables, called principal components. 
                        These components are ordered based on the importance of their contribution to the total variability of the data. 
                        PCA is often used to reduce the dimensionality of data by selecting the most significant principal components. 
-                       This allows for visualizing the data in a lower-dimensional space, making interpretation and analysis easier.", align="justify"),
+                       This allows for visualizing the data in a lower-dimensional space, making interpretation and analysis easier.", align="justify"),br(),
                         column(width = 12, align = "center",
-                        imageOutput("pca_Image")))),
+                        imageOutput("pca_Image"))), 
+
+                        tags$details(
+                            tags$summary(strong("More information")),
+
+                      column(width = 12, 
+                            "PCA is based on fundamental mathematical concepts such as the eigenvalue and eigenvector decomposition of a covariance matrix. 
+                            Firstly, the covariance matrix is calculated from the input data, representing the correlation relationships between the different variables. 
+                            Next, the eigenvalue decomposition of this matrix yields the principal components, which are the directions in which the data vary most. 
+                            The eigenvectors associated with these eigenvalues determine the linear combinations of the original variables that form the principal components. 
+                            Finally, the data are projected into the space defined by these principal components, thus reducing dimensionality while preserving maximum variance.",br(), 
+                            HTML("<p>The decomposition of the covariance matrix Σ is done as follows:</p>
+                         <p>Σ = (1/(n-1)) * (X - X̄)^T * (X - X̄)</p>
+                         <p>Where X is the centered data matrix, X̄ is the vector of means of each variable, and n is the number of observations. The eigenvalues λ_i and eigenvectors v_i are obtained by solving the characteristic equation:</p>
+                         <p>Σv_i = λ_i * v_i</p>
+                         <p>The principal components are then calculated as linear combinations of the original variables:</p>
+                         <p>Y = X * V</p>
+                         <p>Where Y is the matrix of principal components and V is the matrix whose columns are the corresponding eigenvectors v_i.</p>
+                         "), align="justify")) 
+                                            
+                        ),
                      
                        
          box(width = 12, title = h2('Differential Expression Analysis by DESeq2', icon('dna')), status = 'success', solidHeader = TRUE, collapsible = TRUE,
@@ -134,9 +185,25 @@ library(plotly)
                        identify genes whose expression varies significantly between different sample groups. This method is widely used in RNA sequencing (RNA-Seq) studies 
                        to detect genes that are differentially regulated in response to different treatments, experimental conditions, or biological states.
                        DESeq2 uses a statistical model based on the negative binomial distribution to model the variability of gene expression data and is particularly 
-                       suited for RNA-Seq datasets with a small number of samples.", align="justify"), br(),
+                       suited for RNA-Seq datasets with a small number of samples.", align="justify"), br(),br(),
                        column(width = 12, align = "center",
-                       imageOutput("anaDiff_Image")))),
+                       imageOutput("anaDiff_Image"))),
+                       
+                       tags$details(
+                            tags$summary(strong("More information")),
+
+                      column(width = 12, 
+                            "Differential analysis, as performed by DESeq2, involves the use of advanced statistical models based on the negative binomial distribution to model 
+                            the variability of gene expression data. These models take into account several factors, such as covariates and sampling bias, 
+                            to identify genes whose expression varies significantly between sample groups. Statistical calculations involve fitting these models to each individual 
+                            gene to estimate expression differences and assess their statistical significance. The test scores obtained enable genes to be ranked according to their 
+                            degree of variation in expression between experimental conditions.",br(), 
+                            HTML("<p>In the case of DESeq2, modeling gene expression variability is based on a negative binomial distribution. For each gene, a regression model is fitted as follows:</p>
+                         <p>Y_i ∼ NegBin(size = μ_i, prob = θ)</p>
+                         <p>Where Y_i represents the number of reads associated with gene i, μ_i is the average expression level of gene i, and θ is a global dispersion parameter. Differences in expression between groups are estimated from this model, and a Wald test is used to assess their significance.</p>
+                         "), align="justify")) 
+
+                       ),
                        
 
            box(width = 12, title = h2('Gene Set Enrichment Analysis (GSEA)', icon('circle-nodes')), status = 'success', solidHeader = TRUE, collapsible = TRUE,
@@ -147,9 +214,25 @@ library(plotly)
                        predefined set of genes, often associated with a specific biological pathway or cellular function, with genes ranked by their differential expression 
                        across different experimental conditions. GSEA identifies sets of genes that show coordinated and significant changes in expression rather than individual genes, 
                        allowing for the detection of subtle biological alterations that may be overlooked by other differential analysis methods.", align="justify"), br(),
-                        br(),
+                        br(),br(),
                         column(width = 12, align = "center",
-                        imageOutput("gsea_Image")))),
+                        imageOutput("gsea_Image"))), 
+                        
+                        tags$details(
+                            tags$summary(strong("More information")),
+
+                      column(width = 12, 
+                            "GSEA uses rank statistic calculations to assess the enrichment of gene sets associated with specific biological pathways or cellular functions. First, genes are 
+                            ranked according to their difference in expression between experimental groups. In our case, they are ranked by their results in differential analysis. 
+                            Next, a richness score is calculated for each predefined gene set, reflecting the collective tendency of genes in that set to be positioned at the top or bottom 
+                            of the ranked list. Finally, permutation tests are performed to assess the significance of these richness scores and identify gene sets whose expression is 
+                            significantly enriched under the experimental conditions studied.",br(), 
+                            HTML("<p>The Enrichment Score (ES) for a gene set is calculated by evaluating the overall tendency of genes in that set to be positioned at the top or bottom of the ranked list of genes based on their expression differences between groups. The calculation is performed as follows:</p>
+                         <p>ES = max(Σ_{i=1}^{k} (R_i / N_1), Σ_{i=1}^{k} (-S_i / N_2))</p>
+                         <p>Where R_i and S_i represent the cumulative positive and negative expression differences up to gene i, respectively, in the ranked list. N_1 and N_2 are the total numbers of genes in the two compared groups.</p>
+                         "), align="justify")) 
+
+                        ),
                      
 
            box(width = 12, title = h1('What data do you need ?', icon('upload')), status = 'success', solidHeader = TRUE, collapsible = TRUE,
@@ -162,7 +245,7 @@ library(plotly)
                         br(),
                         strong('Annotation file:'),
                        "The annotation file must contain only the samples to be studied , the first column is the Sample_ID and other columns are the annotations you want to use to create your groups in the analysis. Be careful to select only your samples of interest and your corresponding annotations. Any superfluous information will be taken into account as a comparison modality in the analysis.", br(),
-                         br(),
+                         br(),br(),
                          column(width = 12, align = "center",
                          imageOutput("annot_Image")))))),
                  

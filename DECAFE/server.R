@@ -45,7 +45,7 @@ output$anaDiff_Image <- renderImage({
     filename = "analysediff.png"
  
     list(src = filename,
-      width = 1000,
+      width = 1300,
       alt = "overview RNA-Seq")
 
   }, deleteFile = FALSE)
@@ -55,7 +55,7 @@ output$rna_Image <- renderImage({
     filename = "RNA_seq.png"
 
     list(src = filename,
-      width = 800,
+      width = 1200,
          
          alt = "overview RNA-Seq")
 
@@ -67,7 +67,7 @@ output$gsea_Image <- renderImage({
     filename = "gsea.png"
  
     list(src = filename,
-      width = 1000,
+      width = 1200,
       alt = "overview RNA-Seq")
 
   }, deleteFile = FALSE)
@@ -80,7 +80,7 @@ output$annot_Image <- renderImage({
  
     # Return a list containing the filename and alt text
     list(src = filename,
-      width = 1000,
+      width = 1500,
       alt = "overview RNA-Seq")
 
   }, deleteFile = FALSE)
