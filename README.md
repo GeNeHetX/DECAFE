@@ -26,6 +26,14 @@ DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentia
 **Annotation file:** it should contain only the samples to be studied, with Sample_ID in the first column and other columns for annotations used to create groups in the analysis.<br>
 
 ___________________________________
+### Prerequisites : 
+DECAFE requires the R language (at least version 4.0).<br>
+
+If R is installed, you can launch the application directly via a command terminal or work on Rstudio
+
+**install R:** [downlaod here](https://cran.r-project.org/)
+you can find **Rstudio** here : [download](https://posit.co/download/rstudio-desktop/)
+
 ### DECAFE GitHub Download 
 ```bash
   git clone https://github.com/GeNeHetX/DECAFE.git
