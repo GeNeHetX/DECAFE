@@ -24,10 +24,10 @@ ___________________________________
 DECAFE requires the R language (at least version 4.0).<br>
 If R is installed, you can launch the application directly via a command terminal or work on Rstudio.
 
-**install R:** [downlaod here](https://cran.r-project.org/)
+**install R:** [download here](https://cran.r-project.org/)
 
-You can find **Rstudio** here : [download](https://posit.co/download/rstudio-desktop/)
-
+You can find Rstudio here : [download](https://posit.co/download/rstudio-desktop/)
+___________________________________
 ### DECAFE GitHub Download 
 ```bash
   git clone https://github.com/GeNeHetX/DECAFE.git
