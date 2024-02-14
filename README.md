@@ -37,12 +37,13 @@ ___________________________________
 ```bash
 cd DECAFE/
 Rscript -e 'install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT")); shiny::runApp()'
-```
 
+```
 #### Use DECAFE 
 ```bash
   cd DECAFE/
   Rscript -e 'shiny::runApp()'
+
 ```
 ___________________________________
 
