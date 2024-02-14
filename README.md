@@ -7,16 +7,13 @@
 ## Overview
 DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentially expressed genes and annotating them with functional information.<br><br>
 
-  <ins>Principal Component Analysis (PCA)<ins><br>
-  
+  - <ins>Principal Component Analysis (PCA)<ins><br>
   PCA is a statistical method used to explore relationships between variables in a dataset and reduce its dimensionality.<br><br>
 
-  <ins>Differential Expression Analysis by DESeq2<ins><br>
-  
+  - <ins>Differential Expression Analysis by DESeq2<ins><br>
   DESeq2 is a method used in genomics for identifying genes with significantly different expression levels between sample groups, particularly suited for RNA-Seq datasets.<br><br>
 
-  <ins>Gene Set Enrichment Analysis (GSEA)<ins><br>
-  
+  - <ins>Gene Set Enrichment Analysis (GSEA)<ins><br>
   GSEA is a bioinformatics method used to interpret functional genomics studies by comparing sets of functionally related genes for coordinated expression changes.<br><br>
 
 ___________________________________
@@ -25,9 +22,9 @@ ___________________________________
 DECAFE requires the R language (at least version 4.0).<br>
 If R is installed, you can launch the application directly via a command terminal or work on Rstudio.
 
-**install R:** [download here](https://cran.r-project.org/)
+- install R: [download](https://cran.r-project.org/)
 
-You can find Rstudio here : [download](https://posit.co/download/rstudio-desktop/)
+- You can find Rstudio here : [download](https://posit.co/download/rstudio-desktop/)
 
 ___________________________________
 <br>
