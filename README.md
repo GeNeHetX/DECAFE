@@ -31,19 +31,18 @@ ___________________________________
 ### DECAFE GitHub Download 
 ```bash
   git clone https://github.com/GeNeHetX/DECAFE.git
-
 ```
+
 ### First-time use DECAFE
 ```bash
-cd DECAFE/
-Rscript -e 'install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT")); shiny::runApp()'
-
+  cd DECAFE/
+  Rscript -e 'install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT")); shiny::runApp()'
 ```
+
 #### Use DECAFE 
 ```bash
   cd DECAFE/
   Rscript -e 'shiny::runApp()'
-
 ```
 ___________________________________
 
