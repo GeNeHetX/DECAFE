@@ -7,13 +7,13 @@
 ## Overview
 DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentially expressed genes and annotating them with functional information.<br><br>
 
-  - <ins>Principal Component Analysis (PCA)<ins><br>
+  - **Principal Component Analysis (PCA)**<br>
   PCA is a statistical method used to explore relationships between variables in a dataset and reduce its dimensionality.<br><br>
 
-  - <ins>Differential Expression Analysis by DESeq2<ins><br>
+  - **Differential Expression Analysis by DESeq2**<br>
   DESeq2 is a method used in genomics for identifying genes with significantly different expression levels between sample groups, particularly suited for RNA-Seq datasets.<br><br>
 
-  - <ins>Gene Set Enrichment Analysis (GSEA)<ins><br>
+  - **Gene Set Enrichment Analysis (GSEA)**<br>
   GSEA is a bioinformatics method used to interpret functional genomics studies by comparing sets of functionally related genes for coordinated expression changes.<br><br>
 
 ___________________________________
@@ -47,6 +47,7 @@ Rscript -e 'install.packages(c("shiny", "shinydashboard", "shinycssloaders", "pl
 ___________________________________
 <br>
 ## Upload data
+
 **Count matrix:** You need to upload the entire RNA-Seq count matrix with Sample_ID as column names and GeneName as row names.<br>
 
 **Annotation file:** it should contain only the samples to be studied, with Sample_ID in the first column and other columns for annotations used to create groups in the analysis.
