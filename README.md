@@ -28,6 +28,7 @@ If R is installed, you can launch the application directly via a command termina
 
 ___________________________________
 <br>
+
 ### DECAFE GitHub Download 
 ```bash
   git clone https://github.com/GeNeHetX/DECAFE.git
@@ -46,6 +47,7 @@ Rscript -e 'install.packages(c("shiny", "shinydashboard", "shinycssloaders", "pl
 ```
 ___________________________________
 <br>
+
 ## Upload data
 
 **Count matrix:** You need to upload the entire RNA-Seq count matrix with Sample_ID as column names and GeneName as row names.<br>
