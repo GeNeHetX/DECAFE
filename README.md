@@ -18,7 +18,7 @@ DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentia
   <ins>Gene Set Enrichment Analysis (GSEA)<ins><br>
   
   GSEA is a bioinformatics method used to interpret functional genomics studies by comparing sets of functionally related genes for coordinated expression changes.<br><br>
-
+___________________________________
 
 ## Upload data
 **Count matrix:** You need to upload the entire RNA-Seq count matrix with Sample_ID as column names and GeneName as row names.<br>
@@ -28,12 +28,13 @@ DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentia
 ___________________________________
 ### Prerequisites : 
 DECAFE requires the R language (at least version 4.0).<br>
-
-If R is installed, you can launch the application directly via a command terminal or work on Rstudio
+If R is installed, you can launch the application directly via a command terminal or work on Rstudio.
 
 **install R:** [downlaod here](https://cran.r-project.org/)
-you can find **Rstudio** here : [download](https://posit.co/download/rstudio-desktop/)
 
+You can find **Rstudio** here : [download](https://posit.co/download/rstudio-desktop/)
+
+___________________________________
 ### DECAFE GitHub Download 
 ```bash
   git clone https://github.com/GeNeHetX/DECAFE.git
