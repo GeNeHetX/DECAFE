@@ -28,18 +28,24 @@ If R is installed, you can launch the application directly via a command termina
 
 ___________________________________
 
-### DECAFE GitHub Download 
+### Installation 
+- 1) If you are a git user, clone the DECAFE folder, otherwise download the DECAFE code zip via the green "<>Code" button.
+     
 ```bash
   git clone https://github.com/GeNeHetX/DECAFE.git
 ```
 
-### First-time use DECAFE
+- 2) Open an R terminal or Rstudio where the DECAFE codes are stored
+     
+- 3) Use the following commands to launch the shiny application.
+
+## First-time use DECAFE
 ```bash
   cd DECAFE/
   Rscript -e 'install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT")); shiny::runApp()'
 ```
 
-#### Use DECAFE 
+### Use DECAFE 
 ```bash
   cd DECAFE/
   Rscript -e 'shiny::runApp()'
