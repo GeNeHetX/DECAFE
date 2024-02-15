@@ -18,7 +18,7 @@ DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentia
 
 ___________________________________
 
-### Prerequisites : 
+## Prerequisites : 
 DECAFE requires the R language (at least version 4.0).<br>
 If R is installed, you can launch the application directly via a command terminal or work on Rstudio.
 
@@ -28,24 +28,24 @@ If R is installed, you can launch the application directly via a command termina
 
 ___________________________________
 
-### Installation 
-- 1) If you are a git user, clone the DECAFE folder, otherwise download the DECAFE code zip via the green "<>Code" button.
+## Installation 
+1- If you are a git user, clone the DECAFE folder, otherwise download the DECAFE code zip via the green "<>Code" button.
      
 ```bash
   git clone https://github.com/GeNeHetX/DECAFE.git
 ```
 
-- 2) Open an R terminal or Rstudio where the DECAFE codes are stored
+2- Open an R terminal or Rstudio where the DECAFE codes are stored
      
-- 3) Use the following commands to launch the shiny application.
+3- Use the following commands to launch the shiny application.
 
-## First-time use DECAFE
+#### First-time use DECAFE
 ```bash
   cd DECAFE/
   Rscript -e 'install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT")); shiny::runApp()'
 ```
 
-### Use DECAFE 
+#### Use DECAFE 
 ```bash
   cd DECAFE/
   Rscript -e 'shiny::runApp()'
