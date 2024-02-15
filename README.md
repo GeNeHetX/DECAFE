@@ -25,7 +25,7 @@ If R is installed, you can launch the application directly via a command termina
 - install R: [download](https://cran.r-project.org/)
 
 - You can find Rstudio here : [download](https://posit.co/download/rstudio-desktop/)
-
+<br>
 
 
 ## Installation 
@@ -50,7 +50,7 @@ If R is installed, you can launch the application directly via a command termina
   cd DECAFE/
   Rscript -e 'shiny::runApp()'
 ```
-
+<br>
 
 ## Upload data
 
