@@ -31,6 +31,7 @@ If R is installed, you can launch the application directly via a command termina
 ## Installation 
 
 With internet : 
+
 1- Run this command in a R terminal
 ```bash
    shiny::runGitHub('DECAFE', 'GeNeHetX', subdir='DECAFE' ,ref='main')
@@ -39,6 +40,7 @@ in ref you can precise the version, for example : 'v.1.0.0'
 ___________________________________________________
 
 Without internet, (use just to download and run the following commands without a connection) : 
+
 1- If you are a git user, clone the DECAFE folder, otherwise download the DECAFE code zip via the green "<>Code" button.
 
 ```bash
