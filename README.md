@@ -36,7 +36,7 @@ With internet :
 ```bash
    shiny::runGitHub('DECAFE', 'GeNeHetX', subdir='DECAFE' ,ref='main')
 ```
-in ref you can precise the version, for example : 'v.1.0.0'
+ps : you can precise the version thanks to ref='', for example : ref='v.1.0.0'
 ___________________________________________________
 
 Without internet, (use just to download and run the following commands without a connection) : 
