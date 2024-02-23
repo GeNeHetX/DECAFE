@@ -29,8 +29,20 @@ If R is installed, you can launch the application directly via a command termina
 
 
 ## Installation 
+
+With internet : 
+
+1- Run this command in a R terminal
+```bash
+   shiny::runGitHub('DECAFE', 'GeNeHetX', subdir='DECAFE' ,ref='main')
+```
+ps : you can precise the version thanks to ref='', for example : ref='v.1.0.0'
+___________________________________________________
+
+Without internet, (use just to download and run the following commands without a connection) : 
+
 1- If you are a git user, clone the DECAFE folder, otherwise download the DECAFE code zip via the green "<>Code" button.
-     
+
 ```bash
   git clone https://github.com/GeNeHetX/DECAFE.git
 ```
@@ -39,13 +51,14 @@ If R is installed, you can launch the application directly via a command termina
      
 3- Use the following commands to launch the shiny application.
 
-#### First-time use DECAFE
+4- First-time use DECAFE
 ```bash
   cd DECAFE/
   Rscript -e 'install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT")); shiny::runApp()'
 ```
+or
 
-#### Use DECAFE 
+4- Use DECAFE 
 ```bash
   cd DECAFE/
   Rscript -e 'shiny::runApp()'
@@ -54,6 +67,6 @@ If R is installed, you can launch the application directly via a command termina
 
 ## Upload data
 
-**Count matrix:** You need to upload the entire RNA-Seq count matrix with Sample_ID as column names and GeneName as row names.<br>
+**Count matrix:**  It must be a .tsv file. You need to upload the entire RNA-Seq count matrix with Sample_ID as column names and genes as row names.<br>
 
-**Annotation file:** It should contain only the samples to be studied, with Sample_ID in the first column and other columns for annotations used to create groups in the analysis.
+**Annotation file:** It must be a .tsv file or .txt file with tabulation separator. It should contain only the samples to be studied, with Sample_ID in the first column and other columns for annotations used to create groups in the analysis.
