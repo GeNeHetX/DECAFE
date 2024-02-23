@@ -13,7 +13,7 @@
 #   install.packages("BiocManager")
 # BiocManager::install(new_packages,update=FALSE)
 packages <- c("shiny", "DT", "shinydashboard", "shinycssloaders", "BiocManager", "ggplot2", "plotly", "reshape2", "factoextra", "FactoMineR", "devtools", "ggupset", 
-"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ComplexHeatmap")
+"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ComplexHeatmap", "ggdendro")
 new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
 if(length(new_packages)) {
   if (!requireNamespace("BiocManager", quietly = TRUE)) {
@@ -94,7 +94,7 @@ output$annot_Image <- renderImage({
  
     # Return a list containing the filename and alt text
     list(src = filename,
-      width = 1500,
+      width = 1400,
       alt = "overview RNA-Seq")
 
   }, deleteFile = FALSE)
@@ -176,17 +176,28 @@ dataUpset <- reactive({
 
 output$upsetPlot <- renderPlot({
   df = dataUpset()
-  UpSet(df,
-        left_annotation = upset_left_annotation(df,
-                                                add_numbers = TRUE,
-                                                gp = gpar(fill = "#262686")
-        ),
-        top_annotation = upset_top_annotation(df, add_numbers = TRUE),
-        comb_col = "#262686",
-        bg_col = c("#DEDEF6", "#EEEEEE"),
-        bg_pt_col = "#CCCCFF")
-  
+      UpSet(df,
+           left_annotation = upset_left_annotation(df,
+                                                    add_numbers = TRUE,
+                                                    gp = gpar(fill = "#262686"), 
+                                                    text.scale = 1.5 
+           ),
+           top_annotation = upset_top_annotation(df, add_numbers = TRUE),
+           comb_col = "#262686",
+           bg_col = c("#DEDEF6", "#EEEEEE"),
+           bg_pt_col = "#CCCCFF")
 })
+
+output$downloadUpsetPlot <- downloadHandler(
+      filename = function() {
+            plot_title <- 'overview'
+            paste(gsub(" ", "_", plot_title), "_", Sys.Date(), ".jpeg", sep = "")
+      },
+      content = function(file) {
+        ggsave(filename = file,
+          plot = input$upsetPlot,
+          width = 8, height = 6, units = "in", dpi = 300, type = "jpeg")
+      })
   
   output$tableAnnot <- DT::renderDT(server = FALSE, {
 
@@ -699,7 +710,7 @@ countNormGenePlot <-reactive({
         
         ggsave(file, volcanoplot + ggtitle(paste(group1, "vs", group2)) +
         geom_text_repel(
-                  data = head(as.data.frame(table[which(table$diffexpressed != "NO"),]), 10),
+                  data = head(as.data.frame(table[which(table$diffexpressed != "NO"),]), 15),
                   aes(label = name),
                   box.padding = 0.5, point.padding = 0.1,
                   segment.color = 'grey', segment.size = 0.2,

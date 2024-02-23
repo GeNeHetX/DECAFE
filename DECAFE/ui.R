@@ -182,6 +182,20 @@ library(htmltools)
         #                 column(width = 12, align = "center",
         #                 imageOutput("rna_Image")))),
                      
+        box(width = 12, title = h1('What data do you need ?', icon('upload')), status = 'success', solidHeader = TRUE, collapsible = TRUE,
+              fluidRow(
+                column(width = 12,             
+                       h3(""),
+                        strong("Count matrix : "),
+                       "You have to upload the RNA-Seq count matrix with Sample_ID as column names and genes as row names, it must be a .tsv file.
+                       This matrix is created with the sequencing output. It is mapped onto a reference genome to identify which genes are present in the sample, then the number found for each gene is counted.", br(),
+                        br(),
+                        strong('Annotation file:'),
+                       "It must be a .tsv file or .txt file with tabulation separator. The annotation file must contain only the samples to be studied, the first column is the Sample_ID and other columns are the annotations you want to use to create your groups in the analysis. Be careful to select only your samples of interest and your corresponding annotations. Any superfluous information will be taken into account as a comparison modality in the analysis.", br(),
+                         br(),br(),
+                         column(width = 12, align = "center",
+                         imageOutput("annot_Image"))))), 
+
 
         box(width = 12, title = h2('Principal Component Analysis (PCA)', icon('slack')), status = 'success', solidHeader = TRUE, collapsible = TRUE,
               fluidRow(
@@ -269,22 +283,10 @@ library(htmltools)
                          <p>Where R_i and S_i represent the cumulative positive and negative expression differences up to gene i, respectively, in the ranked list. N_1 and N_2 are the total numbers of genes in the two compared groups.</p>
                          "), align="justify")) 
 
-                        ),
+                        )
                      
 
-           box(width = 12, title = h1('What data do you need ?', icon('upload')), status = 'success', solidHeader = TRUE, collapsible = TRUE,
-              fluidRow(
-                column(width = 12,             
-                       h3(""),
-                        strong("Count matrix : "),
-                       "You have to upload the RNA-Seq count matrix with Sample_ID as column names and genes as row names, it must be a .tsv file.
-                       This matrix is created with the sequencing output. It is mapped onto a reference genome to identify which genes are present in the sample, then the number found for each gene is counted.", br(),
-                        br(),
-                        strong('Annotation file:'),
-                       "It must be a .tsv file or .txt file with tabulation separator. The annotation file must contain only the samples to be studied, the first column is the Sample_ID and other columns are the annotations you want to use to create your groups in the analysis. Be careful to select only your samples of interest and your corresponding annotations. Any superfluous information will be taken into account as a comparison modality in the analysis.", br(),
-                         br(),br(),
-                         column(width = 12, align = "center",
-                         imageOutput("annot_Image")))))),
+           ),
                  
 
 
@@ -300,44 +302,44 @@ library(htmltools)
           fluidRow(
             column(width = 3,
               fileInput('file', 'Load Count Matrix .tsv'),
-              selectInput('org', 'Choose your species', choices = list(Human='hs', Mouse='mm')),#, Other='oth'))
-              radioButtons('coding', 'Use only coding genes', choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = FALSE)
+              fileInput('annot-file',"Load the annot file .tsv")
+              
             ),
             column(width = 3,
-              fileInput('annot-file',"Load the annot file .tsv"),
+              selectInput('org', 'Choose your species', choices = list(Human='hs', Mouse='mm')),#, Other='oth'))
+              radioButtons('coding', 'Use only coding genes', choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = FALSE)
               # conditionalPanel("input.org == 'oth'", fileInput('genefile', 'Load Gene Annotation'))
             ),
             
             column(width = 3,
-              uiOutput('cond1'),
-              uiOutput('cond2')
-             
+              numericInput('nb_thread', 'Provide the number of CPU to use', 1, min = 1, max = (parallel::detectCores()-1)), 
+              p(icon('circle-info'),paste0(" You have ",parallel::detectCores(), " CPU"))
+              
             ),
             column(width =3,
-              numericInput('nb_thread', 'Provide the number of CPU to use', 1, min = 1, max = (parallel::detectCores()-1)), 
-              p(icon('circle-info'),paste0(" You have ",parallel::detectCores(), " CPU")),
+              uiOutput('cond1'),
+              uiOutput('cond2')
             )
 
           )
         ),
         fluidRow(
         tabBox(
-    tabPanel("Overwiew",height=1000,
-        fluidRow(
-        column(width=4,
-        box(width=12, status = 'info', solidHeader = TRUE, title = h3("Table of Annotion", icon('table')),
-          withSpinner( DT::DTOutput("tableAnnot"), type = 8, color = "#CDCDE6", size = 1)
-        )),
-        column(width=8,
-                box(width=12, status = 'success', solidHeader = TRUE, title = h3("Overview of condition", icon('chart-simple')),
-                br(), br(),
-                column(width = 1),
-                column(width = 10, withSpinner(plotOutput('upsetPlot'), type = 8, color = "#CDCDE6", size = 1)),
-                column(width = 1), br(), br()
-        )
-        )
-
-    )),
+    tabPanel("Overview", height = 1000,
+         fluidRow(
+           column(width = 4,
+                  box(width = 12, status = 'info', solidHeader = TRUE, title = h3("Table of Annotation", icon('table')),
+                      withSpinner(DT::DTOutput("tableAnnot"), type = 8, color = "#CDCDE6", size = 1)
+                  )
+           ),
+           column(width = 8,
+                  box(width = 12, status = 'success', solidHeader = TRUE, title = h3("Overview of Condition", icon('chart-simple')),
+                      downloadButton("downloadUpsetPlot", "Download UpsetPlot", icon('download')), br(), br(),
+                      withSpinner(plotOutput('upsetPlot'), type = 8, color = "#CDCDE6", size = 1)
+                  )
+           )
+         )
+),
     tabPanel("PCA",
         fluidRow(
         box(class = "map_container",width=12,status='success',title = h2('Graph of PCA',icon('chart-simple')),solidHeader = TRUE,
