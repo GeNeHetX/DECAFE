@@ -6,12 +6,21 @@
 #
 #    http://shiny.rstudio.com/
 #
-packages <- c("shiny", "DT","shinydashboard","shinycssloaders","BiocManager", "ggplot2", "plotly", "reshape2", "factoextra", "FactoMineR", "devtools", "ggupset", "fgsea","DESeq2","ggpubr")
+# packages <- c("shiny", "DT","shinydashboard","shinycssloaders","BiocManager", "ggplot2", "plotly", "reshape2", "factoextra", "FactoMineR", "devtools", "ggupset", "fgsea","DESeq2","ggpubr")
+# new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+# if(length(new_packages)) install.packages(new_packages)
+# if (!require("BiocManager", quietly = TRUE) && "BiocManager" %in% new_packages)
+#   install.packages("BiocManager")
+# BiocManager::install(new_packages,update=FALSE)
+packages <- c("shiny", "DT", "shinydashboard", "shinycssloaders", "BiocManager", "ggplot2", "plotly", "reshape2", "factoextra", "FactoMineR", "devtools", "ggupset", 
+"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ComplexHeatmap")
 new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
-if(length(new_packages)) install.packages(new_packages)
-if (!require("BiocManager", quietly = TRUE) && "BiocManager" %in% new_packages)
-  install.packages("BiocManager")
-BiocManager::install(new_packages,update=FALSE)
+if(length(new_packages)) {
+  if (!requireNamespace("BiocManager", quietly = TRUE)) {
+    install.packages("BiocManager")
+  }
+  BiocManager::install(new_packages, update = FALSE)
+}
 
 options(shiny.maxRequestSize=100000*1024^2)
 library(shiny)
@@ -24,6 +33,11 @@ library(factoextra)
 library(FactoMineR)
 library(ggupset)
 library(fgsea)
+library(stringr)
+library(ggpubr)
+library(ggrepel)
+library(UpSetR)
+library(ComplexHeatmap)
 
 # Define server logic required to draw a histogram
 function(input, output, session) {
@@ -97,6 +111,14 @@ output$annot_Image <- renderImage({
 
   })
   
+  # Format annotation matrix
+  annotProcess <- reactive({
+    annot = annotFile()
+    annot$condshiny = apply(annot, 1, function(x) paste(colnames(annot),"_", x, collapse = ','))
+    return(annot)
+  })
+
+    
   # Open count file
   countFile <-reactive({
     req(input$file)
@@ -104,52 +126,67 @@ output$annot_Image <- renderImage({
     notif <<- showNotification("Opening count matrix in progress", duration = 0)
     count = read.delim(input$file$datapath, sep='\t', row.names = 1, header=T,as.is=T)
     removeNotification(notif)
+
+    genefile = switch(input$org, 
+    'hs' = 'humanGeneannot.rds',
+    'mm' = 'mouseGeneannot.rds',
+    )
+    geneannot = readRDS(genefile)
+    geneannot =  geneannot[rownames(count),]
+
+    if(input$coding){
+    count = count[which(geneannot$biotype == 'protein_coding'),]}
     
-    return(count)
+    return(list(count=count, geneannot=geneannot))
   })
+ 
 
-  # Format annotation matrix
-  annotProcess <- reactive({
-
-    annot = annotFile()
-                                 
-    annot$name = apply(annot, 1, function(x) paste(colnames(annot),"_", x, collapse = ','))
-    annot_combn = annot %>%
-      mutate(
-          all_list = as.list(strsplit(name, ","))
-      )
-     
-    return(annot_combn)
-  })
-
-
-  # Create named vector will all annotation (condition)
+   # Create named vector will all annotation (condition)
   conditionVector <- reactive({
-    annot = annotProcess()$name
+    annot = annotProcess()$condshiny
     name = unique(annot)
     num  = c(1:length(unique(name)))
 
     choice_table = data.frame(name, num)
     choix = setNames(as.numeric(choice_table$num), choice_table$name)
-
-  
   })
 
 
   
-  ## Output 
-  output$upsetPlot <- renderPlot(
+## Output 
+# upset plot  
+dataUpset <- reactive({
+      annot2 = annotFile()
+      lab = apply(annot2,2,unique, simplify = FALSE)
+      tt= unlist(lapply(1:length(lab),function(x) lapply(1:length(lab[[x]]),function(y) paste0(names(lab)[x],'_',lab[[x]][y]))))
+      nb_cond= length(tt)
+      conditions=matrix(0,nrow=nrow(annot2),ncol=nb_cond)
+      conditions = as.data.frame(conditions)
+      colnames(conditions)= tt
+      
+      for(i in 1:nrow(annot2)){
+        for(j in 1: ncol(annot2)){
+            conditions[i,paste0(colnames(annot2)[j], '_', annot2[i,j])]<-1
+        }
+      }
+   
+      return(make_comb_mat(conditions))
+})
 
-    ggplot(data = annotProcess(),mapping = aes(x = all_list)) +
-      geom_bar(fill = '#262686') +
-      scale_x_upset(order_by = "degree")+
-      geom_text(stat='count', aes(label=..count..), vjust=2, size=5, color="white") +
-      labs(x='Annotation combination', y='Distribution') +
-      theme(axis.title = element_text(size=15))+
-      theme_combmatrix(combmatrix.label.text = element_text(color ='#262686', size=12)) + 
-      axis_combmatrix(levels = levels(as.factor(unlist(annotProcess()$all_list)))) 
-    
-  )
+
+output$upsetPlot <- renderPlot({
+  df = dataUpset()
+  UpSet(df,
+        left_annotation = upset_left_annotation(df,
+                                                add_numbers = TRUE,
+                                                gp = gpar(fill = "#262686")
+        ),
+        top_annotation = upset_top_annotation(df, add_numbers = TRUE),
+        comb_col = "#262686",
+        bg_col = c("#DEDEF6", "#EEEEEE"),
+        bg_pt_col = "#CCCCFF")
+  
+})
   
   output$tableAnnot <- DT::renderDT(server = FALSE, {
 
@@ -191,44 +228,18 @@ output$annot_Image <- renderImage({
     selectInput("cond2", label = "Choose group 2",
                   choices = conditionVector(), selected=2)
   })
+  
+ 
 
-# Boxplot Panel
-
-
-  geneTargetChoice <- reactive({
-    count= countFile()
-    gene = rownames(count)
-
-    name = gene
-    num  = c(1:length(name))
-
-    choiceTable = data.frame(name, num)
-    choix = setNames(as.numeric(choiceTable$num), choiceTable$name)
-
-    return(choix)
-
-  })
-
-  output$geneTarget <-renderUI({
-    
-    
-   
-    return(selectInput("geneTarget", label = "Choose gene target to observe",
-                  choices = geneTargetChoice()))
-
-  })
-
-
-
-  annotationName <- reactive({
+ annotationName <- reactive({
 
     annot = annotProcess()
 
 
-    annot_name_cond1 = unique(annot$name)[as.numeric(input$cond1)]
-    annot_name_cond2 = unique(annot$name)[as.numeric(input$cond2)]
-    annot_gp1 = rownames(annot)[which(annot$name == annot_name_cond1)]
-    annot_gp2 = rownames(annot)[which(annot$name == annot_name_cond2)]
+    annot_name_cond1 = unique(annot$condshiny)[as.numeric(input$cond1)]
+    annot_name_cond2 = unique(annot$condshiny)[as.numeric(input$cond2)]
+    annot_gp1 = rownames(annot)[which(annot$condshiny == annot_name_cond1)]
+    annot_gp2 = rownames(annot)[which(annot$condshiny == annot_name_cond2)]
 
     res = list(
       annotName1=annot_name_cond1,
@@ -244,24 +255,20 @@ output$annot_Image <- renderImage({
   intersectCond <-reactive({
     
     annot_name = annotationName()
-    count = countFile()
+    count = countFile()$count
     annot = annotProcess()
 
     annot_gp1 = annot_name$annotGP1
     annot_gp2 = annot_name$annotGP2
-
     
     all_annot = c(annot_gp1,annot_gp2)
     annot = annot[all_annot,]
-
-  
     
     count_intersect = count[, intersect(rownames(annot), colnames(count))]
     annot_intersect= as.data.frame(annot[intersect(rownames(annot), colnames(count)), ])
 
-    annot_intersect$condshiny = apply(annot_intersect,1,function(x) paste(colnames(annot_intersect), "_", x, collapse=','))
+    # annot_intersect$condshiny = apply(annot_intersect,1,function(x) paste(colnames(annot_intersect), "_", x, collapse=','))
 
-  
     res = list(
       annot=annot_intersect,
       count=count_intersect
@@ -272,26 +279,29 @@ output$annot_Image <- renderImage({
 
 
 
-  DDS <- reactive({
-
+  DDS_all <- reactive({
     intersect = intersectCond()
-    notif <<- showNotification("DESeq", duration = 0)
+
     count_intersect = intersect$count
     annot_intersect = intersect$annot
-    
-      dds = DESeqDataSetFromMatrix(
-        countData = count_intersect,
-        colData = annot_intersect,
-        design = ~condshiny
-      )
+
+    zero_threshold = as.numeric(input$zero_threshold)
+    countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
+    print(dim(countfilt))
+    print(dim(annot_intersect))
+
+    dds = DESeqDataSetFromMatrix(countData = countfilt,
+                                    colData = annot_intersect,
+                                    design = ~condshiny)
+
+    dds = dds[rowSums(counts(dds)) >= 10]
     removeNotification(notif)
-      return(dds)
+    return(dds)
   })
 
 
   vstNormalization <- reactive({
-
-    dds = DDS()
+    dds = DDS_all()
     notif <<- showNotification("VST", duration = 0)
     normalized_counts =  assay(vst(dds))
 
@@ -300,9 +310,17 @@ output$annot_Image <- renderImage({
 
   })
 
+  desqNormalization <- reactive({
+    dds = DDS_all()
+    dds2 = estimateSizeFactors(dds)
+    normalized_counts = counts(dds2, normalized = TRUE)
+    return(normalized_counts)
+
+  })
+
 countNormGenePlot <-reactive({
   
-    normalized_counts =  vstNormalization()
+    normalized_counts =  desqNormalization()
     annotName = annotationName()
 
     annot_name_cond1 = annotName$annotName1
@@ -312,40 +330,23 @@ countNormGenePlot <-reactive({
 
     norm1 = normalized_counts[as.numeric(input$geneTarget),intersect(annot_gp1, colnames(normalized_counts))]
     norm2 = normalized_counts[as.numeric(input$geneTarget),intersect(annot_gp2, colnames(normalized_counts))]
-
+    sample = as.vector(c(colnames(norm1), colnames(norm2)))
     norm1_rm = as.vector(norm1)
     norm2_rm = as.vector(norm2)
 
-    res = data.frame( 
+    count = c(norm1_rm, norm2_rm)
+    condition = c(rep(annot_name_cond1,length(norm1_rm)), rep(annot_name_cond2,length(norm2_rm)))
+
+    res = data.frame(
       count = c(norm1_rm, norm2_rm),
       condition = c(rep(annot_name_cond1,length(norm1_rm)), rep(annot_name_cond2,length(norm2_rm)))
     )
-
     return(res)
   })
 
-  output$bpGeneTarget <- renderPlot({
-    
-    res = countNormGenePlot()
-    
-    ggboxplot(res, 'condition','count',col='condition',shape='condition',xlab=NULL)+
-      rotate_x_text(45)+
-      scale_x_discrete(labels=NULL)+
-      stat_compare_means(label = "p.signif")
-  })
-
-  output$histGeneTarget <- renderPlot({
-    res = countNormGenePlot()
-    
-    ggplot(res, aes(x=count, color=condition)) +
-      geom_histogram(fill="white", alpha=0.5, position="identity") + 
-      theme(legend.position="top")
-  })
-
-  
 
 #PCA
-  pcaVSD <- reactive({
+  pcaVST <- reactive({
 
     intersect = intersectCond()
     count_intersect = intersect$count
@@ -370,12 +371,13 @@ countNormGenePlot <-reactive({
       cbind(
         coordinates, 
         rownames(annot_intersect), 
-        annot_intersect$name,
+        annot_intersect$condshiny,
         colSums(count_intersect>0)
       )
     )
     colnames(pca_df)=c(paste0("Dim",1:5),"Sample","Group","NumberGene")
-    
+    print(head(pca_df))
+
     eigen_value = get_eig(res_pca)[1:5,2]
 
     res = list(
@@ -390,12 +392,11 @@ countNormGenePlot <-reactive({
 
   pcaGraph <- reactive({
 
-    res.pca = pcaVSD()
+    res.pca = pcaVST()
     pca_df = res.pca$pca_df
-    print(dim(pca_df))
     eigen_value =res.pca$eig
 
-    pca_sub = pca_df[,c(as.numeric(input$dim1), as.numeric(input$dim2), 6, 7,8)]
+    pca_sub = pca_df[,c(as.numeric(input$dim1), as.numeric(input$dim2), 6, 7, 8)]
     colnames(pca_sub)= c("x","y","sample","Group","NumberGene")
     pca_sub$x = as.numeric(pca_sub$x)
     pca_sub$y = as.numeric(pca_sub$y)
@@ -404,6 +405,7 @@ countNormGenePlot <-reactive({
     plot=ggplot(data=pca_sub, aes(x=x, y=y, col=Group, tooltip=Sample)) +
       geom_point(size=1) + theme_minimal() +
       labs(x = paste0("Dimension ", input$dim1," (",eigen_value[as.numeric(input$dim1)],"%)"),y = paste0("Dimension ", input$dim2," (",eigen_value[as.numeric(input$dim2)],"%)")) + 
+      scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
       geom_vline(xintercept=0, linetype="dashed", color = "grey") +
       geom_hline(yintercept=0, linetype="dashed", color = "grey") +
       theme(legend.position="bottom")
@@ -418,7 +420,7 @@ countNormGenePlot <-reactive({
 
   sampleTopDim1 <- reactive({
     
-    res.pca = pcaVSD()
+    res.pca = pcaVST()
     pca_sample = res.pca$pca_sample
     contrib = pca_sample$contrib[,as.numeric(input$dim1)]
     intersect = intersectCond()
@@ -434,7 +436,8 @@ countNormGenePlot <-reactive({
     tab = tab[order(abs(as.numeric(tab$contrib)),decreasing=TRUE),]
     rownames(tab)= NULL
 
-    return(tab[1:min(10,nrow(tab)),]) # In the case where number sample least than 10
+    # return(tab[1:min(10,nrow(tab)),]) # In the case where number sample least than 10
+    return(tab)
   })
 
    output$sampleTop1 <- DT::renderDT(server = FALSE, {
@@ -443,10 +446,11 @@ countNormGenePlot <-reactive({
         extensions = c("Buttons"),
         options = list(
           dom = 'Bfrtip',
+          scrollX = TRUE,
           buttons = list(
             list(extend = "copy", text = "Copy", filename = "sample1_contrib",
                  exportOptions = list(
-                   modifier = list(page = "all")
+                   modifier = list(page = "current")
                  )
             ),
             list(extend = "csv", text = "CSV", filename = "sample1_contrib",
@@ -467,7 +471,7 @@ countNormGenePlot <-reactive({
   sampleTopDim2 <- reactive({
    
     
-    res.pca = pcaVSD()
+    res.pca = pcaVST()
     pca_sample = res.pca$pca_sample
     contrib = pca_sample$contrib[,as.numeric(input$dim2)]
     intersect = intersectCond()
@@ -483,8 +487,8 @@ countNormGenePlot <-reactive({
     tab = tab[order(abs(as.numeric(tab$contrib)),decreasing=TRUE),]
     rownames(tab)= NULL
 
-    return(tab[1:min(10,nrow(tab)),]) # In the case where number sample least than 10
-
+    # return(tab[1:min(10,nrow(tab)),]) # In the case where number sample least than 10
+    return(tab)
   })
 
    output$sampleTop2 <- DT::renderDT(server = FALSE, {
@@ -493,10 +497,11 @@ countNormGenePlot <-reactive({
         extensions = c("Buttons"),
         options = list(
           dom = 'Bfrtip',
+          scrollX = TRUE,
           buttons = list(
             list(extend = "copy", text = "Copy", filename = "sample2_contrib",
                  exportOptions = list(
-                   modifier = list(page = "all")
+                   modifier = list(page = "current")
                  )
             ),
             list(extend = "csv", text = "CSV", filename = "sample2_contrib",
@@ -516,24 +521,24 @@ countNormGenePlot <-reactive({
 
    geneTopDim1 <- reactive({
 
-   res.pca = pcaVSD()
+   res.pca = pcaVST()
     pca_gene = res.pca$pca_gene
     contrib = pca_gene$contrib[,as.numeric(input$dim1)]
     intersect = intersectCond()
     count_intersect = intersect$count
-
+    geneannot = countFile()$geneannot
 
     tab = as.data.frame(
       cbind(
-        name = rownames(count_intersect),
+        name = as.vector(geneannot[rownames(count_intersect),'GeneName']),
         contrib = contrib
       )
     )
     tab = tab[order(abs(as.numeric(tab$contrib)),decreasing=TRUE),]
     rownames(tab)= NULL
 
-    return(tab[1:min(10,nrow(tab)),]) # In the case where number sample least than 10
-
+    # return(tab[1:min(10,nrow(tab)),]) # In the case where number sample least than 10
+    return(tab)
   })
 
    output$geneTop1 <- DT::renderDT(server = FALSE, {
@@ -542,10 +547,11 @@ countNormGenePlot <-reactive({
         extensions = c("Buttons"),
         options = list(
           dom = 'Bfrtip',
+          scrollX = TRUE,
           buttons = list(
             list(extend = "copy", text = "Copy", filename = "gene1_contrib",
                  exportOptions = list(
-                   modifier = list(page = "all")
+                   modifier = list(page = "current")
                  )
             ),
             list(extend = "csv", text = "CSV", filename = "gene1_contrib",
@@ -564,23 +570,25 @@ countNormGenePlot <-reactive({
     })
  geneTopDim2 <- reactive({
 
-    res.pca = pcaVSD()
+    res.pca = pcaVST()
     pca_gene = res.pca$pca_gene
     contrib = pca_gene$contrib[,as.numeric(input$dim2)]
     intersect = intersectCond()
     count_intersect = intersect$count
+    geneannot = countFile()$geneannot
 
 
     tab = as.data.frame(
       cbind(
-        name = rownames(count_intersect),
+        name = as.vector(geneannot[rownames(count_intersect),'GeneName']),
         contrib = contrib
       )
     )
     tab = tab[order(abs(as.numeric(tab$contrib)),decreasing=TRUE),]
     rownames(tab)= NULL
 
-    return(tab[1:min(10,nrow(tab)),]) # In the case where number sample least than 10
+    # return(tab[1:min(10,nrow(tab)),]) # In the case where number sample least than 10
+    return(tab)
 
 
   })
@@ -590,10 +598,11 @@ countNormGenePlot <-reactive({
       extensions = c("Buttons"),
       options = list(
         dom = 'Bfrtip',
+        scrollX = TRUE,
         buttons = list(
           list(extend = "copy", text = "Copy", filename = "gene2_contrib",
                exportOptions = list(
-                 modifier = list(page = "all")
+                 modifier = list(page = "current")
                )
           ),
           list(extend = "csv", text = "CSV", filename = "gene2_contrib",
@@ -617,19 +626,7 @@ countNormGenePlot <-reactive({
 
   resDeseq <- reactive({
 
-    intersect = intersectCond()
-
-    count_intersect = intersect$count
-    annot_intersect = intersect$annot
-
-    zero_threshold = as.numeric(input$zero_threshold)
-    countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
-
-    dds = DESeqDataSetFromMatrix(countData = countfilt,
-                                    colData = annot_intersect,
-                                    design = ~name)
-
-    dds = dds[rowSums(counts(dds)) >= 10]
+    dds = DDS_all()
 
     notif <<- showNotification("Differential analysis in progress", duration = 0)
     nb_thread = as.numeric(input$nb_thread)
@@ -640,12 +637,14 @@ countNormGenePlot <-reactive({
     else{
       dds = DESeq(dds,parallel = FALSE)
     }
-
+    geneannot = countFile()$geneannot
     table = results(dds)
     removeNotification(notif)
-    table$name = rownames(table)
+    table$name = as.vector(geneannot[rownames(table), 'GeneName'])
     table = as.data.frame(table)
     table = table[order(abs(table$stat),decreasing=TRUE),]
+    table = table[, c(7, 1:6)]
+     
 
     return(list(deseq = dds, res = table) )
 
@@ -655,23 +654,23 @@ countNormGenePlot <-reactive({
 
     table = resDeseq()$res
     tsPadj = as.numeric(input$ts_padj)
-    tsFC = 2
+    tsFC = 1
 
           
     table$diffexpressed = "NO"
     table$diffexpressed[table$log2FoldChange > tsFC & table$padj < tsPadj] = "UP"
     table$diffexpressed[table$log2FoldChange < -tsFC & table$padj < tsPadj] = "DOWN"
 
-    cols=c("gold", "black","blue")
+    cols=c("lightcoral", "lightgrey","#4ab3d6")
 
-    if(nrow(subset(table,diffexpressed = 'NO'))   == 0) { cols = c('gold' , 'blue')}
-    if(nrow(subset(table,diffexpressed = 'DOWN')) == 0) { cols = c('black', 'blue')}
-    if(nrow(subset(table,diffexpressed = 'UP'))   ==0)  { cols = c('black', 'gold')}
+    if(nrow(table[table$diffexpressed == 'NO', ])   == 0) { cols = c('lightcoral' , '#4ab3d6')}
+    if(nrow(table[table$diffexpressed == 'DOWN',]) == 0) { cols = c('lightgrey', '#4ab3d6')}
+    if(nrow(table[table$diffexpressed == 'UP',])   == 0)  { cols = c('lightgrey', 'lightcoral')}
 
     plot = ggplot(data=as.data.frame(table), aes(x=log2FoldChange, y=-log10(padj), col=diffexpressed, tooltip=name)) +
       geom_point(size=1) + theme_minimal()+
-      geom_vline(xintercept=c(-tsFC, tsFC), col="red") +
-      geom_hline(yintercept=-log10(tsPadj), col="red")+
+      geom_vline(xintercept=c(-tsFC, tsFC), col="#919191") +
+      geom_hline(yintercept=-log10(tsPadj), col="#919191")+
       scale_color_manual(values=cols)
      
     return(plot)
@@ -679,16 +678,47 @@ countNormGenePlot <-reactive({
 
   output$volcano <- renderPlotly({ ggplotly(volcano()) })
 
+  output$downloadVolcanoPlot <- downloadHandler(
+      filename = function() {
+            group1 <- annotationName()$annotName1
+            group2 <- annotationName()$annotName2
+            plot_title <- paste(group1, "vs", group2)
+            paste(gsub(" ", "_", plot_title), "_", Sys.Date(), ".jpeg", sep = "")
+      },
+      content = function(file) {
+        group1 <- annotationName()$annotName1
+        group2 <- annotationName()$annotName2
+
+        table = resDeseq()$res
+        tsPadj = as.numeric(input$ts_padj)
+        tsFC = 1
+        table$diffexpressed = "NO"
+        table$diffexpressed[table$log2FoldChange > tsFC & table$padj < tsPadj] = "UP"
+        table$diffexpressed[table$log2FoldChange < -tsFC & table$padj < tsPadj] = "DOWN"
+        volcanoplot = volcano()
+        
+        ggsave(file, volcanoplot + ggtitle(paste(group1, "vs", group2)) +
+        geom_text_repel(
+                  data = head(as.data.frame(table[which(table$diffexpressed != "NO"),]), 10),
+                  aes(label = name),
+                  box.padding = 0.5, point.padding = 0.1,
+                  segment.color = 'grey', segment.size = 0.2,
+                  nudge_y = 0.2
+                ),  width = 8, height = 6, units = "in", dpi = 300, type = "jpeg")
+      })
+
+
   output$degTable <- DT::renderDT(server = FALSE, {
     DT::datatable(
       resDeseq()$res,
       extensions = c("Buttons"),
       options = list(
-        dom = 'Bfrtip',
+        dom = 'Bfrtip', 
+        scrollX = TRUE,
         buttons = list(
           list(extend = "copy", text = "Copy", filename = "res_deseq",
                exportOptions = list(
-                 modifier = list(page = "all")
+                 modifier = list(page = "current")
                )
           ),
           list(extend = "csv", text = "CSV", filename = "res_deseq",
@@ -706,9 +736,102 @@ countNormGenePlot <-reactive({
     )
   })
 
-  gsea <- reactive({
+  # Boxplot Panel
+  geneTargetChoice <- reactive({
+    count= countFile()$count
+    geneannot = countFile()$geneannot
+    gene = as.vector(geneannot[rownames(count),'GeneName'])
 
-    pathways = readRDS('pathway_human.rds')
+    name = gene
+    num  = c(1:length(name))
+
+    choiceTable = data.frame(name, num)
+    choix = setNames(as.numeric(choiceTable$num), choiceTable$name)
+
+    return(choix)
+
+  })
+
+  output$geneTarget <-renderUI({  
+    return(selectInput("geneTarget", label = "Choose gene target to observe",
+                  choices = geneTargetChoice()))
+  })
+
+# boxplot
+ output$bpGeneTarget <- renderPlot({
+    res = countNormGenePlot()
+    res$count = as.numeric(res$count)
+    padj = resDeseq()$res[as.numeric(input$geneTarget),'padj']
+   
+    df_p_val <- data.frame(
+      group1 = unique(res$condition)[1],
+      group2 = unique(res$condition)[2],
+      label = padj,
+      y.position = max(res$count)*1.1
+    )
+
+
+  ggplot(res, aes(x=condition,y=count, color=condition)) + geom_boxplot() + 
+      rotate_x_text(45)+
+      scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
+      scale_x_discrete(labels=NULL) +  theme_minimal() + theme(legend.position="right", legend.text=element_text(size=10)) + 
+      stat_pvalue_manual(df_p_val, xmin = "group1", xmax = "group2", label = "label", y.position = "y.position") + 
+      stat_summary(fun.y=mean, geom="point", shape=20, size=7, color="#262686", fill="#262686")
+      # stat_compare_means(label = "p.signif"))
+  })
+
+  output$histGeneTarget <- renderPlot({
+    res = countNormGenePlot()
+    
+    ggplot(res, aes(x=count, color=condition)) +
+      geom_histogram(fill="white", alpha=0.5, position="identity") + 
+      theme_minimal() + theme(legend.position="top", legend.text=element_text(size=10)) +  
+      labs(x = "number of samples",y = 'count') + 
+      scale_color_manual(values=c("lightcoral", '#4ab3d6'))
+  })
+
+
+  # select collection pathway
+  appendCollection <- reactive({
+    pathwayfile = switch(input$org, 
+    'hs' = 'human_pathays.rds',
+    'mm' = 'mouse_pathays.rds',
+    )
+    pathways_list = readRDS(pathwayfile)
+    return(list(namesp=names(pathways_list), pathways=pathways_list))
+  })
+
+  output$dbpath <- renderUI({
+    selectInput('path_list', label = 'Select list of pathways', choices= appendCollection()$namesp, multiple = TRUE)
+  })
+
+  # photo pathways
+  output$path_Image <- renderImage({
+    imagepath = switch(input$org, 
+    'hs' = 'human_pathway.png',
+    'mm' = 'mouse_pathway.png',
+    )
+    list(src = imagepath,
+      width = 500,
+         alt = "image_pathways")
+  }, deleteFile = FALSE)
+
+
+  gsea <- eventReactive(input$gogsea,{
+
+    pathways_list = appendCollection()$pathways
+    pathwaySelect = input$path_list
+    pathways_list = pathways_list[pathwaySelect]
+    
+    pathways = pathways_list[[1]]
+    names(pathways) = paste0(pathwaySelect[1], '_:_', names(pathways))
+    if (length(pathways_list) > 1){
+    for (i in 2:length(pathways_list)){
+      path_temp = pathways_list[[i]]
+      names(path_temp) = paste0(pathwaySelect[i], '_:_', names(path_temp))
+      pathways = append(pathways, path_temp)
+    }}
+    
     table = resDeseq()$res
     vec = table$stat
     names(vec) = table$name
@@ -717,24 +840,33 @@ countNormGenePlot <-reactive({
     nb_thread = as.numeric(input$nb_thread)
     
     if(nb_thread > 1){
-      res = fgsea(pathways,vec,BPPARAM = BiocParallel::MulticoreParam(nb_thread))
+      res = fgseaSimple(pathways,vec,BPPARAM = BiocParallel::MulticoreParam(nb_thread), nperm = 1000)
     }
+  
     else{
-      res = fgsea(pathways,vec)
+      res = fgseaSimple(pathways,vec, nperm = 1000)
     }
     
+    splitcolpath = strsplit(res$pathway, '_:_')
+    res$collection = sapply(splitcolpath, function(x) x[1])
+    res$pathway = sapply(splitcolpath, function(x) x[2])
+    res$pathway = str_replace_all(res$pathway, '_', ' ')
     removeNotification(notif)
 
     lE_list = res$leadingEdge
-
-    
-    lE_vector = sapply(lE_list, paste, collapse=",")
+    lE_vector = sapply(lE_list, paste, collapse=", ")
     res$leadingEdge = lE_vector
     res = as.data.frame(na.omit(res))
     res_sig = res[which(as.numeric(res$padj) < 0.05),]
     res_sort = res_sig[order(abs(as.numeric(res_sig$NES)),decreasing=TRUE),]
+    res_sort = res_sort[, c(9, 1:5, 7:8)]
+
     return(res_sort)
   })
+
+
+
+  
 
   output$barplotGsea <- renderPlot({
 
@@ -754,13 +886,14 @@ countNormGenePlot <-reactive({
         gsea(),
         extensions = c("Buttons"),
         caption= "Pathways enrichment",
+        selection = 'single',
         options = list(
           dom = 'Bfrtip',
           scrollX = TRUE,
           buttons = list(
             list(extend = "copy", text = "Copy", filename = "gsea",
                  exportOptions = list(
-                   modifier = list(page = "all")
+                   modifier = list(page = "current")
                  )
             ),
             list(extend = "csv", text = "CSV", filename = "gsea",
@@ -778,6 +911,25 @@ countNormGenePlot <-reactive({
       )
     })
 
+  browse <- eventReactive(input$browsebutton, {
+    species = switch(input$org, 
+    'hs' = 'human',
+    'mm' = 'mouse',
+    )
+    indice_clickpath = input$gsea_rows_selected
+    if (length(indice_clickpath) == 1){
+    clickpath = gsea()[indice_clickpath, 'pathway']
+    clickpath = str_replace_all(clickpath, ' ', '_')
+    url = paste0("https://www.gsea-msigdb.org/gsea/msigdb/", species, "/geneset/", clickpath ,".html")
+    browseURL(url)
+    return(clickpath)
+}})
+
+  output$comment <- renderText({
+    clickpath = browse()
+    clickpath = str_replace_all(clickpath, '_', ' ')
+    return(paste0('Opening url for : ', clickpath))
+  }) 
 
   }
 
