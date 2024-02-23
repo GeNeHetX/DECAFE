@@ -445,16 +445,8 @@ library(htmltools)
         actionButton('browsebutton', 'More info about selected pathway', icon('globe')),
         textOutput('comment'),br(),
         withSpinner(DT::dataTableOutput("gsea"), type = 8, color = "#CDCDE6", size = 1)
-      ))),
-      fluidRow(
-        column(width=12,
-           box(width=NULL,status='success',title = h1('Barplot',icon('chart-simple')),solidHeader = TRUE, 
-        withSpinner(plotOutput("barplotGsea"), type = 8, color = "#CDCDE6", size = 1)
-
-
-        )
-
-    ))),id="tabBox",
+      )))
+      ),id="tabBox",
 
     width = 12
 

@@ -868,17 +868,7 @@ countNormGenePlot <-reactive({
 
   
 
-  output$barplotGsea <- renderPlot({
 
-    df = gsea()[1:15,]
-    df$NES = as.numeric(df$NES)
-# En dehors des barres
-  ggplot(data=df, aes(x=NES, y=pathway, fill = padj)) +
-  geom_bar(stat="identity")+
-  theme_minimal()
-
-
-    })
 
   # GSEA Panel
   output$gsea <- DT::renderDT(server = FALSE, {
