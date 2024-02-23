@@ -919,7 +919,46 @@ countNormGenePlot <-reactive({
     clickpath = browse()
     clickpath = str_replace_all(clickpath, '_', ' ')
     return(paste0('Opening url for : ', clickpath))
-  }) 
+  })
+
+  graph <- reactive({
+    res=gsea()
+    rownames(res) = res$pathway
+    print(res)
+    name_pathway = res$pathway[1:30]
+    print(name_pathway)
+    mat = data.frame(matrix(0,nrow=length(name_pathway),ncol=length(name_pathway)))
+    print(dim(mat))
+    colnames(mat) = name_pathway
+    rownames(mat) = name_pathway
+    print(mat)
+    for( i in name_pathway){
+      for( j in name_pathway){
+          print(i)
+          print(j)
+
+        le_i = strsplit(res[i,'leadingEdge'], ',')[[1]]
+        le_j = strsplit(res[j,'leadingEdge'], ',')[[1]]
+        print(le_i)
+        print(le_j)
+        mat[i,j] = 1-(length(intersect(le_i,le_j)) / length(union(le_i,le_j)))
+
+
+      }
+    }
+    print(mat)
+    hc = hclust(as.dist(mat),method="average")
+    print(hc)
+    return(hc)
+
+    })
+
+  output$treePlot <- renderPlot({
+
+      ggdendro::ggdendrogram(graph())
+    })
+
+
 
   }
 

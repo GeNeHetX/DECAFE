@@ -445,8 +445,13 @@ library(htmltools)
         actionButton('browsebutton', 'More info about selected pathway', icon('globe')),
         textOutput('comment'),br(),
         withSpinner(DT::dataTableOutput("gsea"), type = 8, color = "#CDCDE6", size = 1)
-      )))
-      ),id="tabBox",
+      ))),
+      column(width=12,
+        box(width=NULL,status='info',title = h1('Table of GSEA results',icon('table')),solidHeader = TRUE, 
+          withSpinner(plotOutput("treePlot"), type = 8, color = "#CDCDE6", size = 1)
+        
+      )
+      )),id="tabBox",
 
     width = 12
 
