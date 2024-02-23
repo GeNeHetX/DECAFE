@@ -21,6 +21,7 @@ suppressMessages(library(shinydashboard))
 suppressMessages(library(shinycssloaders))
 
 library(plotly)
+library(htmltools)
 
 # Define UI for application that draws a histogram
 
@@ -70,6 +71,14 @@ library(plotly)
         border-right-color:#CDCDE6;
         border-top-color:#CDCDE6;
       }
+
+      .nav-tabs-custom>.nav-tabs {
+      margin: 0;
+      border-bottom-color: #f4f4f4;
+      border-top-right-radius: 3px;
+      border-top-left-radius: 3px;
+      background: #ddd;
+      }
       
       .progress-bar {
         background-color: #CDCDE6;
@@ -85,7 +94,35 @@ library(plotly)
         border-top-color: #262686;
       }
               
-    ")),      tabItems(
+    ")),htmlDependency(
+      "font-awesome", "5.3.1", "www/shared/fontawesome", package = "shiny",
+               stylesheet = c("css/all.min.css", "css/v4-shims.min.css")
+    ),
+    tags$head(tags$script('
+      // Define function to set height of "map" and "map_container"
+      setHeight = function() {
+        var window_height = $(window).height();
+        var header_height = $(".main-header").height();
+
+        var boxHeight = (window_height - header_height) * 0.6;
+
+        $(".map_container").height(boxHeight);
+        $("#pcaVST").height(boxHeight - 20);
+        $("#volcano").height(boxHeight - 20);
+      };
+
+      // Set input$box_height when the connection is established
+      $(document).on("shiny:connected", function(event) {
+        setHeight();
+      });
+
+      // Refresh the box height on every window resize event    
+      $(window).on("resize", function(){
+        setHeight();
+      });
+      ')),
+
+       tabItems(
   tabItem(tabName ="home",
 
           fluidRow(
@@ -240,11 +277,11 @@ library(plotly)
                 column(width = 12,             
                        h3(""),
                         strong("Count matrix : "),
-                       "You have to upload the entire matrix of RNAseq, the name of the columns is the Sample_ID and the row name is the GeneName. 
+                       "You have to upload the RNA-Seq count matrix with Sample_ID as column names and genes as row names, it must be a .tsv file.
                        This matrix is created with the sequencing output. It is mapped onto a reference genome to identify which genes are present in the sample, then the number found for each gene is counted.", br(),
                         br(),
                         strong('Annotation file:'),
-                       "The annotation file must contain only the samples to be studied , the first column is the Sample_ID and other columns are the annotations you want to use to create your groups in the analysis. Be careful to select only your samples of interest and your corresponding annotations. Any superfluous information will be taken into account as a comparison modality in the analysis.", br(),
+                       "It must be a .tsv file or .txt file with tabulation separator. The annotation file must contain only the samples to be studied, the first column is the Sample_ID and other columns are the annotations you want to use to create your groups in the analysis. Be careful to select only your samples of interest and your corresponding annotations. Any superfluous information will be taken into account as a comparison modality in the analysis.", br(),
                          br(),br(),
                          column(width = 12, align = "center",
                          imageOutput("annot_Image")))))),
@@ -262,17 +299,19 @@ library(plotly)
         box(width = 12, status = 'info', title = h1("Settings", icon('cogs')), solidHeader = TRUE, collapsible=TRUE,
           fluidRow(
             column(width = 3,
-              fileInput('file', 'Load Count Matrix'),
+              fileInput('file', 'Load Count Matrix .tsv'),
+              selectInput('org', 'Choose your species', choices = list(Human='hs', Mouse='mm')),#, Other='oth'))
+              radioButtons('coding', 'Use only coding genes', choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = FALSE)
             ),
             column(width = 3,
-              fileInput('annot-file',"Load the annot file")
+              fileInput('annot-file',"Load the annot file .tsv"),
+              # conditionalPanel("input.org == 'oth'", fileInput('genefile', 'Load Gene Annotation'))
             ),
+            
             column(width = 3,
-
               uiOutput('cond1'),
               uiOutput('cond2')
              
-
             ),
             column(width =3,
               numericInput('nb_thread', 'Provide the number of CPU to use', 1, min = 1, max = (parallel::detectCores()-1)), 
@@ -292,48 +331,33 @@ library(plotly)
         column(width=8,
                 box(width=12, status = 'success', solidHeader = TRUE, title = h3("Overview of condition", icon('chart-simple')),
                 br(), br(),
-          withSpinner(plotOutput('upsetPlot'), type = 8, color = "#CDCDE6", size = 1), br(), br(),
+                column(width = 1),
+                column(width = 10, withSpinner(plotOutput('upsetPlot'), type = 8, color = "#CDCDE6", size = 1)),
+                column(width = 1), br(), br()
         )
         )
 
-    )),
-    tabPanel("Boxplot",
-      fluidRow(column(width=3,uiOutput('geneTarget'))),
-        fluidRow(
-
-        column(width=6,
-        box(width=12, status = 'success', solidHeader = TRUE, title = h3("Gene Target Histogram", icon('chart-simple')),
-          withSpinner(plotOutput('histGeneTarget'), type = 8, color = "#CDCDE6", size = 1)
-        )
-        ),
-        column(width=6,
-        box(width=12, status = 'success', solidHeader = TRUE, title = h3("Gene Target Boxplot", icon('chart-simple')),
-            
-          withSpinner(plotOutput('bpGeneTarget'), type = 8, color = "#CDCDE6", size = 1)
-        )
-        )
-
-      
     )),
     tabPanel("PCA",
         fluidRow(
-        box(width=12,status='success',title = h2('Graph of PCA',icon('chart-simple')),solidHeader = TRUE,
+        box(class = "map_container",width=12,status='success',title = h2('Graph of PCA',icon('chart-simple')),solidHeader = TRUE,
             column(width=3,
         numericInput("nb_gene", "Number of most variable Gene", min = 1, step = 1, value = 1000),
              selectInput("dim1", label = "Choose your first PCA dimension",
                   choices = list("Dim1" = 1, "Dim2" = 2,"Dim3" = 3, "Dim4" =4, "Dim5" = 5),selected = 1),
-              selectInput("dim2", label = "Choose your secondPCA dimension",
+              selectInput("dim2", label = "Choose your second PCA dimension",
                   choices = list( "Dim2" = 2,"Dim3" = 3, "Dim4" =4, "Dim5" = 5),selected = 2),
             
             #selectInput("color.pca", label = "Color by ",
             #      choices = list("Dim1" = "1", "Dim2" = "2","Dim3" = "3", "Dim4" ="4", "Dim5" = "5"),selected = "2")
             #
             ),
-            column(width=9, 
+            column(width=1),
+            column(width=8, 
           withSpinner(plotlyOutput("pcaVST"), type = 8, color = "#CDCDE6", size = 1)
         )
-        ),
-
+        )),
+        fluidRow(
             column(width=6,
                 box(width=12, status = 'info', solidHeader = TRUE, title = h3("Gene most contributed to first dim", icon('table')),
           withSpinner( DT::dataTableOutput("geneTop1"), type = 8, color = "#CDCDE6", size = 1)
@@ -352,24 +376,23 @@ library(plotly)
         )
 
             )
-             
-          
-        
-
-      
+    
       )),
+
     tabPanel("Differential Analysis",
         fluidRow(
         column(width=12,
-      box(width=NULL,status='success',solidHeader=TRUE,title=h1("Volcano Plot",icon('chart-simple')),
+      box(class = "map_container", width=NULL,status='success',solidHeader=TRUE,title=h1("Volcano Plot",icon('chart-simple')),
         fluidRow(
-          column(width=4,
+          column(width=3,
             sliderInput("zero_threshold",label = "Frequency of zero per gene to remove",
                         min = 0, max =0.8, value = 0.5,step=0.1),
-              sliderInput("ts_padj",label = "p-Value cutoff from output ",
-                        min = 0, max =0.1, value = 0.01,step=0.01)
+            sliderInput("ts_padj",label = "p-Value cutoff from output ",
+                        min = 0, max =0.1, value = 0.05,step=0.01),br(),
+            downloadButton("downloadVolcanoPlot", "Download VolcanoPlot with gene label", icon('download'))
             
           ),
+          column(width=1),
           column(width=8,
             withSpinner(plotlyOutput("volcano"), type = 8, color = "#CDCDE6", size = 1)
           )
@@ -382,14 +405,45 @@ library(plotly)
         withSpinner(DT::dataTableOutput("degTable"), type = 8, color = "#CDCDE6", size = 1)
       )
     )
-
-
-
     )),
+
+
+    tabPanel("Boxplot",
+      fluidRow(column(width=3,uiOutput('geneTarget'))),
+        fluidRow(
+
+        column(width=6,
+        box(width=12, status = 'success', solidHeader = TRUE, title = h3("Gene Target Histogram", icon('chart-simple')),
+          withSpinner(plotOutput('histGeneTarget'), type = 8, color = "#CDCDE6", size = 1)
+        )
+        ),
+        column(width=6,
+        box(width=12, status = 'success', solidHeader = TRUE, title = h3("Gene Target Boxplot", icon('chart-simple')),
+            
+          withSpinner(plotOutput('bpGeneTarget'), type = 8, color = "#CDCDE6", size = 1)
+        )
+        )
+
+      
+    )),
+
+
     tabPanel("GSEA",
+      fluidRow(
+        column(width=4,
+        imageOutput('path_Image')),
+        
+        column(width = 3,
+        uiOutput('dbpath')),
+
+        column(width = 2,
+        actionButton('gogsea', label='Run GSEA', icon('play')))
+      ),
       fluidRow(
         column(width=12,
         box(width=NULL,status='info',title = h1('Table of GSEA results',icon('table')),solidHeader = TRUE, 
+        actionButton('browsebutton', 'More info about selected pathway', icon('globe')),
+        textOutput('comment'),br(),
         withSpinner(DT::dataTableOutput("gsea"), type = 8, color = "#CDCDE6", size = 1)
       ))),
       fluidRow(
