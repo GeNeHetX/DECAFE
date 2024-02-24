@@ -186,9 +186,11 @@ output$annot_Image <- renderImage({
 
 
   output$counthead <- DT::renderDT(server = FALSE, {
+    data = countFile()$count
+    data = data[1:10, 1:ncol(data)]
 
     DT::datatable(
-      head(countFile()$count, 10),
+      data,
       extensions = c("Buttons"),
       options = list(
         scrollX = TRUE,
