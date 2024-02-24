@@ -327,12 +327,18 @@ library(htmltools)
         tabBox(
     tabPanel("Overview", height = 1000,
          fluidRow(
-           column(width = 4,
-                  box(width = 12, status = 'info', solidHeader = TRUE, title = h3("Table of Annotation", icon('table')),
+           column(width = 6,
+                  box(width = 12, status = 'info', solidHeader = TRUE, title = h3("Check : Sample_ID and Annotations", icon('file')),
                       withSpinner(DT::DTOutput("tableAnnot"), type = 8, color = "#CDCDE6", size = 1)
                   )
            ),
-           column(width = 8,
+          column(width = 6,
+                  box(width = 12, status = 'info', solidHeader = TRUE, title = h3("Check : Sample_ID and Genes", icon('dna')),
+                      withSpinner(DT::DTOutput("counthead"), type = 8, color = "#CDCDE6", size = 1)
+                  )
+           ),
+
+           column(width = 12,
                   box(width = 12, status = 'success', solidHeader = TRUE, title = h3("Overview of Condition", icon('chart-simple')),
                       downloadButton("downloadUpsetPlot", "Download UpsetPlot", icon('download')), br(), br(),
                       withSpinner(plotOutput('upsetPlot'), type = 8, color = "#CDCDE6", size = 1)

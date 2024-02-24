@@ -154,6 +154,67 @@ output$annot_Image <- renderImage({
 
   
 ## Output 
+
+  output$tableAnnot <- DT::renderDT(server = FALSE, {
+
+    DT::datatable(
+      annotFile(),
+      extensions = c("Buttons"),
+      options = list(
+        scrollX = TRUE,
+        dom = 'Bfrtip',
+        buttons = list(
+          list(extend = "copy", text = "Copy", filename = "annot",
+               exportOptions = list(
+                 modifier = list(page = "all")
+               )
+          ),
+          list(extend = "csv", text = "CSV", filename = "annot",
+               exportOptions = list(
+                 modifier = list(page = "all")
+               )
+          ),
+          list(extend = "excel", text = "Excel", filename = "annot",
+               exportOptions = list(
+                 modifier = list(page = "all")
+               )
+          )
+        )
+      )
+    )
+  })
+
+
+  output$counthead <- DT::renderDT(server = FALSE, {
+
+    DT::datatable(
+      head(countFile()$count, 10),
+      extensions = c("Buttons"),
+      options = list(
+        scrollX = TRUE,
+        dom = 'Bfrtip',
+        buttons = list(
+          list(extend = "copy", text = "Copy", filename = "annot",
+               exportOptions = list(
+                 modifier = list(page = "all")
+               )
+          ),
+          list(extend = "csv", text = "CSV", filename = "annot",
+               exportOptions = list(
+                 modifier = list(page = "all")
+               )
+          ),
+          list(extend = "excel", text = "Excel", filename = "annot",
+               exportOptions = list(
+                 modifier = list(page = "all")
+               )
+          )
+        )
+      )
+    )
+  })
+
+
 # upset plot  
 dataUpset <- reactive({
       annot2 = annotFile()
@@ -199,34 +260,7 @@ output$downloadUpsetPlot <- downloadHandler(
           width = 8, height = 6, units = "in", dpi = 300, type = "jpeg")
       })
   
-  output$tableAnnot <- DT::renderDT(server = FALSE, {
 
-    DT::datatable(
-      annotFile(),
-      extensions = c("Buttons"),
-      options = list(
-        scrollX = TRUE,
-        dom = 'Bfrtip',
-        buttons = list(
-          list(extend = "copy", text = "Copy", filename = "annot",
-               exportOptions = list(
-                 modifier = list(page = "all")
-               )
-          ),
-          list(extend = "csv", text = "CSV", filename = "annot",
-               exportOptions = list(
-                 modifier = list(page = "all")
-               )
-          ),
-          list(extend = "excel", text = "Excel", filename = "annot",
-               exportOptions = list(
-                 modifier = list(page = "all")
-               )
-          )
-        )
-      )
-    )
-  })
 
   output$cond1 <-renderUI({
 
