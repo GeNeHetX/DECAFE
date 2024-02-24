@@ -823,7 +823,7 @@ countNormGenePlot <-reactive({
     'mm' = 'mouse_pathway.png',
     )
     list(src = imagepath,
-      width = 500,
+      width = 800,
          alt = "image_pathways")
   }, deleteFile = FALSE)
 

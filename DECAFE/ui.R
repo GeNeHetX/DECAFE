@@ -432,7 +432,7 @@ library(htmltools)
 
     tabPanel("GSEA",
       fluidRow(
-        column(width=4,
+        column(width=7,
         imageOutput('path_Image')),
         
         column(width = 3,
@@ -448,11 +448,12 @@ library(htmltools)
         textOutput('comment'),br(),
         withSpinner(DT::dataTableOutput("gsea"), type = 8, color = "#CDCDE6", size = 1)
       ))),
+      fluidRow(
       column(width=12,
-        box(width=NULL,status='info',title = h1('Table of GSEA results',icon('table')),solidHeader = TRUE, 
+        box(width=NULL,status='info',title = h1('Tree Pathways',icon('square-poll-horizontal')),solidHeader = TRUE, 
           withSpinner(plotOutput("treePlot"), type = 8, color = "#CDCDE6", size = 1)
         
-      )
+      ))
       )),id="tabBox",
 
     width = 12
