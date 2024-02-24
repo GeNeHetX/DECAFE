@@ -334,8 +334,6 @@ output$downloadUpsetPlot <- downloadHandler(
 
     zero_threshold = as.numeric(input$zero_threshold)
     countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
-    print(dim(countfilt))
-    print(dim(annot_intersect))
 
     dds = DESeqDataSetFromMatrix(countData = countfilt,
                                     colData = annot_intersect,
@@ -423,7 +421,6 @@ countNormGenePlot <-reactive({
       )
     )
     colnames(pca_df)=c(paste0("Dim",1:5),"Sample","Group","NumberGene")
-    print(head(pca_df))
 
     eigen_value = get_eig(res_pca)[1:5,2]
 
@@ -971,38 +968,28 @@ countNormGenePlot <-reactive({
   graph <- reactive({
     res=gsea()
     rownames(res) = res$pathway
-    print(res)
     name_pathway = res$pathway[1:30]
-    print(name_pathway)
     mat = data.frame(matrix(0,nrow=length(name_pathway),ncol=length(name_pathway)))
-    print(dim(mat))
     colnames(mat) = name_pathway
     rownames(mat) = name_pathway
-    print(mat)
     for( i in name_pathway){
       for( j in name_pathway){
-          print(i)
-          print(j)
-
         le_i = strsplit(res[i,'leadingEdge'], ',')[[1]]
         le_j = strsplit(res[j,'leadingEdge'], ',')[[1]]
-        print(le_i)
-        print(le_j)
         mat[i,j] = 1-(length(intersect(le_i,le_j)) / length(union(le_i,le_j)))
 
 
       }
     }
-    print(mat)
     hc = hclust(as.dist(mat),method="average")
-    print(hc)
     return(hc)
 
     })
 
   output$treePlot <- renderPlot({
 
-      ggdendro::ggdendrogram(graph())
+      ggdendro::ggdendrogram(graph(),  rotate = TRUE) + theme_minimal()
+      
     })
 
 
