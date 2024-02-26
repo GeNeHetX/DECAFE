@@ -90,10 +90,8 @@ output$gsea_Image <- renderImage({
 
 
 output$annot_Image <- renderImage({
-    # When input$n is 3, filename is ./images/image3.jpeg
     filename = "annot.png"
  
-    # Return a list containing the filename and alt text
     list(src = filename,
       width = 1400,
       alt = "overview RNA-Seq")
@@ -107,7 +105,6 @@ output$annot_Image <- renderImage({
   # Open annotation file
   annotFile <-reactive({
     req(input$'annot-file')
-
     annot = read.delim(input$'annot-file'$datapath, row.names = 1)
 
   })
@@ -136,8 +133,9 @@ output$annot_Image <- renderImage({
     geneannot =  geneannot[rownames(count),]
 
     if(input$coding){
-    count = count[which(geneannot$biotype == 'protein_coding'),]}
-    
+    count = count[which(geneannot$biotype == 'protein_coding'),]
+    geneannot = geneannot[which(geneannot$biotype == 'protein_coding'),]
+    }
     return(list(count=count, geneannot=geneannot))
   })
  
@@ -264,16 +262,17 @@ output$downloadUpsetPlot <- downloadHandler(
       contentType = "image/pdf",
       content = function(file) { 
         df = dataUpset()
+
+        pdf(file,onefile = F,width = 10,height = 8)
+
         upset_plot = upset(df, main.bar.color = '#262686',
                               sets.bar.color = '#262686', 
                               keep.order = TRUE,
                               text.scale = 2, 
                               shade.color = "#CDCDE6", 
                               sets.x.label = "Samples per Annotations", 
-                              mainbar.y.label = "Samples per intersections")     
-
-        pdf(file,onefile = F,width = 16,height = 8)
-        print(upset_plot)
+                              mainbar.y.label = "Samples per intersections")   
+        print(upset_plot)   
         dev.off()    
       })
   
@@ -292,12 +291,10 @@ output$downloadUpsetPlot <- downloadHandler(
   })
   
  
-
+# create annot filter by input group1 and 2
  annotationName <- reactive({
 
     annot = annotProcess()
-
-
     annot_name_cond1 = unique(annot$condshiny)[as.numeric(input$cond1)]
     annot_name_cond2 = unique(annot$condshiny)[as.numeric(input$cond2)]
     annot_gp1 = rownames(annot)[which(annot$condshiny == annot_name_cond1)]
@@ -309,11 +306,11 @@ output$downloadUpsetPlot <- downloadHandler(
       annotGP1 = annot_gp1,
       annotGP2 = annot_gp2
     )
-
     return(res)
 
   })
 
+# filter count and annot by annotationName
   intersectCond <-reactive({
     
     annot_name = annotationName()
@@ -390,6 +387,7 @@ countNormGenePlot <-reactive({
 
     norm1 = normalized_counts[as.numeric(input$geneTarget),intersect(annot_gp1, colnames(normalized_counts))]
     norm2 = normalized_counts[as.numeric(input$geneTarget),intersect(annot_gp2, colnames(normalized_counts))]
+
     sample = as.vector(c(colnames(norm1), colnames(norm2)))
     norm1_rm = as.vector(norm1)
     norm2_rm = as.vector(norm2)
@@ -715,7 +713,6 @@ countNormGenePlot <-reactive({
     tsPadj = as.numeric(input$ts_padj)
     tsFC = 1
 
-          
     table$diffexpressed = "NO"
     table$diffexpressed[table$log2FoldChange > tsFC & table$padj < tsPadj] = "UP"
     table$diffexpressed[table$log2FoldChange < -tsFC & table$padj < tsPadj] = "DOWN"
@@ -799,28 +796,30 @@ countNormGenePlot <-reactive({
   geneTargetChoice <- reactive({
     count= countFile()$count
     geneannot = countFile()$geneannot
-    gene = as.vector(geneannot[rownames(count),'GeneName'])
+    genename_list = as.vector(geneannot[rownames(count),'GeneName'])
 
-    name = gene
+    name = genename_list
     num  = c(1:length(name))
 
     choiceTable = data.frame(name, num)
     choix = setNames(as.numeric(choiceTable$num), choiceTable$name)
 
-    return(choix)
+    return(list(choix_indice=choix, choix_name=choiceTable$name[choix]))
 
   })
 
   output$geneTarget <-renderUI({  
     return(selectInput("geneTarget", label = "Choose gene target to observe",
-                  choices = geneTargetChoice()))
+                  choices = geneTargetChoice()$choix_indice))
   })
 
 # boxplot
  output$bpGeneTarget <- renderPlot({
     res = countNormGenePlot()
     res$count = as.numeric(res$count)
-    padj = resDeseq()$res[as.numeric(input$geneTarget),'padj']
+    
+    res$genetarget = geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
+    padj = resDeseq()$res$padj[which(resDeseq()$res$name == res$genetarget)]
    
     df_p_val <- data.frame(
       group1 = unique(res$condition)[1],
@@ -829,25 +828,63 @@ countNormGenePlot <-reactive({
       y.position = max(res$count)*1.1
     )
 
-
-  ggplot(res, aes(x=condition,y=count, color=condition)) + geom_boxplot() + 
-      rotate_x_text(45)+
+    ggplot(res, aes(x=condition,y=count, color=condition)) + geom_boxplot() + 
+      rotate_x_text(45)+ labs(x = "dispersion", y = paste0('count normDESq2 of target gene: ',res$genetarget))+
       scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
       scale_x_discrete(labels=NULL) +  theme_minimal() + theme(legend.position="right", legend.text=element_text(size=10)) + 
       stat_pvalue_manual(df_p_val, xmin = "group1", xmax = "group2", label = "label", y.position = "y.position") + 
-      stat_summary(fun.y=mean, geom="point", shape=20, size=7, color="#262686", fill="#262686")
-      # stat_compare_means(label = "p.signif"))
+      stat_summary(fun.y=mean, geom="point", shape=20, size=5, color="#262686", fill="#262686")
   })
 
   output$histGeneTarget <- renderPlot({
     res = countNormGenePlot()
-    
+    res$genetarget = geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
+
     ggplot(res, aes(x=count, color=condition)) +
       geom_histogram(fill="white", alpha=0.5, position="identity") + 
       theme_minimal() + theme(legend.position="top", legend.text=element_text(size=10)) +  
-      labs(x = "number of samples",y = 'count') + 
+      labs(x = "number of samples",y = paste0('count normDESq2 of target gene: ', res$genetarget)) + 
       scale_color_manual(values=c("lightcoral", '#4ab3d6'))
   })
+
+  
+output$downloadboxplot <- downloadHandler(
+      filename = function() {
+            plot_title <- 'boxplot'
+            paste(gsub(" ", "_", plot_title), "_", Sys.Date(), ".pdf", sep = "")
+      },
+      contentType = "application/pdf",
+      content = function(file) { 
+          res = countNormGenePlot()
+          res$genetarget = geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
+          res$count = as.numeric(res$count)
+          padj = resDeseq()$res$padj[which(resDeseq()$res$name == res$genetarget)]
+
+          df_p_val <- data.frame(
+          group1 = unique(res$condition)[1],
+          group2 = unique(res$condition)[2],
+          label = padj,
+          y.position = max(res$count)*1.1)
+
+          pdf(file, width = 16, height = 8)
+          boxplot = ggplot(res, aes(x=condition,y=count, color=condition)) + geom_boxplot() + 
+                    rotate_x_text(45)+ labs(x = "condition", y = paste0('count normDESq2 of target gene: ',res$genetarget)) +
+                    scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
+                    scale_x_discrete(labels=NULL) +  theme_minimal() + theme(legend.position="right", legend.text=element_text(size=10)) + 
+                    stat_pvalue_manual(df_p_val, xmin = "group1", xmax = "group2", label = "label", y.position = "y.position") + 
+                    stat_summary(fun.y=mean, geom="point", shape=20, size=5, color="#262686", fill="#262686")
+          
+          histo = ggplot(res, aes(x=count, color=condition)) +
+                  geom_histogram(fill="white", alpha=0.5, position="identity") + 
+                  theme_minimal() + theme(legend.position="top", legend.text=element_text(size=10)) +  
+                  labs(x = "number of samples",y = paste0('count normDESq2 of target gene: ',res$genetarget)) + 
+                  scale_color_manual(values=c("lightcoral", '#4ab3d6'))       
+        
+        print(histo)
+        print(boxplot)
+        dev.off()   
+      })
+
 
 
   # select collection pathway
