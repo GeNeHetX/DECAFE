@@ -524,6 +524,8 @@ pca_alldownload <- reactive({
             paste(gsub(" ", "_", 'PCA_allConditions'), "_", Sys.Date(), ".jpeg", sep = "")
       },
       content = function(file) {
+        showModal(modalDialog("Downloading PCA with all samples, wait", footer=NULL))
+        on.exit(removeModal())
         res.pca = pca_alldownload()
         pca_df = res.pca$pca_df
         eigen_value =res.pca$eig
@@ -543,7 +545,6 @@ pca_alldownload <- reactive({
 
         ggsave(file, plot, width = 8, height = 6, units = "in", dpi = 300, type = "jpeg")
       })
-
 
 
   sampleTopDim1 <- reactive({
