@@ -93,6 +93,7 @@ library(htmltools)
       .nav-tabs-custom>.nav-tabs>li.active {
         border-top-color: #262686;
       }
+        
               
     ")),htmlDependency(
       "font-awesome", "5.3.1", "www/shared/fontawesome", package = "shiny",
@@ -109,6 +110,7 @@ library(htmltools)
         $(".map_container").height(boxHeight);
         $("#pcaVST").height(boxHeight - 20);
         $("#volcano").height(boxHeight - 20);
+        $("#treePlot").height(boxHeight - 10);
       };
 
       // Set input$box_height when the connection is established
@@ -119,6 +121,13 @@ library(htmltools)
       // Refresh the box height on every window resize event    
       $(window).on("resize", function(){
         setHeight();
+
+      $(window).resize(function(event){
+      var w = $(this).width();
+      var h = $(this).height();
+      var obj = {width: w, height: h};
+      Shiny.onInputChange("pltChange", obj);
+    
       });
       ')),
 
@@ -456,9 +465,11 @@ library(htmltools)
       fluidRow(
       column(width=12,
         box(width=NULL,status='info',title = h1('Tree Pathways',icon('square-poll-horizontal')),solidHeader = TRUE, 
-          withSpinner(plotOutput("treePlot"), type = 8, color = "#CDCDE6", size = 1)
-        
-      ))
+          column(width = 3, sliderInput("k",label = "Number of different groups",
+                        min = 1, max =10, value = 3,step=1)), br(),
+          withSpinner(plotOutput("treePlot", inline=F, width="80%", height=1200), type = 8, color = "#CDCDE6", size = 1), 
+          style = 'display:block;width:100%;overflow-y: scroll')
+      )
       )),id="tabBox",
 
     width = 12

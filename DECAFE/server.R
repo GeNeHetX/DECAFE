@@ -13,7 +13,7 @@
 #   install.packages("BiocManager")
 # BiocManager::install(new_packages,update=FALSE)
 packages <- c("shiny", "DT", "shinydashboard", "shinycssloaders", "BiocManager", "ggplot2", "plotly", "reshape2", "factoextra", "FactoMineR", "devtools", "ggupset", 
-"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ComplexHeatmap", "ggdendro")
+"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ggdendro", "dendextend")
 new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
 if(length(new_packages)) {
   if (!requireNamespace("BiocManager", quietly = TRUE)) {
@@ -37,7 +37,8 @@ library(stringr)
 library(ggpubr)
 library(ggrepel)
 library(UpSetR)
-library(ComplexHeatmap)
+library(ggdendro)
+library(dendextend)
 
 
 # Define server logic required to draw a histogram
@@ -1089,10 +1090,13 @@ output$downloadboxplot <- downloadHandler(
     return(paste0('Opening url for : ', clickpath))
   })
 
+
+
   graph <- reactive({
     res=gsea()
     rownames(res) = res$pathway
-    name_pathway = res$pathway[1:30]
+    name_pathway = res$pathway[1:100]
+    collection = res$collection
     mat = data.frame(matrix(0,nrow=length(name_pathway),ncol=length(name_pathway)))
     colnames(mat) = name_pathway
     rownames(mat) = name_pathway
@@ -1106,17 +1110,17 @@ output$downloadboxplot <- downloadHandler(
       }
     }
     hc = hclust(as.dist(mat),method="average")
-    return(hc)
+    return(list(hc=hc, collection = collection))
 
     })
 
   output$treePlot <- renderPlot({
-
-      ggdendro::ggdendrogram(graph(),  rotate = TRUE) + theme_void()
+     
+      dend <- as.dendrogram(graph()$hc)
+      dend %>% set("branches_k_color", k = as.numeric(input$k)) %>% plot(horiz = TRUE)
       
+  
     })
-
-
 
   }
 
