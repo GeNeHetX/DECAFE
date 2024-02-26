@@ -346,7 +346,6 @@ output$downloadUpsetPlot <- downloadHandler(
 
     zero_threshold = as.numeric(input$zero_threshold)
     countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
-    print(table(annot_intersect$condshiny))
 
     dds = DESeqDataSetFromMatrix(countData = countfilt,
                                     colData = annot_intersect,
@@ -1093,34 +1092,35 @@ output$downloadboxplot <- downloadHandler(
 
 
   graph <- reactive({
-    res=gsea()
-    rownames(res) = res$pathway
-    name_pathway = res$pathway[1:100]
-    collection = res$collection
-    mat = data.frame(matrix(0,nrow=length(name_pathway),ncol=length(name_pathway)))
-    colnames(mat) = name_pathway
-    rownames(mat) = name_pathway
-    for( i in name_pathway){
-      for( j in name_pathway){
-        le_i = strsplit(res[i,'leadingEdge'], ',')[[1]]
-        le_j = strsplit(res[j,'leadingEdge'], ',')[[1]]
-        mat[i,j] = 1-(length(intersect(le_i,le_j)) / length(union(le_i,le_j)))
-
-
+    res <- gsea()
+    rownames(res) <- make.unique(res$pathway)
+    if (dim(res)[1]<101){
+      name_pathway <- rownames(res)[1:dim(res)[1]]}
+    else {
+    name_pathway <- rownames(res)[1:100]}
+    
+    collection <- res$collection
+    mat <- matrix(0, nrow = length(name_pathway), ncol = length(name_pathway))
+    dimnames(mat) <- list(name_pathway, name_pathway)
+    
+    for (i in name_pathway) {
+      for (j in name_pathway) {
+        le_i <- strsplit(res[i, 'leadingEdge'], ',')[[1]]
+        le_j <- strsplit(res[j, 'leadingEdge'], ',')[[1]]
+        mat[i, j] <- 1 - (length(intersect(le_i, le_j)) / length(union(le_i, le_j)))
       }
     }
-    hc = hclust(as.dist(mat),method="average")
-    return(list(hc=hc, collection = collection))
+    
+  hc <- hclust(as.dist(mat), method = "average")
+  return(list(hc = hc, collection = collection))
 
     })
 
   output$treePlot <- renderPlot({
-     
       dend <- as.dendrogram(graph()$hc)
       dend %>% set("branches_k_color", k = as.numeric(input$k)) %>% plot(horiz = TRUE)
-      
-  
-    })
+
+    }, width = 1200, height = 1300, res = 96)
 
   }
 

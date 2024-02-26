@@ -465,10 +465,8 @@ library(htmltools)
       fluidRow(
       column(width=12,
         box(width=NULL,status='info',title = h1('Tree Pathways',icon('square-poll-horizontal')),solidHeader = TRUE, 
-          column(width = 3, sliderInput("k",label = "Number of different groups",
-                        min = 1, max =10, value = 3,step=1)), br(),
-          withSpinner(plotOutput("treePlot", inline=F, width="80%", height=1200), type = 8, color = "#CDCDE6", size = 1), 
-          style = 'display:block;width:100%;overflow-y: scroll')
+          column(width = 3, sliderInput("k",label = "Number of different groups", min = 1, max =10, value = 3,step=1)),
+          withSpinner(plotOutput("treePlot", inline=F, width = 1200, height=1400), type = 8, color = "#CDCDE6", size = 1))#, style = 'display:block;width:100%;overflow-y: scroll')
       )
       )),id="tabBox",
 
