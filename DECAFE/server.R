@@ -39,6 +39,7 @@ library(ggrepel)
 library(UpSetR)
 library(ComplexHeatmap)
 
+
 # Define server logic required to draw a histogram
 function(input, output, session) {
 # HOME Page
@@ -219,47 +220,61 @@ output$annot_Image <- renderImage({
 
 # upset plot  
 dataUpset <- reactive({
-      annot2 = annotFile()
-      lab = apply(annot2,2,unique, simplify = FALSE)
-      tt= unlist(lapply(1:length(lab),function(x) lapply(1:length(lab[[x]]),function(y) paste0(names(lab)[x],'_',lab[[x]][y]))))
-      nb_cond= length(tt)
-      conditions=matrix(0,nrow=nrow(annot2),ncol=nb_cond)
-      conditions = as.data.frame(conditions)
-      colnames(conditions)= tt
-      
-      for(i in 1:nrow(annot2)){
-        for(j in 1: ncol(annot2)){
-            conditions[i,paste0(colnames(annot2)[j], '_', annot2[i,j])]<-1
-        }
-      }
-   
-      return(make_comb_mat(conditions))
+  annot2 <- annotFile()
+  lab <- apply(annot2, 2, unique, simplify = FALSE)
+  tt <- unlist(lapply(seq_along(lab), function(x) {
+    lapply(seq_along(lab[[x]]), function(y) paste0(names(lab)[x], '_', lab[[x]][y]))
+  }))
+  nb_cond <- length(tt)
+
+  conditions <- as.data.frame(matrix(0, nrow = nrow(annot2), ncol = nb_cond)) # Création d'une dataframe remplie de 0
+  colnames(conditions) <- tt
+  # Assignation de 1 à chaque élément correspondant dans la dataframe
+  for (i in 1:nrow(annot2)) {
+    for (j in 1:ncol(annot2)) {
+      conditions[i, paste0(names(annot2)[j], '_', annot2[i, j])] <- 1
+    }
+  }
+  # Vérifier si chaque ligne a au moins deux occurrences de 1
+  at_least_two_ones <- apply(conditions, 1, function(row) sum(row == 1) >= 2)
+  # Filtrer les lignes où cette condition est vraie
+  conditions <- conditions[at_least_two_ones, ]
+ 
+  return(conditions)
 })
 
 
 output$upsetPlot <- renderPlot({
   df = dataUpset()
-      UpSet(df,
-           left_annotation = upset_left_annotation(df,
-                                                    add_numbers = TRUE,
-                                                    gp = gpar(fill = "#262686"), 
-                                                    text.scale = 1.5 
-           ),
-           top_annotation = upset_top_annotation(df, add_numbers = TRUE),
-           comb_col = "#262686",
-           bg_col = c("#DEDEF6", "#EEEEEE"),
-           bg_pt_col = "#CCCCFF")
+  df$numbers <- rowSums(df)
+  upset(df, main.bar.color = '#262686',
+            sets.bar.color = '#262686', 
+            keep.order = TRUE,
+            text.scale = 2,
+            shade.color = "#CDCDE6", 
+            sets.x.label = "Samples per Annotations", 
+            mainbar.y.label = "Samples per intersections" ) 
 })
 
 output$downloadUpsetPlot <- downloadHandler(
       filename = function() {
             plot_title <- 'overview'
-            paste(gsub(" ", "_", plot_title), "_", Sys.Date(), ".jpeg", sep = "")
+            paste(gsub(" ", "_", plot_title), "_", Sys.Date(), ".pdf", sep = "")
       },
-      content = function(file) {
-        ggsave(filename = file,
-          plot = input$upsetPlot,
-          width = 8, height = 6, units = "in", dpi = 300, type = "jpeg")
+      contentType = "image/pdf",
+      content = function(file) { 
+        df = dataUpset()
+        upset_plot = upset(df, main.bar.color = '#262686',
+                              sets.bar.color = '#262686', 
+                              keep.order = TRUE,
+                              text.scale = 2, 
+                              shade.color = "#CDCDE6", 
+                              sets.x.label = "Samples per Annotations", 
+                              mainbar.y.label = "Samples per intersections")     
+
+        pdf(file,onefile = F,width = 16,height = 8)
+        print(upset_plot)
+        dev.off()    
       })
   
 
