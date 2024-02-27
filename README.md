@@ -32,7 +32,12 @@ If R is installed, you can launch the application directly via a command termina
 
 With internet : 
 
-1- Run this command in a R terminal
+1 - First-time use DECAFE
+```bash
+    Rscript -e 'install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT"))
+```
+
+2- Then, run this command in a R terminal
 ```bash
    shiny::runGitHub('DECAFE', 'GeNeHetX', subdir='DECAFE' ,ref='main')
 ```
