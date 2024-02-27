@@ -1094,11 +1094,13 @@ output$downloadboxplot <- downloadHandler(
   graph <- reactive({
     res <- gsea()
     rownames(res) <- make.unique(res$pathway)
-    if (dim(res)[1]<101){
-      name_pathway <- rownames(res)[1:dim(res)[1]]}
-    else {
-    name_pathway <- rownames(res)[1:100]}
     
+    res_filtered <- res[res$pval <= 0.01, ]
+      if (nrow(res_filtered) < 100) {
+        name_pathway <- rownames(res_filtered)
+    } else {
+        name_pathway <- rownames(res_filtered)[1:100]
+    }   
     collection <- res$collection
     mat <- matrix(0, nrow = length(name_pathway), ncol = length(name_pathway))
     dimnames(mat) <- list(name_pathway, name_pathway)
@@ -1117,7 +1119,8 @@ output$downloadboxplot <- downloadHandler(
     })
 
   output$treePlot <- renderPlot({
-      dend <- as.dendrogram(graph()$hc)
+      dend <- as.dendrogram(graph()$hc) 
+      par(cex=0.6, mar=c(6, 1, 1, 60))
       dend %>% set("branches_k_color", k = as.numeric(input$k)) %>% plot(horiz = TRUE)
 
     }, width = 1200, height = 1300, res = 96)
