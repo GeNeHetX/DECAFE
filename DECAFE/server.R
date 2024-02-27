@@ -107,7 +107,7 @@ output$annot_Image <- renderImage({
   annotFile <-reactive({
     req(input$'annot-file')
     annot = read.delim(input$'annot-file'$datapath, row.names = 1)
-
+    return(annot)
   })
   
   # Format annotation matrix
@@ -234,11 +234,6 @@ dataUpset <- reactive({
       conditions[i, paste0(names(annot2)[j], '_', annot2[i, j])] <- 1
     }
   }
-  # Vérifier si chaque ligne a au moins deux occurrences de 1
-  at_least_two_ones <- apply(conditions, 1, function(row) sum(row == 1) >= 2)
-  # Filtrer les lignes où cette condition est vraie
-  conditions <- conditions[at_least_two_ones, ]
- 
   return(conditions)
 })
 
@@ -866,9 +861,10 @@ pca_alldownload <- reactive({
 
   # Boxplot Panel
   geneTargetChoice <- reactive({
-    count= countFile()$count
-    geneannot = countFile()$geneannot
-    genename_list = as.vector(geneannot[rownames(count),'GeneName'])
+    # count= countFile()$count
+    # geneannot = countFile()$geneannot
+    # genename_list = as.vector(geneannot[rownames(count),'GeneName'])
+    genename_list = as.vector(resDeseq()$res$name)
 
     name = genename_list
     num  = c(1:length(name))

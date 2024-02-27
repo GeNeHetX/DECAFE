@@ -364,7 +364,7 @@ library(htmltools)
                   choices = list("Dim1" = 1, "Dim2" = 2,"Dim3" = 3, "Dim4" =4, "Dim5" = 5),selected = 1),
               selectInput("dim2", label = "Choose your second PCA dimension",
                   choices = list( "Dim2" = 2,"Dim3" = 3, "Dim4" =4, "Dim5" = 5),selected = 2),
-              downloadButton("downloadPCAPlot", "Download PCAplot with all conditions", icon('download')),
+              downloadButton("downloadPCAPlot", "Download PCA plot with all conditions", icon('download')),
           
             ),
             column(width=1),
