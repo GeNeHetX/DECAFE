@@ -166,7 +166,7 @@ output$annot_Image <- renderImage({
         buttons = list(
           list(extend = "copy", text = "Copy", filename = "annot",
                exportOptions = list(
-                 modifier = list(page = "all")
+                 modifier = list(page = "current")
                )
           ),
           list(extend = "csv", text = "CSV", filename = "annot",
@@ -198,7 +198,7 @@ output$annot_Image <- renderImage({
         buttons = list(
           list(extend = "copy", text = "Copy", filename = "annot",
                exportOptions = list(
-                 modifier = list(page = "all")
+                 modifier = list(page = "current")
                )
           ),
           list(extend = "csv", text = "CSV", filename = "annot",
