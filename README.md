@@ -32,13 +32,13 @@ If R is installed, you can launch the application directly via a command termina
 
 With internet : 
 
-1 - First-time use DECAFE
-```bash
-    Rscript -e 'install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT"))
+1 - First-time use DECAFE, run this command in a R terminal
+```R
+    install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT"))
 ```
 
-2- Then, run this command in a R terminal
-```bash
+2- Then, run this command :
+```R
    shiny::runGitHub('DECAFE', 'GeNeHetX', subdir='DECAFE' ,ref='main')
 ```
 ps : you can precise the version thanks to ref='', for example : ref='v.1.0.0'
@@ -54,19 +54,16 @@ Without internet, (use just to download and run the following commands without a
 
 2- Open an R terminal or Rstudio where the DECAFE codes are stored
      
-3- Use the following commands to launch the shiny application.
-
-4- First-time use DECAFE
-```bash
-  cd DECAFE/
-  Rscript -e 'install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT")); shiny::runApp()'
+- First-time use DECAFE
+```R
+  install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT"))
+  shiny::runApp()
 ```
 or
 
-4- Use DECAFE 
-```bash
-  cd DECAFE/
-  Rscript -e 'shiny::runApp()'
+- Use DECAFE 
+```R
+  shiny::runApp()
 ```
 <br>
 
