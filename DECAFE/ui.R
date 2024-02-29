@@ -213,7 +213,10 @@ library(htmltools)
                        Its main objective is to transform a set of correlated variables into a set of uncorrelated variables, called principal components. 
                        These components are ordered based on the importance of their contribution to the total variability of the data. 
                        PCA is often used to reduce the dimensionality of data by selecting the most significant principal components. 
-                       This allows for visualizing the data in a lower-dimensional space, making interpretation and analysis easier.", align="justify"),br(),
+                       This allows for visualizing the data in a lower-dimensional space, making interpretation and analysis easier.", br(),br(),
+                            
+                      strong("Tips:"),"PCA reduces the dimensions of your data. These compact dimensions will group your samples by similarity. The idea here is to see if your samples 
+                      separate according to a new dimension. If so, you'll have the contribution value of each sample and gene in the new dimension and know which ones contribute most to your dimension.", align="justify"),br(),br(),
                         column(width = 12, align = "center",
                         imageOutput("pca_Image"))), 
 

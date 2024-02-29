@@ -896,7 +896,7 @@ pca_alldownload <- reactive({
       y.position = max(res$count)*1.1
     )
 
-    ggplot(res, aes(x=condition,y=count, color=condition)) + geom_boxplot() + 
+    ggplot(res, aes(x=condition,y=count, color=condition)) + geom_boxplot() +
       rotate_x_text(45)+ labs(x = "dispersion", y = paste0('count normDESq2 of target gene: ',res$genetarget))+
       scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
       scale_x_discrete(labels=NULL) +  theme_minimal() + theme(legend.position="right", legend.text=element_text(size=10)) + 
@@ -911,7 +911,7 @@ pca_alldownload <- reactive({
     ggplot(res, aes(x=count, color=condition)) +
       geom_histogram(fill="white", alpha=0.5, position="identity") + 
       theme_minimal() + theme(legend.position="top", legend.text=element_text(size=10)) +  
-      labs(x = "number of samples",y = paste0('count normDESq2 of target gene: ', res$genetarget)) + 
+      labs(x = paste0('count normDESq2 of target gene: ',res$genetarget),y = "number of samples") + 
       scale_color_manual(values=c("lightcoral", '#4ab3d6'))
   })
 
@@ -935,7 +935,7 @@ output$downloadboxplot <- downloadHandler(
           y.position = max(res$count)*1.1)
 
           pdf(file, width = 10, height = 8)
-          boxplot = ggplot(res, aes(x=condition,y=count, color=condition)) + geom_boxplot() + 
+          boxplot = ggplot(res, aes(x=condition,y=count, color=condition)) + geom_boxplot() +
                     rotate_x_text(45)+ labs(x = "condition", y = paste0('count normDESq2 of target gene: ',res$genetarget)) +
                     scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
                     scale_x_discrete(labels=NULL) +  theme_minimal() + theme(legend.position="right", legend.text=element_text(size=10)) + 
@@ -945,7 +945,7 @@ output$downloadboxplot <- downloadHandler(
           histo = ggplot(res, aes(x=count, color=condition)) +
                   geom_histogram(fill="white", alpha=0.5, position="identity") + 
                   theme_minimal() + theme(legend.position="top", legend.text=element_text(size=10)) +  
-                  labs(x = "number of samples",y = paste0('count normDESq2 of target gene: ',res$genetarget)) + 
+                  labs(x = paste0('count normDESq2 of target gene: ',res$genetarget),y = "number of samples") + 
                   scale_color_manual(values=c("lightcoral", '#4ab3d6'))       
         
         print(histo)
