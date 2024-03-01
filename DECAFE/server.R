@@ -382,13 +382,9 @@ countNormGenePlot <-reactive({
 
     norm1 = normalized_counts[as.numeric(input$geneTarget),intersect(annot_gp1, colnames(normalized_counts))]
     norm2 = normalized_counts[as.numeric(input$geneTarget),intersect(annot_gp2, colnames(normalized_counts))]
-
-    sample = as.vector(c(colnames(norm1), colnames(norm2)))
+    
     norm1_rm = as.vector(norm1)
     norm2_rm = as.vector(norm2)
-
-    count = c(norm1_rm, norm2_rm)
-    condition = c(rep(annot_name_cond1,length(norm1_rm)), rep(annot_name_cond2,length(norm2_rm)))
 
     res = data.frame(
       count = c(norm1_rm, norm2_rm),
@@ -766,7 +762,7 @@ pca_alldownload <- reactive({
     removeNotification(notif)
     table$name = as.vector(geneannot[rownames(table), 'GeneName'])
     table = as.data.frame(table)
-    table = table[order(abs(table$stat),decreasing=TRUE),]
+    # table = table[order(abs(table$stat),decreasing=TRUE),]
     table = table[, c(7, 1:6)]
      
 
@@ -832,8 +828,10 @@ pca_alldownload <- reactive({
 
 
   output$degTable <- DT::renderDT(server = FALSE, {
+    table = resDeseq()$res
+    table = table[order(abs(table$stat),decreasing=TRUE),]
     DT::datatable(
-      resDeseq()$res,
+      table,
       extensions = c("Buttons"),
       options = list(
         dom = 'Bfrtip', 
@@ -887,6 +885,7 @@ pca_alldownload <- reactive({
     res$count = as.numeric(res$count)
     
     res$genetarget = geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
+    
     padj = resDeseq()$res$padj[which(resDeseq()$res$name == res$genetarget)]
    
     df_p_val <- data.frame(
@@ -1122,6 +1121,3 @@ output$downloadboxplot <- downloadHandler(
     }, width = 1200, height = 1300, res = 96)
 
   }
-
-
-
