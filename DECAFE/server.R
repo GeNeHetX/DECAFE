@@ -341,10 +341,16 @@ output$downloadUpsetPlot <- downloadHandler(
 
     zero_threshold = as.numeric(input$zero_threshold)
     countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
+    annot_intersect$condshiny = as.factor(annot_intersect$condshiny)
+    A = as.character(unique(annot_intersect$condshiny)[1])
+    B = as.character(unique(annot_intersect$condshiny)[2])
+    annot_intersect$condshiny <- factor(annot_intersect$condshiny, levels = c(A, B))
+    print(A)
+    print(B)
 
     dds = DESeqDataSetFromMatrix(countData = countfilt,
                                     colData = annot_intersect,
-                                    design = ~condshiny)
+                                    design = ~ condshiny)
 
     dds = dds[rowSums(counts(dds)) >= 10]
     removeNotification(notif)
@@ -885,7 +891,6 @@ pca_alldownload <- reactive({
     res$count = as.numeric(res$count)
     
     res$genetarget = geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
-    
     padj = resDeseq()$res$padj[which(resDeseq()$res$name == res$genetarget)]
    
     df_p_val <- data.frame(
