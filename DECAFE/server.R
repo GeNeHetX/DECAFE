@@ -133,10 +133,16 @@ output$annot_Image <- renderImage({
     geneannot = readRDS(genefile)
     geneannot =  geneannot[rownames(count),]
 
-    if(input$coding){
-    count = count[which(geneannot$biotype == 'protein_coding'),]
-    geneannot = geneannot[which(geneannot$biotype == 'protein_coding'),]
+    if (input$coding) {
+    count <- count[geneannot$biotype == 'protein_coding', ]
+    geneannot <- geneannot[geneannot$biotype == 'protein_coding', ]
     }
+
+    # if (input$sex) {
+    #   count <- count[!grepl("^(Y|X|MT)$", geneannot$seqname), ]
+    #   geneannot <- geneannot[!grepl("^(Y|X|MT)$", geneannot$seqname), ]
+    # }
+    
     return(list(count=count, geneannot=geneannot))
   })
  
@@ -341,14 +347,15 @@ output$downloadUpsetPlot <- downloadHandler(
 
     zero_threshold = as.numeric(input$zero_threshold)
     countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
+
     annot_intersect$condshiny = as.factor(annot_intersect$condshiny)
     A = as.character(unique(annot_intersect$condshiny)[1])
     B = as.character(unique(annot_intersect$condshiny)[2])
     annot_intersect$condshiny <- factor(annot_intersect$condshiny, levels = c(A, B))
-    print(A)
-    print(B)
+    # print(A)
+    # print(B)
 
-    dds = DESeqDataSetFromMatrix(countData = countfilt,
+    dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
                                     colData = annot_intersect,
                                     design = ~ condshiny)
 
@@ -815,6 +822,7 @@ pca_alldownload <- reactive({
         group2 <- annotationName()$annotName2
 
         table = resDeseq()$res
+        table = table[order(abs(table$stat),decreasing=TRUE),]
         tsPadj = as.numeric(input$ts_padj)
         tsFC = 1
         table$diffexpressed = "NO"

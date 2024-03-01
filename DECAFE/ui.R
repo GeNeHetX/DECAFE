@@ -319,7 +319,8 @@ library(htmltools)
             ),
             column(width = 3,
               selectInput('org', 'Choose your species', choices = list(Human='hs', Mouse='mm')),#, Other='oth'))
-              radioButtons('coding', 'Use only coding genes', choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = FALSE)
+              radioButtons('coding', 'Use only coding genes', choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = FALSE),
+              # radioButtons('sex', 'Independently analyze sex genes', choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = FALSE)
               # conditionalPanel("input.org == 'oth'", fileInput('genefile', 'Load Gene Annotation'))
             ),
             
@@ -365,6 +366,7 @@ library(htmltools)
         numericInput("nb_gene", "Number of most variable Gene", min = 1, step = 1, value = 1000),
              selectInput("dim1", label = "Choose your first PCA dimension",
                   choices = list("Dim1" = 1, "Dim2" = 2,"Dim3" = 3, "Dim4" =4, "Dim5" = 5),selected = 1),
+              # p(icon('circle-info'),paste0(" You have ",dim_matrix, " genes in your matrix")),
               selectInput("dim2", label = "Choose your second PCA dimension",
                   choices = list( "Dim2" = 2,"Dim3" = 3, "Dim4" =4, "Dim5" = 5),selected = 2),
               downloadButton("downloadPCAPlot", "Download PCA plot with all conditions", icon('download')),
