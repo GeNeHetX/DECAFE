@@ -106,7 +106,14 @@ output$annot_Image <- renderImage({
   # Open annotation file
   annotFile <-reactive({
     req(input$'annot-file')
-    annot = read.delim(input$'annot-file'$datapath, row.names = 1)
+      annot = read.delim(input$'annot-file'$datapath, row.names = 1)
+      count = countFile()$count
+    if(length(intersect(rownames(annot), colnames(count)))==0)
+    showModal(modalDialog(
+        title = "Invalid input",
+        "The intersection between colnames of count matrix and rownames of annotation is empty!",
+        easyClose = TRUE
+      ))
     return(annot)
   })
   
@@ -114,6 +121,7 @@ output$annot_Image <- renderImage({
   annotProcess <- reactive({
     annot = annotFile()
     annot$condshiny = apply(annot, 1, function(x) paste(colnames(annot),"_", x, collapse = ','))
+    
     return(annot)
   })
 
@@ -125,6 +133,12 @@ output$annot_Image <- renderImage({
     notif <<- showNotification("Opening count matrix in progress", duration = 0)
     count = read.delim(input$file$datapath, sep='\t', row.names = 1, header=T,as.is=T)
     removeNotification(notif)
+      if(!is.integer(count))
+    showModal(modalDialog(
+        title = "Invalid input",
+        "The  count matrix must not be normalized, only integer are accepted!",
+        easyClose = TRUE
+      ))
 
     genefile = switch(input$org, 
     'hs' = 'humanGeneannot.rds',
@@ -193,7 +207,7 @@ output$annot_Image <- renderImage({
 
   output$counthead <- DT::renderDT(server = FALSE, {
     data = countFile()$count
-    data = data[1:10, 1:ncol(data)]
+    data = data[1:10, ]
 
     DT::datatable(
       data,
