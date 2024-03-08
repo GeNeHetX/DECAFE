@@ -358,7 +358,25 @@ library(htmltools)
                   )
            )
          )
-),
+    ),
+    tabPanel("Heatmap", height = 1000,
+          fluidRow(
+        box(class = "map_container",width=12,status='success',title = h2('Heatmap of normalize count',icon('chart-simple')),solidHeader = TRUE,
+            column(width=3,
+        numericInput("nb_gene_heat", "Number of most variable Gene", min = 10, step = 1, max = 1000,value = 1000),
+             selectInput("data_heat", label = "Choose sample to visualize",
+                  choices = list("All" = "all", "Just the two conditions" = "cond"),selected = "cond"),
+              
+              downloadButton("downloadHeatmap", "Download heatmap", icon('download')),
+          
+            ),
+            column(width=1),
+            column(width=8, 
+          withSpinner(plotOutput("heatMap"), type = 8, color = "#CDCDE6", size = 1)
+        )
+        )),
+        
+    ),
     tabPanel("PCA",
         fluidRow(
         box(class = "map_container",width=12,status='success',title = h2('Graph of PCA',icon('chart-simple')),solidHeader = TRUE,

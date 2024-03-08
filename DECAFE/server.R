@@ -352,8 +352,7 @@ output$downloadUpsetPlot <- downloadHandler(
     A = as.character(unique(annot_intersect$condshiny)[1])
     B = as.character(unique(annot_intersect$condshiny)[2])
     annot_intersect$condshiny <- factor(annot_intersect$condshiny, levels = c(A, B))
-    # print(A)
-    # print(B)
+
 
     dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
                                     colData = annot_intersect,
@@ -364,7 +363,6 @@ output$downloadUpsetPlot <- downloadHandler(
     return(dds)
   })
 
-
   vstNormalization_cond <- reactive({
     dds = DDS_cond()
     notif <<- showNotification("VST", duration = 0)
@@ -374,6 +372,34 @@ output$downloadUpsetPlot <- downloadHandler(
     return(normalized_counts)
 
   })
+
+  vstAll <-reactive({
+
+    count = countFile()$count
+    annot = annotProcess()
+
+
+    count_intersect = count[, intersect(rownames(annot), colnames(count))]
+    annot_intersect= as.data.frame(annot[intersect(rownames(annot), colnames(count)), ])
+
+    zero_threshold = as.numeric(input$zero_threshold)
+    countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
+
+    dds = DESeqDataSetFromMatrix(countData = countfilt,
+                                    colData = annot_intersect,
+                                    design = ~condshiny)
+    dds = dds[rowSums(counts(dds)) >= 10]
+
+     notif <<- showNotification("VST", duration = 0)
+    normalized_counts =  assay(vst(dds))
+    #normalized_counts = t(scale(t(normalized_counts), scale=FALSE)) # Normalization per gene 
+    removeNotification(notif)
+    return(list(normalized_counts=normalized_counts, annot_intersect=annot_intersect, count_intersect=count_intersect))
+
+
+    })
+
+
 
   desqNormalization_cond <- reactive({
     dds = DDS_cond()
@@ -405,6 +431,110 @@ countNormGenePlot <-reactive({
     )
     return(res)
   })
+
+# Heatmap 
+heatmapData <- reactive({
+
+  if(input$data_heat =="all"){
+    normalized_counts =  vstAll()$normalized_counts
+    condition = vstAll()$annot_intersect$condshiny
+    normalized_counts = t(scale(t(normalized_counts), scale=FALSE)) # Normalization per gene 
+    gvar = apply(normalized_counts, 1, sd) 
+
+
+
+
+  }
+  else{
+    normalized_counts = vstNormalization_cond()
+    intersect = intersectCond()
+    count_intersect = intersect$count
+    annot_intersect= intersect$annot
+    condition = annot_intersect$condshiny
+    normalized_counts = t(scale(t(normalized_counts), scale=FALSE)) # Normalization per gene 
+    gvar = apply(normalized_counts, 1, sd) 
+    
+
+  }
+  return(list(gvar=gvar, normalized_counts = normalized_counts,condition=condition))
+
+
+
+})
+
+output$heatMap <- renderPlot({
+
+  data_heatmap = heatmapData()
+  gvar = data_heatmap$gvar
+  normalized_counts = data_heatmap$normalized_counts
+  condition = data_heatmap$condition
+  mostvargenes = order(gvar, decreasing=TRUE)[1:as.numeric(input$nb_gene_heat)]
+  
+  palette.annot =colorRampPalette(c("#CDCDE6", '#262686'))
+  condition.colors = palette.annot(length(unique(condition)))
+  
+  
+
+  gplots::heatmap.2(x=normalized_counts[mostvargenes,], 
+    dendrogram="column",
+    srtCol=45,
+    col = "bluered",
+    scale="none",
+    trace="none",
+    ColSideColors=condition.colors[ as.factor(condition)],
+    labRow=FALSE,
+    #ylab="Genes",
+    xlab=NULL,margins = c(15, 3),
+  )
+
+  legend("left",
+    legend=paste0(sapply(strsplit(unique(condition),','),paste,collapse = '\n'),'\n'),
+    fill=condition.colors[ unique(as.factor(condition))], 
+    cex=0.7
+  )
+
+
+
+})
+output$downloadHeatmap <- downloadHandler(
+      filename = function() {
+            plot_title <- 'heatmap'
+            paste(gsub(" ", "_", plot_title), "_", Sys.Date(), ".pdf", sep = "")
+      },
+      contentType = "application/pdf",
+      content = function(file) { 
+          
+data_heatmap = heatmapData()
+  gvar = data_heatmap$gvar
+  normalized_counts = data_heatmap$normalized_counts
+  condition = data_heatmap$condition
+  mostvargenes = order(gvar, decreasing=TRUE)[1:as.numeric(input$nb_gene_heat)]
+  
+  palette.annot =colorRampPalette(c("#CDCDE6", '#262686'))
+  condition.colors = palette.annot(length(unique(condition)))
+
+  
+          pdf(file, width = 10, height = 8)
+          gplots::heatmap.2(x=normalized_counts[mostvargenes,], 
+    dendrogram="column",
+    srtCol=45,
+    col = "bluered",
+    scale="none",
+    trace="none",
+    ColSideColors=condition.colors[ as.factor(condition)],
+    labRow=FALSE,
+    #ylab="Genes",
+    xlab=NULL,margins = c(15, 3),
+  )
+
+  legend("left",
+    legend=paste0(sapply(strsplit(unique(condition),','),paste,collapse = '\n'),'\n'),
+    fill=condition.colors[ unique(as.factor(condition))], 
+    cex=0.7
+  )
+        dev.off()   
+      })
+
 
 
 #PCA
@@ -479,22 +609,12 @@ countNormGenePlot <-reactive({
   })
 
 
+  
 pca_alldownload <- reactive({
-    count = countFile()$count
-    annot = annotProcess()
-
-    count_intersect = count[, intersect(rownames(annot), colnames(count))]
-    annot_intersect= as.data.frame(annot[intersect(rownames(annot), colnames(count)), ])
-
-    zero_threshold = as.numeric(input$zero_threshold)
-    countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
-
-    dds = DESeqDataSetFromMatrix(countData = countfilt,
-                                    colData = annot_intersect,
-                                    design = ~condshiny)
-    dds = dds[rowSums(counts(dds)) >= 10]
-
-    normalized_counts =  assay(vst(dds))
+    
+    normalized_counts =  vstAll()$normalized_counts
+    annot_intersect = vstAll()$annot_intersect
+    count_intersect = vstAll()$count_intersect
     normalized_counts = t(scale(t(normalized_counts), scale=FALSE)) # Normalization per gene 
     gvar = apply(normalized_counts, 1, sd) 
     mostvargenes = order(gvar, decreasing=TRUE)[1:as.numeric(input$nb_gene)]
