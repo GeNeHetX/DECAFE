@@ -1,3 +1,3 @@
 DECAFE © 2024 by Audrey Beaufils, Camille Pignolet is licensed under CC BY-NC 4.0. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc/4.0/
 
-**Process method for RNA sequencing output** : Reads are aligned with the reference genome ensemblv107_GRCh38 by STAR and gene expression counts obtained with FeatureCount. 
+Process method for RNA sequencing output : Reads are aligned with the reference genome ensemblv107_GRCh38 by STAR and gene expression counts obtained with FeatureCount. 
