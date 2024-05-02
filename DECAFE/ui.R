@@ -326,7 +326,8 @@ library(htmltools)
             
             column(width = 3,
               numericInput('nb_thread', 'Provide the number of CPU to use', 1, min = 1, max = (parallel::detectCores()-1)), 
-              p(icon('circle-info'),paste0(" You have ",parallel::detectCores(), " CPU"))
+              p(icon('circle-info'),paste0(" You have ",parallel::detectCores(), " CPU")),
+              radioButtons('format', 'Choose saving format', choices = list("PNG/PDF"='png', "SVG (modifiable)"='svg'), inline=TRUE, selected = 'svg')
               
             ),
             column(width =3,

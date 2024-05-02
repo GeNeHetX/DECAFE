@@ -134,7 +134,7 @@ output$annot_Image <- renderImage({
     notif <<- showNotification("Opening count matrix in progress", duration = 0)
     count = read.delim(input$file$datapath, sep='\t', row.names = 1, header=T,as.is=T)
     removeNotification(notif)
-      if(!is.integer(count))
+      if(!all(as.matrix(count) == as.integer(as.matrix(count))))
     showModal(modalDialog(
         title = "Invalid input",
         "The  count matrix must not be normalized, only integer are accepted!",
@@ -274,13 +274,19 @@ output$upsetPlot <- renderPlot({
 output$downloadUpsetPlot <- downloadHandler(
       filename = function() {
             plot_title <- 'overview'
-            paste(gsub(" ", "_", plot_title), "_", Sys.Date(), ".pdf", sep = "")
+            format = input$format
+            format = if(format=='png') 'pdf' else format
+            paste(gsub(" ", "_", plot_title), "_", Sys.Date(), ".", format, sep = "")
       },
-      contentType = "image/pdf",
+      contentType = paste0("image/",input$format),
       content = function(file) { 
         df = dataUpset()
 
-        pdf(file,onefile = F,width = 15,height = 8)
+        if(input$format == 'png')
+          pdf(file,onefile = F,width = 15,height = 8)
+        else
+          svg(file,onefile = F,width = 15,height = 8) 
+
 
         upset_plot = upset(df, main.bar.color = '#262686',
                               sets.bar.color = '#262686', 
@@ -514,7 +520,9 @@ output$heatMap <- renderPlot({
 output$downloadHeatmap <- downloadHandler(
       filename = function() {
             plot_title <- 'heatmap'
-            paste(gsub(" ", "_", plot_title), "_", Sys.Date(), ".pdf", sep = "")
+            format = input$format
+            format = if(format=='png') 'pdf' else format
+            paste(gsub(" ", "_", plot_title), "_", Sys.Date(), ".", format, sep = "")
       },
       contentType = "application/pdf",
       content = function(file) { 
@@ -528,9 +536,13 @@ data_heatmap = heatmapData()
   palette.annot =colorRampPalette(c("#CDCDE6", '#262686'))
   condition.colors = palette.annot(length(unique(condition)))
 
+  if(input$format == 'png')
+    pdf(file,onefile = F,width = 10,height = 8)
+  else
+    svg(file,onefile = F,width = 10,height = 8) 
   
-          pdf(file, width = 10, height = 8)
-          gplots::heatmap.2(x=normalized_counts[mostvargenes,], 
+
+  gplots::heatmap.2(x=normalized_counts[mostvargenes,], 
     dendrogram="column",
     srtCol=45,
     col = "bluered",
@@ -620,7 +632,7 @@ data_heatmap = heatmapData()
 
   output$pcaVST <- renderPlotly({ 
     ggplotly(pcaGraph()) %>% 
-      layout(legend = list(orientation = 'h', x = 0.45, y = 1.1)) 
+      layout(legend = list(orientation = 'h', x = 0.45, y = 1.1)) %>% config(toImageButtonOptions=list(format=input$format, filename=paste0("PCA", "_", Sys.Date())))
   })
 
 
@@ -660,7 +672,7 @@ pca_alldownload <- reactive({
 
   output$downloadPCAPlot <- downloadHandler(
       filename = function() {
-            paste(gsub(" ", "_", 'PCA_allConditions'), "_", Sys.Date(), ".jpeg", sep = "")
+            paste(gsub(" ", "_", 'PCA_allConditions'), "_", Sys.Date(), ".",input$format, sep = "")
       },
       content = function(file) {
         showModal(modalDialog("Downloading PCA with all samples, wait", footer=NULL))
@@ -682,7 +694,7 @@ pca_alldownload <- reactive({
           geom_vline(xintercept=0, linetype="dashed", color = "grey") +
           geom_hline(yintercept=0, linetype="dashed", color = "grey")
 
-        ggsave(file, plot, width = 8, height = 6, units = "in", dpi = 300, type = "jpeg")
+        ggsave(file, plot, width = 8, height = 6, units = "in", dpi = 300)
       })
 
 
@@ -943,14 +955,14 @@ pca_alldownload <- reactive({
     return(plot)
   })
 
-  output$volcano <- renderPlotly({ ggplotly(volcano()) })
+  output$volcano <- renderPlotly({ ggplotly(volcano())%>% config(toImageButtonOptions=list(format=input$format, filename=paste0("Volcano", "_", Sys.Date()))) })
 
   output$downloadVolcanoPlot <- downloadHandler(
       filename = function() {
             group1 <- annotationName()$annotName1
             group2 <- annotationName()$annotName2
             plot_title <- paste(group1, "vs", group2)
-            paste(gsub(" ", "_", plot_title), "_", Sys.Date(), ".jpeg", sep = "")
+            paste(gsub(" ", "_", plot_title), "_", Sys.Date(), ".",input$format, sep = "")
       },
       content = function(file) {
         group1 <- annotationName()$annotName1
@@ -963,16 +975,16 @@ pca_alldownload <- reactive({
         table$diffexpressed = "NO"
         table$diffexpressed[table$log2FoldChange > tsFC & table$padj < tsPadj] = "UP"
         table$diffexpressed[table$log2FoldChange < -tsFC & table$padj < tsPadj] = "DOWN"
-        volcanoplot = volcano()
-        
-        ggsave(file, volcanoplot + ggtitle(paste(group1, "vs", group2)) +
+        volcanoplot = volcano()  + ggtitle(paste(group1, "vs", group2)) +
         geom_text_repel(
                   data = head(as.data.frame(table[which(table$diffexpressed != "NO"),]), 15),
                   aes(label = name),
                   box.padding = 0.5, point.padding = 0.1,
                   segment.color = 'grey', segment.size = 0.2,
                   nudge_y = 0.2
-                ),  width = 8, height = 6, units = "in", dpi = 300, type = "jpeg")
+                )
+        print(file)
+        ggsave(file, volcanoplot,  width = 8, height = 6, units = "in", dpi = 300)
       })
 
 
@@ -1066,7 +1078,9 @@ pca_alldownload <- reactive({
 output$downloadboxplot <- downloadHandler(
       filename = function() {
             plot_title <- 'boxplot'
-            paste(gsub(" ", "_", plot_title), "_", Sys.Date(), ".pdf", sep = "")
+            format = input$format
+            format = if(format=='png') 'pdf' else format
+            paste(gsub(" ", "_", plot_title), "_", Sys.Date(), ".", format, sep = "")
       },
       contentType = "application/pdf",
       content = function(file) { 
@@ -1081,7 +1095,7 @@ output$downloadboxplot <- downloadHandler(
           label = padj,
           y.position = max(res$count)*1.1)
 
-          pdf(file, width = 10, height = 8)
+
           boxplot = ggplot(res, aes(x=condition,y=count, color=condition)) + geom_boxplot() +
                     rotate_x_text(45)+ labs(x = "condition", y = paste0('count normDESq2 of target gene: ',res$genetarget)) +
                     scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
@@ -1093,11 +1107,20 @@ output$downloadboxplot <- downloadHandler(
                   geom_histogram(fill="white", alpha=0.5, position="identity") + 
                   theme_minimal() + theme(legend.position="top", legend.text=element_text(size=10)) +  
                   labs(x = paste0('count normDESq2 of target gene: ',res$genetarget),y = "number of samples") + 
-                  scale_color_manual(values=c("lightcoral", '#4ab3d6'))       
-        
-        print(histo)
-        print(boxplot)
-        dev.off()   
+                  scale_color_manual(values=c("lightcoral", '#4ab3d6'))
+
+        if(input$format == 'png'){
+            pdf(file, width = 10, height = 8)
+              print(histo)
+              print(boxplot)
+            dev.off()}   
+        else{
+          svg(file, width = 10, height = 8)
+            print(ggarrange(histo, boxplot,
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1))
+            dev.off()}
+
       })
 
 
