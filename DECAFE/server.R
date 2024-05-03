@@ -694,7 +694,7 @@ pca_alldownload <- reactive({
           geom_vline(xintercept=0, linetype="dashed", color = "grey") +
           geom_hline(yintercept=0, linetype="dashed", color = "grey")
 
-        ggsave(file, plot, width = 8, height = 6, units = "in", dpi = 300)
+        ggsave(file, plot, width = 8, height = 6, units = "in", dpi = 300, device = input$format)
       })
 
 
