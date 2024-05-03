@@ -139,12 +139,14 @@ output$annot_Image <- renderImage({
     notif <<- showNotification("Opening count matrix in progress", duration = 0)
     count = read.delim(input$file$datapath, sep='\t', row.names = 1, header=T,as.is=T)
     removeNotification(notif)
-      if(!all(as.matrix(count) == as.integer(as.matrix(count))))
-    showModal(modalDialog(
+    
+    if(!all(as.matrix(count) == as.integer(as.matrix(count)))){
+      showModal(modalDialog(
         title = "Invalid input",
         "The  count matrix must not be normalized, only integer are accepted!",
         easyClose = TRUE
       ))
+    }
 
     genefile = switch(input$org, 
     'hs' = 'humanGeneannot.rds',
@@ -154,8 +156,22 @@ output$annot_Image <- renderImage({
     geneannot =  geneannot[rownames(count),]
 
     if (input$coding) {
-    count <- count[geneannot$biotype == 'protein_coding', ]
-    geneannot <- geneannot[geneannot$biotype == 'protein_coding', ]
+      geneannot = geneannot[which(geneannot$biotype == 'protein_coding'), ]
+      count = count[geneannot$GeneID, ]
+    }
+
+    if( input$sex) {
+      X = switch(input$org, 
+        'hs' = 'X',
+        'mm' = 'mmuX',
+      )
+      Y = switch(input$org, 
+        'hs' = 'Y',
+        'mm' = 'mmuY',
+      )
+      geneannot = geneannot[-which(geneannot$seqname == X |geneannot$seqname == Y) , ]
+      count = count[geneannot$GeneID  , ]
+    
     }
 
     # if (input$sex) {
