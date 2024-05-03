@@ -394,6 +394,27 @@ output$downloadUpsetPlot <- downloadHandler(
 
   })
 
+  geneFiltered <- reactive({
+    intersect = intersectCond()
+
+    count_intersect = intersect$count
+    annot_intersect = intersect$annot
+
+    zero_threshold = as.numeric(input$zero_threshold)
+    countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
+
+    return(list(filtered=nrow(countfilt),total=nrow(count_intersect)))
+
+
+
+    })
+
+  output$nbGene <- renderUI({
+    return(
+      p(icon('circle-info'),paste0(" You have ",geneFiltered()$filtered , " filtered  and ",geneFiltered()$total,"total genes"))
+    )
+    })
+
   vstAll <-reactive({
 
     count = countFile()$count
@@ -401,11 +422,12 @@ output$downloadUpsetPlot <- downloadHandler(
 
 
     count_intersect = count[, intersect(rownames(annot), colnames(count))]
+    print(dim(count_intersect))
     annot_intersect= as.data.frame(annot[intersect(rownames(annot), colnames(count)), ])
 
     zero_threshold = as.numeric(input$zero_threshold)
     countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
-
+    print(dim(countfilt))
     dds = DESeqDataSetFromMatrix(countData = countfilt,
                                     colData = annot_intersect,
                                     design = ~condshiny)

@@ -382,7 +382,8 @@ library(htmltools)
         fluidRow(
         box(class = "map_container",width=12,status='success',title = h2('Graph of PCA',icon('chart-simple')),solidHeader = TRUE,
             column(width=3,
-        numericInput("nb_gene", "Number of most variable Gene", min = 1, step = 1, value = 1000),
+        numericInput("nb_gene", "Number of most variable", min = 1, step = 1, value = 1000),
+        uiOutput('nbGene'),
              selectInput("dim1", label = "Choose your first PCA dimension",
                   choices = list("Dim1" = 1, "Dim2" = 2,"Dim3" = 3, "Dim4" =4, "Dim5" = 5),selected = 1),
               # p(icon('circle-info'),paste0(" You have ",dim_matrix, " genes in your matrix")),
