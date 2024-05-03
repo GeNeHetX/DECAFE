@@ -984,7 +984,7 @@ pca_alldownload <- reactive({
                   nudge_y = 0.2
                 )
         print(file)
-        ggsave(file, volcanoplot,  width = 8, height = 6, units = "in", dpi = 300)
+        ggsave(file, volcanoplot,  width = 8, height = 6, units = "in", dpi = 300, device = input$format)
       })
 
 
