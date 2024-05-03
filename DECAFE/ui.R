@@ -481,7 +481,7 @@ library(htmltools)
         actionButton('gogsea', label='Run GSEA', icon('play')))
       ),
       fluidRow(
-        column(width=12,
+        column(width=12,br(),br(),br(),br(),
         box(width=NULL,status='info',title = h1('Table of GSEA results',icon('table')),solidHeader = TRUE, 
         actionButton('browsebutton', 'More info about selected pathway', icon('globe')),
         textOutput('comment'),br(),
