@@ -122,7 +122,12 @@ output$annot_Image <- renderImage({
   annotProcess <- reactive({
     annot = annotFile()
     annot$condshiny = apply(annot, 1, function(x) paste(colnames(annot),"_", x, collapse = ','))
-    
+    if(input$sex){
+      req(input$sexAnnot)
+      sex= read.delim(input$sexAnnot$datapath,row.names=1)
+      annot$sex = sex
+    }
+
     return(annot)
   })
 
@@ -375,9 +380,18 @@ output$downloadUpsetPlot <- downloadHandler(
     annot_intersect$condshiny <- factor(annot_intersect$condshiny, levels = c(A, B))
 
 
-    dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
+
+    if(input$sex){
+      #annot_intersect$sex<- as.factor(annot_intersect$sex)
+      dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
+                                    colData = annot_intersect[,c('condshiny','sex')],
+                                    design = ~condshiny + sex)
+    }
+    else{
+      dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
                                     colData = annot_intersect,
-                                    design = ~ condshiny)
+                                    design = ~condshiny )
+    }
 
     dds = dds[rowSums(counts(dds)) >= 10]
     removeNotification(notif)
@@ -388,6 +402,8 @@ output$downloadUpsetPlot <- downloadHandler(
     dds = DDS_cond()
     notif <<- showNotification("VST", duration = 0)
     normalized_counts =  assay(vst(dds))
+
+    
 
     removeNotification(notif)
     return(normalized_counts)
@@ -422,19 +438,30 @@ output$downloadUpsetPlot <- downloadHandler(
 
 
     count_intersect = count[, intersect(rownames(annot), colnames(count))]
-    print(dim(count_intersect))
+
     annot_intersect= as.data.frame(annot[intersect(rownames(annot), colnames(count)), ])
 
     zero_threshold = as.numeric(input$zero_threshold)
     countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
-    print(dim(countfilt))
-    dds = DESeqDataSetFromMatrix(countData = countfilt,
+
+
+    if(input$sex){
+      dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
                                     colData = annot_intersect,
-                                    design = ~condshiny)
+                                    design = ~condshiny + sex)
+    }
+    else{
+      dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
+                                    colData = annot_intersect,
+                                    design = ~condshiny )
+    }
+
     dds = dds[rowSums(counts(dds)) >= 10]
 
      notif <<- showNotification("VST", duration = 0)
     normalized_counts =  assay(vst(dds))
+    
+      
     #normalized_counts = t(scale(t(normalized_counts), scale=FALSE)) # Normalization per gene 
     removeNotification(notif)
     return(list(normalized_counts=normalized_counts, annot_intersect=annot_intersect, count_intersect=count_intersect))
@@ -595,11 +622,16 @@ data_heatmap = heatmapData()
 
     vst = vstNormalization_cond()
     vst = t(scale(t(vst), scale=FALSE)) # Normalization per gene 
+
+   
+    
+    
     gvar = apply(vst, 1, sd) 
     mostvargenes = order(gvar, decreasing=TRUE)[1:as.numeric(input$nb_gene)] # Keep most variable gene
 
     # Run pca 
     notif <<- showNotification("PCA in progress", duration = 0)
+
     res_pca = prcomp(t(vst[mostvargenes,]), scale. = TRUE)
     removeNotification(notif)
 
