@@ -1314,7 +1314,14 @@ output$downloadboxplot <- downloadHandler(
     if (length(indice_clickpath) == 1){
     clickpath = gsea()[indice_clickpath, 'pathway']
     clickpath = str_replace_all(clickpath, ' ', '_')
-    url = paste0("https://www.gsea-msigdb.org/gsea/msigdb/", species, "/geneset/", clickpath ,".html")
+    if(gsea()[indice_clickpath, 'collection']=='sigGeNeHetX'){
+      load('signatures.rda')
+      annot = signatures$annotation
+      pmid = strsplit(strsplit(annot[clickpath,'src'],';')[[1]][2],'[.]')[[1]][2]
+      url = paste0('https://pubmed.ncbi.nlm.nih.gov/',pmid,'/')
+    }else{
+      url = paste0("https://www.gsea-msigdb.org/gsea/msigdb/", species, "/geneset/", clickpath ,".html")
+    }
     browseURL(url)
     return(clickpath)
 }})
