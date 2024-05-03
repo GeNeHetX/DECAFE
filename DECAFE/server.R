@@ -411,7 +411,7 @@ output$downloadUpsetPlot <- downloadHandler(
 
   output$nbGene <- renderUI({
     return(
-      p(icon('circle-info'),paste0(" You have ",geneFiltered()$filtered , " filtered  and ",geneFiltered()$total,"total genes"))
+      p(icon('circle-info'),paste0(" You have ",geneFiltered()$filtered , " filtered  and ",geneFiltered()$total," total genes"))
     )
     })
 
