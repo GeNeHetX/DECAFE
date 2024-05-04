@@ -22,6 +22,7 @@ suppressMessages(library(shinycssloaders))
 
 library(plotly)
 library(htmltools)
+library(shinyBS)
 
 # Define UI for application that draws a histogram
 
@@ -319,11 +320,12 @@ library(htmltools)
             ),
             column(width = 3,
               selectInput('org', 'Choose your species', choices = list(Human='hs', Mouse='mm')),#, Other='oth'))
-              radioButtons('coding', 'Use only coding genes', choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = FALSE),
-              p(icon('circle-info'),"Remove all non-coding genes from analysis"),
-              radioButtons('sex', 'Sex-independent analysis', choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = FALSE),
-              conditionalPanel(condition="input.sex=='TRUE'", fileInput('sexAnnot','Load sex information')),
-              p(icon('circle-info'),"Remove all gene in chrs X/Y from analysis")
+              radioButtons('coding', label= div('Use only coding genes',icon('circle-info')), choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = FALSE),
+              bsTooltip("coding",title="Remove all non-coding genes from analysis"),
+              radioButtons('sex', label=div('Sex-independent analysis',icon('circle-info')), choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = FALSE),
+              bsTooltip('sex',title="Remove all gene in chrs X/Y from analysis"),
+              conditionalPanel(condition="input.sex=='TRUE'", fileInput('sexAnnot','Load sex information'))
+              
               # conditionalPanel("input.org == 'oth'", fileInput('genefile', 'Load Gene Annotation'))
             ),
             
