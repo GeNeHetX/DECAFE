@@ -34,7 +34,7 @@ With internet :
 
 1 - First-time use DECAFE, run this command in a R terminal
 ```R
-    install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT"))
+    install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT", "shinyBS"))
 ```
 
 2- Then, run this command :
