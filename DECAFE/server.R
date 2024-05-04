@@ -161,6 +161,21 @@ output$annot_Image <- renderImage({
     }
 
     if( input$sex) {
+          observeEvent(input$sex, {
+          showModal(modalDialog(
+        title = "Upload Sex Information",
+        "Upload a TSV file with 1 column representing the sex of your samples in the same order as your metadata TSV file.",
+        footer = tagList(
+          actionButton("dismiss_modal", "Dismiss")
+        ),
+        easyClose = FALSE 
+      ))
+    })
+
+    observeEvent(input$dismiss_modal, {
+      removeModal()  
+    })
+
       X = switch(input$org, 
         'hs' = 'X',
         'mm' = 'mmuX',
