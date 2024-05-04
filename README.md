@@ -56,7 +56,7 @@ Without internet, (use just to download and run the following commands without a
      
 - First-time use DECAFE
 ```R
-  install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT"))
+  install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT","shinyBS"))
   shiny::runApp()
 ```
 or
