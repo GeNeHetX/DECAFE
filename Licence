@@ -1,3 +1,7 @@
 DECAFE © 2024 by Audrey Beaufils, Camille Pignolet is licensed under CC BY-NC 4.0. To view a copy of this license, visit http://creativecommons.org/licenses/by-nc/4.0/
 
 Process method for RNA sequencing output : Reads are aligned with the reference genome ensemblv107_GRCh38.75 (Homo sapiens samples) or ensemblv107_GRCm38.75 (Mus musculus samples) by STAR and gene expression counts obtained with FeatureCount. 
+
+For differential analysis DESeq2 [1] estimates dispersions per gene and reduces these estimates to generate more precise dispersion estimates for the purpose of modeling counts. Next, DESeq2 fits the negative binomial model and performs hypothesis testing using the Wald test or the likelihood ratio test, and uses a p-value fitting method for multiple testing. For the application to the data, we used the Wald test recommended for studies with two conditions, and the p-value was adjusted using the Benjamini & Hochberg method.
+
+[1] Love, M.I., Huber, W. & Anders, S. Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biol 15, 550 (2014). https://doi.org/10.1186/s13059-014-0550-8
