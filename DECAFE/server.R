@@ -1078,7 +1078,7 @@ pca_alldownload <- reactive({
         volcanoplot = volcano()  + ggtitle(paste(group1, "vs", group2)) +
         geom_text_repel(
                   data = head(as.data.frame(table[which(table$diffexpressed != "NO"),]), 15),
-                  aes(label = name),
+                  aes(label = name),show.legend=FALSE,
                   box.padding = 0.5, point.padding = 0.1,
                   segment.color = 'grey', segment.size = 0.2,
                   nudge_y = 0.2
