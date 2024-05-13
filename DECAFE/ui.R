@@ -368,18 +368,19 @@ library(shinyBS)
     tabPanel("Heatmap", height = 1000,
           fluidRow(
         box(class = "map_container",width=12,status='success',title = h2('Heatmap of normalize count',icon('chart-simple')),solidHeader = TRUE,
-            column(width=3,
+            column(width=2,
         numericInput("nb_gene_heat", "Number of most variable Gene", min = 10, step = 1, max = 1000,value = 1000),
+        uiOutput('nbGene2'),
              selectInput("data_heat", label = "Choose sample to visualize",
                   choices = list("All" = "all", "Just the two conditions" = "cond"),selected = "cond"),
               
-              downloadButton("downloadHeatmap", "Download heatmap", icon('download')),
+              downloadButton("downloadHeatmap", "Download heatmap", icon('download')), br(), br(),
           
             ),
-            column(width=1),
-            column(width=8, 
-          withSpinner(plotOutput("heatMap"), type = 8, color = "#CDCDE6", size = 1)
-        )
+           column(width=1),
+            column(width=9, 
+          withSpinner(plotOutput("heatMap", width = 2200, height=1200), type = 8, color = "#CDCDE6", size = 1), style = 'display:block;width:100%'
+        ),
         )),
         
     ),

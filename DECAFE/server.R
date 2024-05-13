@@ -305,7 +305,8 @@ output$upsetPlot <- renderPlot({
             text.scale = 2,
             shade.color = "#CDCDE6", 
             sets.x.label = "Samples per Annotations", 
-            mainbar.y.label = "Samples per intersections" ) 
+            mainbar.y.label = "Samples per intersections",
+            nsets=20 ) 
 })
 
 output$downloadUpsetPlot <- downloadHandler(
@@ -535,6 +536,13 @@ countNormGenePlot <-reactive({
   })
 
 # Heatmap 
+output$nbGene2 <- renderUI({
+    return(
+      p(icon('circle-info'),paste0(" You have ",geneFiltered()$filtered , " filtered  and ",geneFiltered()$total," total genes"))
+    )
+    })
+
+
 heatmapData <- reactive({
 
   if(input$data_heat =="all"){
@@ -572,8 +580,10 @@ output$heatMap <- renderPlot({
   condition = data_heatmap$condition
   mostvargenes = order(gvar, decreasing=TRUE)[1:as.numeric(input$nb_gene_heat)]
   
-  palette.annot =colorRampPalette(c("#CDCDE6", '#262686'))
-  condition.colors = palette.annot(length(unique(condition)))
+  if (length(unique(condition)) == 2){
+    palette.annot =c("#CDCDE6", '#262686')}
+  else {palette.annot = sapply(1:length(unique(condition)),function(x) paste0('#',paste0(sample(c(0:9,LETTERS[1:6]),6,T),collapse='')))}
+  condition.colors = palette.annot
   
   
 
@@ -587,6 +597,8 @@ output$heatMap <- renderPlot({
     labRow=FALSE,
     #ylab="Genes",
     xlab=NULL,margins = c(15, 3),
+    keysize = 0.5,
+    key.par = list(cex=1),
   )
 
   legend("left",
@@ -614,8 +626,10 @@ data_heatmap = heatmapData()
   condition = data_heatmap$condition
   mostvargenes = order(gvar, decreasing=TRUE)[1:as.numeric(input$nb_gene_heat)]
   
-  palette.annot =colorRampPalette(c("#CDCDE6", '#262686'))
-  condition.colors = palette.annot(length(unique(condition)))
+  if (length(unique(condition)) == 2){
+    palette.annot =c("#CDCDE6", '#262686')}
+  else {palette.annot = sapply(1:length(unique(condition)),function(x) paste0('#',paste0(sample(c(0:9,LETTERS[1:6]),6,T),collapse='')))}
+  condition.colors = palette.annot
 
   if(input$format == 'png')
     pdf(file,onefile = F,width = 10,height = 8)
