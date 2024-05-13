@@ -582,7 +582,9 @@ output$heatMap <- renderPlot({
   
   if (length(unique(condition)) == 2){
     palette.annot =c("#CDCDE6", '#262686')}
-  else {palette.annot = sapply(1:length(unique(condition)),function(x) paste0('#',paste0(sample(c(0:9,LETTERS[1:6]),6,T),collapse='')))}
+  else {
+    set.seed(Sys.Date())
+    palette.annot = sapply(1:length(unique(condition)),function(x) paste0('#',paste0(sample(c(0:9,LETTERS[1:6]),6,T),collapse='')))}
   condition.colors = palette.annot
   
   
@@ -628,7 +630,9 @@ data_heatmap = heatmapData()
   
   if (length(unique(condition)) == 2){
     palette.annot =c("#CDCDE6", '#262686')}
-  else {palette.annot = sapply(1:length(unique(condition)),function(x) paste0('#',paste0(sample(c(0:9,LETTERS[1:6]),6,T),collapse='')))}
+  else {
+    set.seed(Sys.Date())
+    palette.annot = sapply(1:length(unique(condition)),function(x) paste0('#',paste0(sample(c(0:9,LETTERS[1:6]),6,T),collapse='')))}
   condition.colors = palette.annot
 
   if(input$format == 'png')
