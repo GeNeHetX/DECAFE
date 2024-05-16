@@ -488,7 +488,7 @@ library(shinyBS)
       ),
       fluidRow(
         column(width=12,br(),br(),br(),br(),
-        box(width=NULL,status='info',title = h1('Table of GSEA results',icon('table')),solidHeader = TRUE, 
+        box(width=12,status='info',title = h1('Table of GSEA results',icon('table')),solidHeader = TRUE, 
         actionButton('browsebutton', 'More info about selected pathway', icon('globe')),
         textOutput('comment'),br(),
         withSpinner(DT::dataTableOutput("gsea"), type = 8, color = "#CDCDE6", size = 1)
@@ -505,7 +505,7 @@ library(shinyBS)
       ),
       fluidRow(
       column(width=12,
-        box(width=NULL,status='info',title = h1('Tree Pathways',icon('square-poll-horizontal')),solidHeader = TRUE, 
+        box(width=12,status='info',title = h1('Tree Pathways',icon('square-poll-horizontal')),solidHeader = TRUE, 
           column(width = 8, sliderInput("k",label = "Number of different groups", min = 1, max =20, value = 5,step=1)),
           withSpinner(plotOutput("treePlot", inline=F, width = 1200, height=1500), type = 8, color = "#CDCDE6", size = 1), style = 'display:block;width:100%;overflow-y: scroll')
       )
