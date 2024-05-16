@@ -1401,7 +1401,7 @@ output$downloadboxplot <- downloadHandler(
   output$treePlot <- renderPlot({
       dend <- as.dendrogram(graph()$hc) 
       par(cex=0.6, mar=c(6, 1, 1, 60))
-      dend %>% set("branches_k_color", k = min(as.numeric(input$k), length(hc$labels))) %>% plot(horiz = TRUE)
+      dend %>% set("branches_k_color", k = min(as.numeric(input$k), length(graph()$hc$labels))) %>% plot(horiz = TRUE)
 
     }, width = 1200, height = 1300, res = 96)
 
@@ -1425,7 +1425,7 @@ output$downloadboxplot <- downloadHandler(
     sub =  sub[order(abs(sub$NES)),]
 
 
-    plot=ggplot(sub, aes(x=x, y=pathway, size=Count)) +
+    plot=ggplot(sub, aes(x=NES, y=pathway, size=Count)) +
     geom_point(aes(colour=padj)) + facet_grid(.~sign)+scale_color_gradient(low="blue", high="red")
     return(plot)
     
