@@ -1415,6 +1415,7 @@ output$downloadboxplot <- downloadHandler(
     df$sign[df$sign == 1]<- "activated"
 
     df$pathway = str_replace_all(df$pathway,'_',' ')
+    df$pathway=str_replace_all(df$pathway, "(.{25})([^\\s])", "\\1\\2-\n")
 
     activated = df[which(df$NES > 0),]
     activated = activated[1:min(nrow(activated),as.numeric(input$nbDotplot)),]
@@ -1425,8 +1426,8 @@ output$downloadboxplot <- downloadHandler(
     sub =  sub[order(abs(sub$NES)),]
 
 
-    plot=ggplot(sub, aes(x=NES, y=pathway)) +
-    geom_point(aes(colour=padj,size=Count)) + facet_grid(.~sign,scales="free_x")+scale_color_gradient(low="blue", high="red")
+    plot=ggplot(sub, aes(x=NES, y=pathway, colour=padj, size=Count)) +
+    geom_point() + facet_grid(.~sign,scales="free_x")+scale_color_gradient(low="blue", high="red")
     return(plot)
     
   })
