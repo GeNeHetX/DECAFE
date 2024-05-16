@@ -13,7 +13,7 @@
 #   install.packages("BiocManager")
 # BiocManager::install(new_packages,update=FALSE)
 packages <- c("shiny", "DT", "shinydashboard", "shinycssloaders", "BiocManager", "ggplot2", "plotly", "reshape2", "factoextra", "FactoMineR", "devtools", "ggupset", 
-"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ggdendro", "dendextend","gplots","svglite", "shinyBS")
+"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ggdendro", "dendextend","gplots","svglite", "shinyBS","grid","gridExtra")
 new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
 if(length(new_packages)) {
   if (!requireNamespace("BiocManager", quietly = TRUE)) {
@@ -41,6 +41,9 @@ library(UpSetR)
 library(ggdendro)
 library(dendextend)
 library(gplots)
+library(gridExtra)
+library(grid)
+
 
 
 # Define server logic required to draw a histogram
