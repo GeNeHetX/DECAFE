@@ -1284,7 +1284,7 @@ output$downloadboxplot <- downloadHandler(
     else{
       res = fgseaSimple(pathways,vec, nperm = 1000)
     }
-    
+    res.original = res
     splitcolpath = strsplit(res$pathway, '_:_')
     res$collection = sapply(splitcolpath, function(x) x[1])
     res$pathway = sapply(splitcolpath, function(x) x[2])
@@ -1299,7 +1299,7 @@ output$downloadboxplot <- downloadHandler(
     res_sort = res_sig[order(abs(as.numeric(res_sig$NES)),decreasing=TRUE),]
     res_sort = res_sort[, c(9, 1:5, 7:8)]
 
-    return(res_sort)
+    return(list(sort=res_sort,orig = res.original, vec = vec, pathways=pathways ))
   })
 
 
@@ -1311,7 +1311,7 @@ output$downloadboxplot <- downloadHandler(
   # GSEA Panel
   output$gsea <- DT::renderDT(server = FALSE, {
       DT::datatable(
-        gsea(),
+        gsea()$sort,
         extensions = c("Buttons"),
         caption= "Pathways enrichment",
         selection = 'single',
@@ -1346,9 +1346,9 @@ output$downloadboxplot <- downloadHandler(
     )
     indice_clickpath = input$gsea_rows_selected
     if (length(indice_clickpath) == 1){
-    clickpath = gsea()[indice_clickpath, 'pathway']
+    clickpath = gsea()$sort[indice_clickpath, 'pathway']
     clickpath = str_replace_all(clickpath, ' ', '_')
-    if(gsea()[indice_clickpath, 'collection']=='sigGeNeHetX'){
+    if(gsea()$sort[indice_clickpath, 'collection']=='sigGeNeHetX'){
       load('signatures.rda')
       annot = signatures$annotation
       pmid = strsplit(strsplit(annot[clickpath,'src'],';')[[1]][2],'[.]')[[1]][2]
@@ -1369,7 +1369,7 @@ output$downloadboxplot <- downloadHandler(
 
 
   graph <- reactive({
-    res <- gsea()
+    res <- gsea()$sort
     rownames(res) <- make.unique(res$pathway)
     
     res_filtered <- res[res$pval <= 0.01, ]
@@ -1398,8 +1398,174 @@ output$downloadboxplot <- downloadHandler(
   output$treePlot <- renderPlot({
       dend <- as.dendrogram(graph()$hc) 
       par(cex=0.6, mar=c(6, 1, 1, 60))
-      dend %>% set("branches_k_color", k = as.numeric(input$k)) %>% plot(horiz = TRUE)
+      dend %>% set("branches_k_color", k = min(as.numeric(input$k), length(hc$labels))) %>% plot(horiz = TRUE)
 
     }, width = 1200, height = 1300, res = 96)
+
+  dotplotGSEA<- reactive({
+    df <- gsea()$sort
+    colnames(df)[which(colnames(df)=='size')]<-"Count"
+    colnames(df)[which(colnames(df)=='p.adj')]<-"padj"
+
+    df$sign = sign(df$NES)
+    df$sign[df$sign == -1] <- "suppresed"
+    df$sign[df$sign == 1]<- "activated"
+
+    df$pathway = str_replace_all(df$pathway,'_',' ')
+
+    activated = df[which(df$NES > 0),]
+    activated = activated[1:min(nrow(activated),as.numeric(input$nbDotplot)),]
+    suppressed = df[which(df$NES < 0),]
+    suppressed = suppressed[1:min(nrow(suppressed),as.numeric(input$nbDotplot)),]
+
+    sub = as.data.frame(rbind(activated,suppressed))
+    sub =  sub[order(abs(sub$NES)),]
+
+
+    plot=ggplot(sub, aes(x=x, y=pathway, size=Count)) +
+    geom_point(aes(colour=padj)) + facet_grid(.~sign)+scale_color_gradient(low="blue", high="red")
+    return(plot)
+    
+  })
+
+  output$dotplot<-renderPlotly({ ggplotly(dotplotGSEA())%>% config(toImageButtonOptions=list(format=input$format, filename=paste0("Dotplot", "_", Sys.Date()))) })
+
+
+
+  qGseaTable <- function (
+    pathways, stats, fgseaRes, gseaParam = 1,
+    colwidths = c(4,3, 0.8, 1.2, 1.2),
+    rename=NULL, colors= list(low = '#ca0020', mid="#f7f7f7", high = '#0571b0')
+  ) {
+
+  require(fgsea)
+  rnk = rank(-stats)
+  ord = order(rnk)
+  statsAdj = stats[ord]
+  statsAdj = sign(statsAdj) * (abs(statsAdj)^gseaParam)
+  statsAdj = statsAdj / max(abs(statsAdj))
+  n = length(statsAdj)
+  pathways = lapply(pathways, function(p) {
+      unname(as.vector(na.omit(match(p, names(statsAdj)))))
+  })
+
+  new_names = str_replace_all(names(pathways),'_',' ')
+  new_names=str_replace_all(new_names, "(.{25})([^\\s])", "\\1\\2-\n")
+  new_names = substring(new_names, 5)
+
+
+  rename=new_names
+  names(rename)=names(pathways)
+
+
+
+  ps = lapply(names(pathways), function(pn) {
+      p = pathways[[pn]]
+      annotation = fgseaRes[match(pn, fgseaRes$pathway), ]
+
+      list(
+        textGrob(rename[pn], just = "right", x = unit(0.95, "npc"), gp=gpar(fontsize=12)),
+          ggplot() + 
+            geom_segment(
+              aes(
+                x = p, 
+                xend = p, 
+                y = 0,
+                        yend = statsAdj[p],
+                        col=p
+                    ), 
+                    size = 0.2
+                ) + 
+                scale_x_continuous(
+                  limits = c(0, length(statsAdj)), 
+                  expand = c(0, 0)
+                ) + 
+                scale_y_continuous(
+                  limits = c(-1, 1),
+                  expand = c(0, 0)
+                ) + 
+                xlab(NULL) + 
+                ylab(NULL) +
+              scale_colour_gradient2(
+                midpoint=n/2,
+                low=colors$low,
+                mid=colors$mid,
+                high=colors$high
+              ) +
+              theme(
+                panel.background = element_rect(fill = "transparent",
+                                  colour = NA_character_),
+                legend.position="none", 
+                axis.line = element_blank(),
+                  axis.text = element_blank(), 
+                  axis.ticks = element_blank(),
+                  panel.grid = element_blank(), 
+                  axis.title = element_blank(),
+                  plot.margin = rep(unit(0, "null"), 4), 
+                  panel.spacing = rep(unit(0,"null"), 4)
+                ), 
+            textGrob(sprintf("%.2f", annotation$NES)),
+          textGrob(sprintf("%.1e", annotation$pval)), 
+          textGrob(sprintf("%.1e",annotation$padj))
+        )
+    })
+    
+    rankPlot = ggplot() + 
+      geom_blank() + 
+      scale_x_continuous(
+        limits = c(0,length(statsAdj)), 
+        expand = c(0, 0)
+      ) + 
+      scale_y_continuous(
+        limits = c(-1,1), 
+        expand = c(0, 0)
+      ) + 
+      xlab(NULL) + 
+      ylab(NULL) + 
+      theme(
+        panel.background = element_rect(fill = "transparent",
+                                  colour = NA_character_),
+          axis.line = element_blank(), 
+            axis.text.y = element_blank(),
+            axis.ticks.y = element_blank(), 
+            panel.grid = element_blank(),
+            axis.title = element_blank(), 
+            plot.margin = unit(c(0,0, 0.5, 0), "npc"), 
+            panel.spacing = unit(c(0, 0, 0, 0), "npc")
+        )
+    grobs = c(
+      lapply(
+        c("Pathway", "Gene ranks", "NES", "pval","padj"), 
+        textGrob
+      ), 
+      unlist(ps, recursive = FALSE), 
+      list(nullGrob(),rankPlot, nullGrob(), nullGrob(), nullGrob())
+    )
+    grobsToDraw = rep(colwidths != 0, length(grobs)/length(colwidths))
+    gridExtra::grid.arrange(
+      grobs = grobs[grobsToDraw], 
+      ncol = sum(colwidths !=0),
+      widths = colwidths[colwidths != 0]
+    )
+
+
+} 
+
+
+
+  gseaTablePlot<-reactive({
+    gsea = gsea()
+    xgsea = gsea$orig
+    xgsea=xgsea[which(as.numeric(xgsea$padj) < 0.05),]
+    xgsea_sub=head(xgsea[order(abs(xgsea$NES),decreasing=TRUE),],input$nbGseaPlot)
+    plot=qGseaTable(gsea$pathways[xgsea_sub$pathway],gsea$vec,xgsea)
+    return(plot)
+
+
+    })
+
+  output$gseaPlot<-renderPlot({ gseaTablePlot() })
+
+
 
   }

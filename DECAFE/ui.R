@@ -379,7 +379,7 @@ library(shinyBS)
             ),
            column(width=1),
             column(width=9, 
-          withSpinner(plotOutput("heatMap", width = 2200, height=1200), type = 8, color = "#CDCDE6", size = 1), style = 'display:block;width:100%'
+          withSpinner(plotOutput("heatMap", width = "95%", height=1200), type = 8, color = "#CDCDE6", size = 1), style = 'display:block;width:100%'
         ),
         )),
         
@@ -495,11 +495,25 @@ library(shinyBS)
       ))),
       fluidRow(
       column(width=12,
+        box(width=6,status='info',title = h1('Dotplot',icon('chart-simple')),solidHeader = TRUE, collapsible=TRUE,
+          fluidRow(column(width = 8, sliderInput("nbDotplot",label = "Number of pathways to display", min = 1, max =20, value = 10,step=1))),
+         fluidRow( column(width=12,withSpinner(plotlyOutput("dotplot",height=1000), type = 8, color = "#CDCDE6", size = 1)))),
+        box(width=6,status='info',title = h1('GSEA plot',icon('chart-simple')),solidHeader = TRUE, collapsible=TRUE,
+          fluidRow(column(width = 8, sliderInput("nbGseaPlot",label = "Number of pathways to display", min = 1, max =20, value = 10,step=1))),
+          fluidRow(column(width=12,withSpinner(plotOutput("gseaPlot", height=1000,width="90%"), type = 8, color = "#CDCDE6", size = 1))))
+      )
+      ),
+      fluidRow(
+      column(width=12,
         box(width=NULL,status='info',title = h1('Tree Pathways',icon('square-poll-horizontal')),solidHeader = TRUE, 
           column(width = 8, sliderInput("k",label = "Number of different groups", min = 1, max =20, value = 5,step=1)),
           withSpinner(plotOutput("treePlot", inline=F, width = 1200, height=1500), type = 8, color = "#CDCDE6", size = 1), style = 'display:block;width:100%;overflow-y: scroll')
       )
-      )),id="tabBox",
+      )
+
+
+
+      ),id="tabBox",
 
     width = 12
 
