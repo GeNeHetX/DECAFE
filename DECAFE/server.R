@@ -1426,8 +1426,13 @@ output$downloadboxplot <- downloadHandler(
     sub =  sub[order(abs(sub$NES)),]
 
 
+    if(unique(df$sign)==2){
     plot=ggplot(sub, aes(x=NES, y=pathway, colour=padj, size=Count)) +
-    geom_point() + facet_grid(.~sign,scales="free_x")+scale_color_gradient(low="blue", high="red")
+    geom_point() + facet_grid(.~sign,scales="free_x")+scale_color_gradient(low="blue", high="red")+ylab(NULL)}
+    else{
+        plot=ggplot(sub, aes(x=NES, y=pathway, colour=padj, size=Count)) +
+    geom_point()+scale_color_gradient(low="blue", high="red")+ylab(NULL)
+    }
     return(plot)
     
   })
