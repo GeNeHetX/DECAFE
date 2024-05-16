@@ -1411,7 +1411,7 @@ output$downloadboxplot <- downloadHandler(
     colnames(df)[which(colnames(df)=='p.adj')]<-"padj"
 
     df$sign = sign(df$NES)
-    df$sign[df$sign == -1] <- "suppresed"
+    df$sign[df$sign == -1] <- "suppressed"
     df$sign[df$sign == 1]<- "activated"
 
     df$pathway = str_replace_all(df$pathway,'_',' ')
@@ -1425,8 +1425,8 @@ output$downloadboxplot <- downloadHandler(
     sub =  sub[order(abs(sub$NES)),]
 
 
-    plot=ggplot(sub, aes(x=NES, y=pathway, size=Count)) +
-    geom_point(aes(colour=padj)) + facet_grid(.~sign)+scale_color_gradient(low="blue", high="red")
+    plot=ggplot(sub, aes(x=NES, y=pathway)) +
+    geom_point(aes(colour=padj,size=Count)) + facet_grid(.~sign,scales="free_x")+scale_color_gradient(low="blue", high="red")
     return(plot)
     
   })
@@ -1454,7 +1454,7 @@ output$downloadboxplot <- downloadHandler(
 
   new_names = str_replace_all(names(pathways),'_',' ')
   new_names=str_replace_all(new_names, "(.{25})([^\\s])", "\\1\\2-\n")
-  new_names = substring(new_names, 5)
+  new_names = sub(".*?:", "", new_names)
 
 
   rename=new_names
