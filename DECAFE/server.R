@@ -1393,7 +1393,7 @@ output$downloadboxplot <- downloadHandler(
       }
     }
     
-  hc <- hclust(as.dist(mat), method = "average")
+  hc <- hclust(as.dist(mat), method = "ward")
   return(list(hc = hc, collection = collection))
 
     })
