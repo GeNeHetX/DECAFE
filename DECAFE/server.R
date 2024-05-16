@@ -1454,7 +1454,7 @@ output$downloadboxplot <- downloadHandler(
 
   new_names = str_replace_all(names(pathways),'_',' ')
   new_names=str_replace_all(new_names, "(.{25})([^\\s])", "\\1\\2-\n")
-  new_names = substring(new_names, 5)
+  new_names = sub(".*?:", "", new_names)
 
 
   rename=new_names
