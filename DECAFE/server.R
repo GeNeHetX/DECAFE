@@ -1426,7 +1426,7 @@ output$downloadboxplot <- downloadHandler(
 
 
     plot=ggplot(sub, aes(x=NES, y=pathway, size=Count)) +
-    geom_point(aes(colour=padj)) + facet_grid(.~sign)+scale_color_gradient(low="blue", high="red")
+    geom_point(aes(colour=padj)) + facet_grid(.~sign,scales="free_x")+scale_color_gradient(low="blue", high="red")
     return(plot)
     
   })
