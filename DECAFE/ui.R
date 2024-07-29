@@ -338,7 +338,8 @@ library(shinyBS)
             column(width =3,
               uiOutput('cond1'),
               uiOutput('cond2'),
-              p(icon('circle-info'),paste0("Group 1 is considered as control \n UP represented upregulated in group 2 "))
+              p(icon('circle-info'),paste0("Group 1 is considered as control  ")),
+              p(paste0("UP represented upregulated in group 2 compared to group 1"))
                    
             )
 
