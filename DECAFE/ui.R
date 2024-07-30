@@ -520,7 +520,33 @@ library(shinyBS)
 
 
 
-      ),id="tabBox",
+      ),tabPanel("MCPcounter",
+      actionButton('gomcp',label="Run MCPcounter",icon('play')),
+      selectInput("mcpPath", label = "Choose type to cell to plot",
+                  choices = c(
+                    "T cells"="Tcells",
+                    "CD8Tcells"="CD8Tcells",
+                    "Cytotox.lymph"="Cytotox.lymph",
+                    "NK" = "NK",
+                    "B.lineage"="B.lineage",
+                    "Mono.lineage"="Mono.lineage",    
+                  "Myeloid.dendritic" ="Myeloid.dendritic",
+                    "Neutrophils"="Neutrophils",
+                    "Endothelial"="Endothelial" ,
+                    "Fibroblasts"="Fibroblasts"
+                    ),selected=1),
+     
+      plotOutput('boxMCP')
+
+
+
+
+      ),
+
+
+
+
+    id="tabBox",
 
     width = 12
 

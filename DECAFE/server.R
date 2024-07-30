@@ -1258,6 +1258,71 @@ output$downloadboxplot <- downloadHandler(
   }, deleteFile = FALSE)
 
 
+  mcpcounter <- eventReactive(input$gomcp,{
+  annot_intersect=intersectCond()$annot
+  genefile = countFile()$geneannot
+    normalized_counts = as.data.frame(vstNormalization_cond())
+    print(normalized_counts[1:10,1:10])
+    print(head(genefile))
+    print(row.names(normalized_counts))
+    normalized_counts$name = genefile[row.names(normalized_counts),'GeneName']
+    print(normalized_counts)
+    normalized_counts$name[duplicated(normalized_counts$name)] <- NA
+    normalized_counts=na.omit(normalized_counts)
+    print(normalized_counts[1:10,1:10])
+    rownames(normalized_counts)=normalized_counts$name
+    normalized_counts$name=NULL
+    
+    mcp = CancerRNASig::mcpcount(normalized_counts,rownames(normalized_counts))
+    A = as.character(unique(annot_intersect$condshiny)[1])
+    B = as.character(unique(annot_intersect$condshiny)[2])
+    print(head(annot_intersect))
+    cond1 = row.names(annot_intersect[which(annot_intersect$condshiny == A),])
+    cond2  = row.names(annot_intersect[which(annot_intersect$condshiny == B),])
+
+
+
+
+  
+
+    #mcp = CancerRNASig::mcpcount(normalized_counts,rownames(normalized_counts))
+    
+    mcp1 = mcp[cond1,]
+    mcp2 = mcp[cond2,]
+    return(list(mcp1=mcp1,mcp2=mcp2,cond1=cond1,cond2=cond2))
+
+
+
+    })
+
+
+  output$boxMCP<- renderPlot({
+    path = input$mcpPath
+    mcp = mcpcounter()
+    proj1= as.data.frame(mcp$mcp1)
+    proj2=as.data.frame(mcp$mcp2)
+
+    annot = annotProcess()
+    cond1 = unique(annot$condshiny)[as.numeric(input$cond1)]
+    cond2 = unique(annot$condshiny)[as.numeric(input$cond2)]
+
+    df = as.data.frame(
+      rbind(
+        cbind(Value=as.numeric(proj1[,path]),Condition=rep(cond1,nrow(proj1))),
+        cbind(Value=as.numeric(proj2[,path]),Condition=rep(cond2,nrow(proj2)))
+      )
+    )
+
+    df$Value=as.numeric(df$Value)
+    df$Score = factor(df$Condition,levels = c(cond1,cond2))
+    
+    
+      ggboxplot(df,x="Condition",y="Value",color="Condition",outlier.shape=NA,remove="outlier", main = "",legend="none",ylab=path) +
+      stat_compare_means(method = "t.test")
+
+
+    })
+
   gsea <- eventReactive(input$gogsea,{
 
     pathways_list = appendCollection()$pathways
