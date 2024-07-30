@@ -1163,7 +1163,7 @@ pca_alldownload <- reactive({
     )
 
     ggplot(res, aes(x=condition,y=count, color=condition)) + geom_boxplot() +
-      rotate_x_text(45)+ labs(x = "dispersion", y = paste0('count normDESq2 of target gene: ',res$genetarget))+
+      rotate_x_text(45)+ labs(x = "dispersion", y = paste0('count normDESq2 of target gene : ',res$genetarget))+
       scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
       scale_x_discrete(labels=NULL) +  theme_minimal() + theme(legend.position="right", legend.text=element_text(size=10)) + 
       stat_pvalue_manual(df_p_val, xmin = "group1", xmax = "group2", label = "label", y.position = "y.position") + 
@@ -1281,11 +1281,19 @@ output$downloadboxplot <- downloadHandler(
     nb_thread = as.numeric(input$nb_thread)
     
     if(nb_thread > 1){
-      res = fgseaSimple(pathways,vec,BPPARAM = BiocParallel::MulticoreParam(nb_thread), nperm = 1000)
+      if(input$gsea_level){
+      res = fgseaSimple(pathways,vec,BPPARAM = BiocParallel::MulticoreParam(nb_thread), nperm = 1000)}
+      else{
+        res=fgseaMultilevel(pathways,vec,BPPARAM = BiocParallel::MulticoreParam(nb_thread))
+      }
     }
   
     else{
-      res = fgseaSimple(pathways,vec, nperm = 1000)
+       if(input$gsea_level){
+      res = fgseaSimple(pathways,vec, nperm = 1000)}
+      else{
+        res=fgseaMultilevel(pathways,vec)
+      }
     }
     res.original = res
     splitcolpath = strsplit(res$pathway, '_:_')
@@ -1298,9 +1306,10 @@ output$downloadboxplot <- downloadHandler(
     lE_vector = sapply(lE_list, paste, collapse=", ")
     res$leadingEdge = lE_vector
     res = as.data.frame(na.omit(res))
-    res_sig = res[which(as.numeric(res$pval) < 0.05),]
+    # res_sig = res[which(as.numeric(res$pval) < 0.05),]
+    res_sig = res
     res_sort = res_sig[order(abs(as.numeric(res_sig$NES)),decreasing=TRUE),]
-    res_sort = res_sort[, c(9, 1:5, 7:8)]
+    res_sort = res_sort[, c("collection", "pathway", "pval", "padj", "ES","NES", "size", "leadingEdge")]
 
     return(list(sort=res_sort,orig = res.original, vec = vec, pathways=pathways ))
   })

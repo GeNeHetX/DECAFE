@@ -37,7 +37,9 @@ library(shinyBS)
     sidebarMenu(
       menuItem("Home", tabName = "home",icon=shiny::icon('home')),
      
-      menuItem("Analysis", tabName = "tab1",icon=icon('arrows-rotate'))
+      menuItem("Analysis", tabName = "tab1",icon=icon('arrows-rotate')),
+
+      menuItem("Tools", tabName = "tab2",icon=icon('screwdriver-wrench'))
       
     )
   ),
@@ -487,6 +489,8 @@ library(shinyBS)
         uiOutput('dbpath')),
 
         column(width = 2,
+        radioButtons('gsea_level', label= div('Choose type of GSEA',icon('circle-info')), choices = list("Simple Level"=TRUE, "Multi Level"=FALSE), inline=TRUE, selected = TRUE),
+              bsTooltip("gsea_level",title="Simple level is faster but less accurate while Multi level is slower and more acuurate (resulted more significate pathways) "),
         actionButton('gogsea', label='Run GSEA', icon('play')))
       ),
       fluidRow(
@@ -522,4 +526,26 @@ library(shinyBS)
 
     )
       
-)))))
+)),
+  
+  tabItem(tabName ="tab2",
+  fluidRow(
+            column(width = 12,
+            box(width = 12, status = 'info', title = h1("Design your own count matrix", icon('table')), solidHeader = TRUE, collapsible=TRUE,
+                fluidRow(
+                    box(width = 4, title = h2('Normalization', icon('table')), collapsible = TRUE,
+                      fluidRow(column(width=12,
+                        radioButtons("normalize","Choose type of normalization",c("None"="no","Variance Stabilizing Transformation (VST)"="vst","DESeq2 normalization"="deseq"))
+
+                      ))),
+                    box(width = 4, title = h2('Genes custom', icon('magnifying-glass')), collapsible = TRUE,
+                      fluidRow(column(width=12,
+                        checkboxGroupInput("gene_custom","Choose customization",choiceNames=list("1000 most variant genes","Center by gene"), choiceValues = list("mostvar","center"))
+                      ))),
+                    box(width = 4, title = h2('Online tools', icon('globe')), collapsible = TRUE,
+                      fluidRow())
+                        
+
+                          )))))
+
+)))
