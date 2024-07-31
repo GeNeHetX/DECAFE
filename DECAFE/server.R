@@ -1737,7 +1737,7 @@ output$downloadboxplot <- downloadHandler(
       scale_color_manual(values=c("lightcoral", '#4ab3d6')) +  theme( axis.text.x=element_blank()) + 
       stat_summary(fun.y = mean, geom = "point", shape = 20, size = 3, color = "#262686", position = position_dodge(width = 0.75)) +
       stat_compare_means(method = "t.test",label = "p.format") + 
-      geom_signif(comparisons = list(c(cond1, cond2)), map_signif_level = TRUE, textsize = 3.5, vjust = -0.5,  y.position = "y.position")       
+      geom_signif(comparisons = list(c(cond1, cond2)), map_signif_level = TRUE, textsize = 3.5, vjust = -0.5,  y.position = "y.position",test="t.test")       
 
 
     })
@@ -1746,31 +1746,39 @@ output$allboxMCP <- renderPlot({
 
     mcpi = mcpcounter()$mcp
     df = as.data.frame(mcpi)
-    annot = annotProcess()
-    cond1 = unique(annot$condshiny)[as.numeric(input$cond1)]
-    cond2 = unique(annot$condshiny)[as.numeric(input$cond2)]
+    annot_intersect=intersectCond()$annot
     
-    proj1 = df[1:nrow(annot[annot$condshiny == cond1, ]), ]
-    proj2 = df[(nrow(annot[annot$condshiny == cond1, ]) + 1):nrow(df), ]
+    A = as.character(unique(annot_intersect$condshiny)[1])
+    B = as.character(unique(annot_intersect$condshiny)[2])
+
+
+    cond1 = row.names(annot_intersect[which(annot_intersect$condshiny == A),])
+    cond2  = row.names(annot_intersect[which(annot_intersect$condshiny == B),])
+
+    proj1 = df[cond1, ]
+    proj2 = df[cond2, ]
     
     df_list = lapply(names(df), function(col) {
-        data.frame(
-            McpCounterValue = c(as.numeric(proj1[, col]), as.numeric(proj2[, col])),
-            Condition = rep(c(rep(cond1, nrow(proj1)), rep(cond2, nrow(proj2))), each = length(names(df))),
-            Metric = col
-        )
+      as.data.frame(
+      rbind(
+        cbind(McpCounterValue=as.numeric(proj1[,col]),Condition=rep(A,nrow(proj1)),Metric=col),
+        cbind(McpCounterValue=as.numeric(proj2[,col]),Condition=rep(B,nrow(proj2)),Metric=col)
+      )
+    )
+        
     })
-    
+    print(df_list)
+
     df_combined = do.call(rbind, df_list)
     df_combined$McpCounterValue = as.numeric(df_combined$McpCounterValue)
-    df_combined$Condition = factor(df_combined$Condition, levels = c(cond1, cond2))
+    df_combined$Condition = factor(df_combined$Condition, levels = c(A, B))
     
     ggboxplot(df_combined, x = "Condition", y = "McpCounterValue", color = "Condition", outlier.shape = NA, main = "", legend = "top", xlab=FALSE) +
         facet_wrap(~ Metric, ncol = 5) + theme( axis.text.x=element_blank()) + 
         scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
         stat_summary(fun.y = mean, geom = "point", shape = 20, size = 3, color = "#262686", position = position_dodge(width = 0.75)) +
         stat_compare_means(method = "t.test",label = "p.format") +
-        geom_signif(comparisons = list(c(cond1, cond2)), map_signif_level = TRUE, textsize = 3.5, vjust = -0.5,  y.position = "y.position")  
+        geom_signif(comparisons = list(c(A, B)), map_signif_level = TRUE, textsize = 3.5, vjust = -0.5,  y.position = "y.position",test="t.test")  
 
 })
   # Boxplot Panel
