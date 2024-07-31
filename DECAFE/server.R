@@ -546,10 +546,10 @@ countNormGenePlot <-reactive({
     
     norm1_rm = as.vector(norm1)
     norm2_rm = as.vector(norm2)
-
     res = data.frame(
       count = c(norm1_rm, norm2_rm),
-      condition = c(rep(annot_name_cond1,length(norm1_rm)), rep(annot_name_cond2,length(norm2_rm)))
+      condition = c(rep(annot_name_cond1,length(norm1_rm)), rep(annot_name_cond2,length(norm2_rm))),
+      sampleID = c(intersect(annot_gp1, colnames(normalized_counts)), intersect(annot_gp2, colnames(normalized_counts)))
     )
     return(res)
   })
@@ -1190,13 +1190,56 @@ pca_alldownload <- reactive({
   output$histGeneTarget <- renderPlot({
     res = countNormGenePlot()
     res$genetarget = geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
-
+    print(head(res))
     ggplot(res, aes(x=count, color=condition)) +
       geom_histogram(fill="white", alpha=0.5, position="identity") + 
       theme_minimal() + theme(legend.position="top", legend.text=element_text(size=10)) +  
       labs(x = paste0('count normDESq2 of target gene: ',res$genetarget),y = "number of samples") + 
       scale_color_manual(values=c("lightcoral", '#4ab3d6'))
   })
+
+
+
+sampleChoice2 <- reactive({
+    res = countNormGenePlot()
+   sample = res$sampleID
+
+   name = sample
+   num = c(1:length(name))
+   choiceTable = data.frame(name, num)
+    choix = setNames(as.numeric(choiceTable$num), choiceTable$name)
+
+  return(list(choix_indice=choix, choix_name=choiceTable$name[choix]))
+
+})
+
+output$sampleTarget2 <-renderUI({  
+    return(selectInput("sampleChoiceTarget2", label = "Choose sample target to observe",
+                  choices = sampleChoice2()$choix_indice))
+  })
+
+
+output$densityPlotgene <- renderPlot({
+    res = countNormGenePlot()
+    res$genetarget = geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
+    id = sampleChoice2()$choix_name[as.numeric(input$sampleChoiceTarget2)]
+    # print(id)
+    sampletarget = as.numeric(res$count[which(res$sampleID == id)])
+    # print(sampletarget)
+
+    p = ggplot(res, aes(x=count, fill = condition, color=condition)) +
+    geom_density(alpha = 0.5)+scale_color_manual(values=c("lightcoral", '#4ab3d6'))+
+      theme(legend.position="top", legend.text=element_text(size=10)) +  
+      labs(title = paste0("Density Plot of ",res$genetarget), x = "Value", y = "Density") +     
+        theme_minimal()+ geom_vline(xintercept = as.numeric(sampletarget),  color = "#262696") +
+            annotate("text", x = sampletarget, y = Inf, label = paste("Sample =", id),
+                     color = "#262696", vjust = 1.5, hjust = -0.1)+ theme(legend.position="bottom", legend.text=element_text(size=10))
+    
+    return(p)
+    
+ 
+})
+
 
   
 output$downloadboxplot <- downloadHandler(

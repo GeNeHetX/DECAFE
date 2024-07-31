@@ -465,10 +465,10 @@ library(shinyBS)
               column(width=7),
               column(width = 1, downloadButton("downloadboxplot", "Download Plots", icon('download')))),br(),
         fluidRow(
-
         column(width=6,
-        box(width=12, status = 'success', solidHeader = TRUE, title = h3("Gene Target Histogram", icon('chart-simple')),
-          withSpinner(plotOutput('histGeneTarget'), type = 8, color = "#CDCDE6", size = 1)
+        box(width=12, status = 'success', solidHeader = TRUE, title = h3("Gene Target DensityPlot", icon('chart-simple')),
+          uiOutput('sampleTarget2'),
+          withSpinner(plotOutput('densityPlotgene'), type = 8, color = "#CDCDE6", size = 1)
         )
         ),
         column(width=6,
@@ -535,7 +535,7 @@ library(shinyBS)
       box(width=NULL,status='info',title = h1('McpCounter projection',icon('table')),solidHeader = TRUE, 
         withSpinner(DT::dataTableOutput("mcptable"), type = 8, color = "#CDCDE6", size = 1)
       ))),
-      
+       br(),br(),
        fluidRow(column(width=12,
       box(
         width=6,status='success',title = h1('Choose one immune cell familly',icon('chart-simple')),solidHeader = TRUE, 
