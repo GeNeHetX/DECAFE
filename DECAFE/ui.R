@@ -538,9 +538,12 @@ library(shinyBS)
                     "Fibroblasts"="Fibroblasts"
                     ),selected=1),
      
-      plotOutput('boxMCP')
+      plotOutput('boxMCP', inline=F, width = 500, height=500),
 
-
+      box(width=NULL,status='info',title = h1('Table of results',icon('table')),solidHeader = TRUE, 
+        withSpinner(DT::dataTableOutput("mcptable"), type = 8, color = "#CDCDE6", size = 1)
+      ),
+      plotOutput("allboxMCP", inline=F, width = 1500, height=1200)
 
 
       ),

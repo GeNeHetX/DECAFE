@@ -125,7 +125,7 @@ output$annot_Image <- renderImage({
   # Format annotation matrix
   annotProcess <- reactive({
     annot = annotFile()
-    annot$condshiny = apply(annot, 1, function(x) paste(colnames(annot),"_", x, collapse = ','))
+    annot$condshiny = apply(annot, 1, function(x) paste(colnames(annot),"_", x, collapse = ',', sep=''))
     if(input$sex){
       req(input$sexAnnot)
       sex= read.delim(input$sexAnnot$datapath,row.names=1)
@@ -1630,11 +1630,42 @@ output$downloadboxplot <- downloadHandler(
     
     mcp1 = mcp[cond1,]
     mcp2 = mcp[cond2,]
-    return(list(mcp1=mcp1,mcp2=mcp2,cond1=cond1,cond2=cond2))
+    return(list(mcp=mcp,mcp1=mcp1,mcp2=mcp2))
 
 
 
     })
+
+  
+  output$mcptable <- DT::renderDT(server = FALSE, {
+    data = mcpcounter()$mcp
+    
+    DT::datatable(
+      data,
+      extensions = c("Buttons"),
+      options = list(
+        scrollX = TRUE,
+        dom = 'Bfrtip',
+        buttons = list(
+          list(extend = "copy", text = "Copy", filename = "mcptable",
+               exportOptions = list(
+                 modifier = list(page = "current")
+               )
+          ),
+          list(extend = "csv", text = "CSV", filename = "mcptable",
+               exportOptions = list(
+                 modifier = list(page = "all")
+               )
+          ),
+          list(extend = "excel", text = "Excel", filename = "mcptable",
+               exportOptions = list(
+                 modifier = list(page = "all")
+               )
+          )
+        )
+      )
+    )
+  })
 
 
   output$boxMCP<- renderPlot({
@@ -1649,21 +1680,52 @@ output$downloadboxplot <- downloadHandler(
 
     df = as.data.frame(
       rbind(
-        cbind(Value=as.numeric(proj1[,path]),Condition=rep(cond1,nrow(proj1))),
-        cbind(Value=as.numeric(proj2[,path]),Condition=rep(cond2,nrow(proj2)))
+        cbind(McpCounterValue=as.numeric(proj1[,path]),Condition=rep(cond1,nrow(proj1))),
+        cbind(McpCounterValue=as.numeric(proj2[,path]),Condition=rep(cond2,nrow(proj2)))
       )
     )
 
-    df$Value=as.numeric(df$Value)
+    df$McpCounterValue=as.numeric(df$McpCounterValue)
     df$Score = factor(df$Condition,levels = c(cond1,cond2))
     
     
-      ggboxplot(df,x="Condition",y="Value",color="Condition",outlier.shape=NA,remove="outlier", main = "",legend="none",ylab=path) +
-      stat_compare_means(method = "t.test")
+      ggboxplot(df,x="Condition",y="McpCounterValue",color="Condition",outlier.shape=NA,remove="outlier", main = "",legend="none",ylab=path) +
+      scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
+      stat_summary(fun.y = mean, geom = "point", shape = 20, size = 3, color = "#262686", position = position_dodge(width = 0.75)) +
+      stat_compare_means(method = "t.test",label = "p.format") +
+      geom_signif(comparisons = list(c(cond1, cond2)), map_signif_level = TRUE, textsize = 3.5, vjust = -0.5,  y.position = "y.position")       
 
 
     })
 
+output$allboxMCP <- renderPlot({
+    df = as.data.frame(mcpcounter()$mcp)
+    annot = annotProcess()
+    cond1 = unique(annot$condshiny)[as.numeric(input$cond1)]
+    cond2 = unique(annot$condshiny)[as.numeric(input$cond2)]
+    
+    proj1 = df[1:nrow(annot[annot$condshiny == cond1, ]), ]
+    proj2 = df[(nrow(annot[annot$condshiny == cond1, ]) + 1):nrow(df), ]
+    
+    df_list = lapply(names(df), function(col) {
+        data.frame(
+            McpCounterValue = c(as.numeric(proj1[, col]), as.numeric(proj2[, col])),
+            Condition = rep(c(rep(cond1, nrow(proj1)), rep(cond2, nrow(proj2))), each = length(names(df))),
+            Metric = col
+        )
+    })
+    
+    df_combined = do.call(rbind, df_list)
+    df_combined$McpCounterValue = as.numeric(df_combined$McpCounterValue)
+    df_combined$Condition = factor(df_combined$Condition, levels = c(cond1, cond2))
+    
+    ggboxplot(df_combined, x = "Condition", y = "McpCounterValue", color = "Condition", outlier.shape = NA, main = "", legend = "none") +
+        facet_wrap(~ Metric, ncol = 5) +
+        scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
+        stat_summary(fun.y = mean, geom = "point", shape = 20, size = 3, color = "#262686", position = position_dodge(width = 0.75)) +
+        stat_compare_means(method = "t.test",label = "p.format") +
+        geom_signif(comparisons = list(c(cond1, cond2)), map_signif_level = TRUE, textsize = 3.5, vjust = -0.5,  y.position = "y.position")  
 
+})
 
   }
