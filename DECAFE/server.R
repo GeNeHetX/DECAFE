@@ -310,7 +310,7 @@ output$upsetPlot <- renderPlot({
             sets.x.label = "Samples per Annotations", 
             mainbar.y.label = "Samples per intersections",
             nsets=20 ) 
-})
+}, width = 1500, height = 800, res = 96)
 
 output$downloadUpsetPlot <- downloadHandler(
       filename = function() {
@@ -354,17 +354,21 @@ output$downloadUpsetPlot <- downloadHandler(
                   choices = conditionVector(), selected=2)
   })
 
-  output$control <-renderUI({
+  phraserelou <-reactive({
     annot = annotProcess()
     cond1 = unique(annot$condshiny)[as.numeric(input$cond1)]
     cond2 = unique(annot$condshiny)[as.numeric(input$cond2)]
     L = list()
-   L[[1]]=p(icon('circle-info'),paste0(cond1," is considered as control  "))
-    L[[2]]=p(paste0("UP = upregulated in",cond2," compared to ",cond1))
+   L$control=p(icon('circle-info'),paste0(cond1," is considered as control  "))
+    L$sens1=p(paste0("Log2Foldchange positive = gene upregulated in ",cond2))
+    L$sens2=p(paste0("NES positive = pathway over-enriched in ",cond2))
     return(L)
 
     })
 
+  output$control<- renderUI(phraserelou()$control)
+  output$sens1<- renderUI(phraserelou()$sens1)
+  output$sens2<- renderUI(phraserelou()$sens2)
   
  
 # create annot filter by input group1 and 2
@@ -1603,21 +1607,17 @@ output$downloadboxplot <- downloadHandler(
   annot_intersect=intersectCond()$annot
   genefile = countFile()$geneannot
     normalized_counts = as.data.frame(vstNormalization_cond())
-    print(normalized_counts[1:10,1:10])
-    print(head(genefile))
-    print(row.names(normalized_counts))
     normalized_counts$name = genefile[row.names(normalized_counts),'GeneName']
-    print(normalized_counts)
     normalized_counts$name[duplicated(normalized_counts$name)] <- NA
     normalized_counts=na.omit(normalized_counts)
-    print(normalized_counts[1:10,1:10])
     rownames(normalized_counts)=normalized_counts$name
     normalized_counts$name=NULL
-    
+ 
     mcp = CancerRNASig::mcpcount(normalized_counts,rownames(normalized_counts))
+
     A = as.character(unique(annot_intersect$condshiny)[1])
     B = as.character(unique(annot_intersect$condshiny)[2])
-    print(head(annot_intersect))
+
     cond1 = row.names(annot_intersect[which(annot_intersect$condshiny == A),])
     cond2  = row.names(annot_intersect[which(annot_intersect$condshiny == B),])
 

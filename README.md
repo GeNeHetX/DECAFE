@@ -34,7 +34,8 @@ With internet :
 
 1 - First-time use DECAFE, run this command in a R terminal
 ```R
-    install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT", "shinyBS"))
+    install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT", "shinyBS", "devtools"))
+    devtools::install_github('GeNeHetX/CancerRNASig')
 ```
 
 2- Then, run this command :
@@ -56,7 +57,8 @@ Without internet, (use just to download and run the following commands without a
      
 - First-time use DECAFE
 ```R
-  install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT","shinyBS"))
+  install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT", "shinyBS", "devtools"))
+  devtools::install_github('GeNeHetX/CancerRNASig')
   shiny::runApp()
 ```
 or

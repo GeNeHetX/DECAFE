@@ -353,7 +353,7 @@ library(shinyBS)
          fluidRow(
            column(width = 6,
                   box(width = 12, status = 'info', solidHeader = TRUE, title = h3("Check : Sample_ID and Annotations", icon('file')),
-                      withSpinner(DT::DTOutput("tableAnnot"), type = 8, color = "#CDCDE6", size = 1)
+                      withSpinner(DT::DTOutput("tableAnnot"), type = 8, color = "#CDCDE6", size = 1), style = 'overflow-x: scroll'
                   )
            ),
           column(width = 6,
@@ -361,13 +361,13 @@ library(shinyBS)
                       withSpinner(DT::DTOutput("counthead"), type = 8, color = "#CDCDE6", size = 1)
                   )
            ),
-
+           fluidRow(
            column(width = 12,
                   box(width = 12, status = 'success', solidHeader = TRUE, title = h3("Overview of Condition", icon('chart-simple')),
                       downloadButton("downloadUpsetPlot", "Download UpsetPlot", icon('download')), br(), br(),
-                      withSpinner(plotOutput('upsetPlot'), type = 8, color = "#CDCDE6", size = 1)
+                      withSpinner(plotOutput('upsetPlot',  width = 1500, height = 800, inline=F), type = 8, color = "#CDCDE6", size = 1)
                   )
-           )
+           ))
          )
     ),
     tabPanel("Heatmap", height = 1000,
@@ -440,7 +440,8 @@ library(shinyBS)
                         min = 0, max =0.8, value = 0.5,step=0.1),
             sliderInput("ts_padj",label = "p-Value cutoff from output ",
                         min = 0, max =0.1, value = 0.05,step=0.01),br(),
-            downloadButton("downloadVolcanoPlot", "Download VolcanoPlot with gene label", icon('download'))
+            downloadButton("downloadVolcanoPlot", "Download VolcanoPlot with gene label", icon('download')),
+              uiOutput('sens1')
             
           ),
           column(width=1),
@@ -497,6 +498,7 @@ library(shinyBS)
         column(width=12,br(),br(),br(),br(),
         box(width=12,status='info',title = h1('Table of GSEA results',icon('table')),solidHeader = TRUE, 
         actionButton('browsebutton', 'More info about selected pathway', icon('globe')),
+          uiOutput('sens2'),
         textOutput('comment'),br(),
         withSpinner(DT::dataTableOutput("gsea"), type = 8, color = "#CDCDE6", size = 1)
       ))),
