@@ -523,7 +523,7 @@ library(shinyBS)
 
 
       ),tabPanel("MCPcounter",
-      actionButton('gomcp',label="Run MCPcounter",icon('play')),
+      actionButton('gomcp',label="Run MCPcounter",icon('play')),br(),
       selectInput("mcpPath", label = "Choose type to cell to plot",
                   choices = c(
                     "T cells"="Tcells",
@@ -538,9 +538,9 @@ library(shinyBS)
                     "Fibroblasts"="Fibroblasts"
                     ),selected=1),
      
-      plotOutput('boxMCP', inline=F, width = 500, height=500),
-
-      box(width=NULL,status='info',title = h1('Table of results',icon('table')),solidHeader = TRUE, 
+      plotOutput('boxMCP', inline=F, width = 700, height=500),
+      br(),br(),
+      box(width=NULL,status='info',title = h1('McpCounter projection',icon('table')),solidHeader = TRUE, 
         withSpinner(DT::dataTableOutput("mcptable"), type = 8, color = "#CDCDE6", size = 1)
       ),
       plotOutput("allboxMCP", inline=F, width = 1500, height=1200)
