@@ -1067,7 +1067,7 @@ pca_alldownload <- reactive({
 
     if(nrow(table[table$diffexpressed == 'NO', ])   == 0) { cols = c('lightcoral' , '#4ab3d6')}
     if(nrow(table[table$diffexpressed == 'DOWN',]) == 0) { cols = c('lightgrey', '#4ab3d6')}
-    if(nrow(table[table$diffexpressed == 'UP',])   == 0)  { cols = c('lightgrey', 'lightcoral')}
+    if(nrow(table[table$diffexpressed == 'UP',])   == 0)  { cols = c('lightcoral', 'lightgrey')}
 
     plot = ggplot(data=as.data.frame(table), aes(x=log2FoldChange, y=-log10(padj), col=diffexpressed, tooltip=name)) +
       geom_point(size=1) + theme_minimal()+
@@ -1689,10 +1689,10 @@ output$downloadboxplot <- downloadHandler(
     df$Score = factor(df$Condition,levels = c(cond1,cond2))
     
     
-      ggboxplot(df,x="Condition",y="McpCounterValue",color="Condition",outlier.shape=NA,remove="outlier", main = "",legend="none",ylab=path) +
-      scale_color_manual(values=c("lightcoral", '#4ab3d6')) + rotate_x_text(45) + 
+      ggboxplot(df,x="Condition",y="McpCounterValue",color="Condition",outlier.shape=NA,remove="outlier", main = "",legend="right",ylab=path, xlab=FALSE) +
+      scale_color_manual(values=c("lightcoral", '#4ab3d6')) +  theme( axis.text.x=element_blank()) + 
       stat_summary(fun.y = mean, geom = "point", shape = 20, size = 3, color = "#262686", position = position_dodge(width = 0.75)) +
-      stat_compare_means(method = "t.test",label = "p.format") +
+      stat_compare_means(method = "t.test",label = "p.format") + 
       geom_signif(comparisons = list(c(cond1, cond2)), map_signif_level = TRUE, textsize = 3.5, vjust = -0.5,  y.position = "y.position")       
 
 
@@ -1719,8 +1719,8 @@ output$allboxMCP <- renderPlot({
     df_combined$McpCounterValue = as.numeric(df_combined$McpCounterValue)
     df_combined$Condition = factor(df_combined$Condition, levels = c(cond1, cond2))
     
-    ggboxplot(df_combined, x = "Condition", y = "McpCounterValue", color = "Condition", outlier.shape = NA, main = "", legend = "none") +
-        facet_wrap(~ Metric, ncol = 5) + rotate_x_text(45) + 
+    ggboxplot(df_combined, x = "Condition", y = "McpCounterValue", color = "Condition", outlier.shape = NA, main = "", legend = "top", xlab=FALSE) +
+        facet_wrap(~ Metric, ncol = 5) + theme( axis.text.x=element_blank()) + 
         scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
         stat_summary(fun.y = mean, geom = "point", shape = 20, size = 3, color = "#262686", position = position_dodge(width = 0.75)) +
         stat_compare_means(method = "t.test",label = "p.format") +
