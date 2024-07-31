@@ -1099,12 +1099,13 @@ pca_alldownload <- reactive({
         table$diffexpressed[table$log2FoldChange > tsFC & table$padj < tsPadj] = "UP"
         table$diffexpressed[table$log2FoldChange < -tsFC & table$padj < tsPadj] = "DOWN"
         volcanoplot = volcano()  + ggtitle(paste(group1, "vs", group2)) +
-        geom_text_repel(
+        geom_label_repel(
                   data = head(as.data.frame(table[which(table$diffexpressed != "NO"),]), 15),
                   aes(label = name),show.legend=FALSE,
-                  box.padding = 0.5, point.padding = 0.1,
-                  segment.color = 'grey', segment.size = 0.2,
-                  nudge_y = 0.2
+                  box.padding = 1, max.overlaps = Inf,
+                  segment.color = "#919191",fill="white",arrow = arrow(
+      length = unit(0.01, "npc"), type = "closed", ends = "first"
+    )
                 )
         print(file)
         ggsave(file, volcanoplot,  width = 8, height = 6, units = "in", dpi = 300, device = input$format, bg='white')
@@ -1689,7 +1690,7 @@ output$downloadboxplot <- downloadHandler(
     df$Score = factor(df$Condition,levels = c(cond1,cond2))
     
     
-      ggboxplot(df,x="Condition",y="McpCounterValue",color="Condition",outlier.shape=NA,remove="outlier", main = "",legend="right",ylab=path, xlab=FALSE) +
+      ggboxplot(df,x="Condition",y="McpCounterValue",color="Condition",outlier.shape=NA,remove="outlier", main = "",legend="bottom",ylab=path, xlab=FALSE) +
       scale_color_manual(values=c("lightcoral", '#4ab3d6')) +  theme( axis.text.x=element_blank()) + 
       stat_summary(fun.y = mean, geom = "point", shape = 20, size = 3, color = "#262686", position = position_dodge(width = 0.75)) +
       stat_compare_means(method = "t.test",label = "p.format") + 
@@ -1699,7 +1700,9 @@ output$downloadboxplot <- downloadHandler(
     })
 
 output$allboxMCP <- renderPlot({
-    df = as.data.frame(mcpcounter()$mcp)
+
+    mcpi = mcpcounter()$mcp
+    df = as.data.frame(mcpi)
     annot = annotProcess()
     cond1 = unique(annot$condshiny)[as.numeric(input$cond1)]
     cond2 = unique(annot$condshiny)[as.numeric(input$cond2)]
@@ -1727,5 +1730,67 @@ output$allboxMCP <- renderPlot({
         geom_signif(comparisons = list(c(cond1, cond2)), map_signif_level = TRUE, textsize = 3.5, vjust = -0.5,  y.position = "y.position")  
 
 })
+  # Boxplot Panel
+ 
+
+sampleChoice <- reactive({
+    mcpi = mcpcounter()$mcp
+   sample = rownames(as.data.frame(mcpi))
+
+   name = sample
+   num = c(1:length(name))
+   choiceTable = data.frame(name, num)
+    choix = setNames(as.numeric(choiceTable$num), choiceTable$name)
+
+  return(list(choix_indice=choix, choix_name=choiceTable$name[choix]))
+
+})
+
+output$sampleTarget <-renderUI({  
+    return(selectInput("sampleChoiceTarget", label = "Choose sample target to observe",
+                  choices = sampleChoice()$choix_indice))
+  })
+
+
+output$densityPlot <- renderPlot({
+    
+    path = input$mcpPath
+    mcp = mcpcounter()
+    proj1= as.data.frame(mcp$mcp1)
+    proj2=as.data.frame(mcp$mcp2)
+
+    annot = annotProcess()
+    cond1 = unique(annot$condshiny)[as.numeric(input$cond1)]
+    cond2 = unique(annot$condshiny)[as.numeric(input$cond2)]
+
+    df = as.data.frame(
+      rbind(
+        cbind(McpCounterValue=as.numeric(proj1[,path]),Condition=rep(cond1,nrow(proj1))),
+        cbind(McpCounterValue=as.numeric(proj2[,path]),Condition=rep(cond2,nrow(proj2)))
+      )
+    )
+
+    df$McpCounterValue=as.numeric(df$McpCounterValue)
+    #df$Score = factor(df$Condition,levels = c(cond1,cond2))
+    rownames(df) = c(rownames(proj1),rownames(proj2))
+
+        sampletarget = as.numeric(df[sampleChoice()$choix_name[as.numeric(input$sampleChoiceTarget)],"McpCounterValue"])
+
+
+
+    
+    p <- ggplot(df, aes(x = McpCounterValue, fill = Condition, color = Condition)) +
+      scale_color_manual(values=c("lightcoral", '#4ab3d6'))+
+        geom_density(alpha = 0.5) +   # Courbes de densité avec transparence
+        labs(title = paste0("Density Plot of ",path), x = "Value", y = "Density") +
+        theme_minimal()+ geom_vline(xintercept = as.numeric(sampletarget),  color = "#262696") +
+            annotate("text", x = sampletarget, y = Inf, label = paste("Sample =", sampleChoice()$choix_name[as.numeric(input$sampleChoiceTarget)]),
+                     color = "#262696", vjust = 1.5, hjust = -0.1)+ theme(legend.position="bottom", legend.text=element_text(size=10))
+    
+    return(p)
+    
+ 
+})
+
 
   }

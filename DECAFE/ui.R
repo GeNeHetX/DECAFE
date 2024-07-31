@@ -504,17 +504,17 @@ library(shinyBS)
       ))),
       fluidRow(
       column(width=12,
-        box(width=6,status='info',title = h1('Dotplot',icon('chart-simple')),solidHeader = TRUE, collapsible=TRUE,
+        box(width=6,status='success',title = h1('Dotplot',icon('chart-simple')),solidHeader = TRUE, collapsible=TRUE,
           fluidRow(column(width = 8, sliderInput("nbDotplot",label = "Number of pathways to display", min = 1, max =20, value = 10,step=1))),
          fluidRow( column(width=12,withSpinner(plotlyOutput("dotplot",height=1000), type = 8, color = "#CDCDE6", size = 1)))),
-        box(width=6,status='info',title = h1('GSEA plot',icon('chart-simple')),solidHeader = TRUE, collapsible=TRUE,
+        box(width=6,status='success',title = h1('GSEA plot',icon('chart-simple')),solidHeader = TRUE, collapsible=TRUE,
           fluidRow(column(width = 8, sliderInput("nbGseaPlot",label = "Number of pathways to display", min = 1, max =20, value = 10,step=1))),
           fluidRow(column(width=12,withSpinner(plotOutput("gseaPlot", height=1000,width="90%"), type = 8, color = "#CDCDE6", size = 1))))
       )
       ),
       fluidRow(
       column(width=12,
-        box(width=12,status='info',title = h1('Tree Pathways',icon('square-poll-horizontal')),solidHeader = TRUE, 
+        box(width=12,status='success',title = h1('Tree Pathways',icon('square-poll-horizontal')),solidHeader = TRUE, 
           column(width = 8, sliderInput("k",label = "Number of different groups", min = 1, max =20, value = 5,step=1)),
           withSpinner(plotOutput("treePlot", inline=F, width = 1200, height=1500), type = 8, color = "#CDCDE6", size = 1), style = 'display:block;width:100%;overflow-y: scroll')
       )
@@ -523,8 +523,24 @@ library(shinyBS)
 
 
       ),tabPanel("MCPcounter",
-      actionButton('gomcp',label="Run MCPcounter",icon('play')),br(),
-      selectInput("mcpPath", label = "Choose type to cell to plot",
+      actionButton('gomcp',label="Run MCPcounter",icon('play')),br(),br(),br(),
+      fluidRow(column(width=12,
+      box(width=12,status='success',title = h1('All immune cell famillies',icon('chart-simple')),solidHeader = TRUE, 
+      withSpinner(
+      plotOutput("allboxMCP", inline=F, width = 1500, height=1200), 
+      type = 8, color = "#CDCDE6", size = 1)))),
+
+      br(),br(),
+      fluidRow(column(width=12,
+      box(width=NULL,status='info',title = h1('McpCounter projection',icon('table')),solidHeader = TRUE, 
+        withSpinner(DT::dataTableOutput("mcptable"), type = 8, color = "#CDCDE6", size = 1)
+      ))),
+      
+       fluidRow(column(width=12,
+      box(
+        width=6,status='success',title = h1('Choose one immune cell familly',icon('chart-simple')),solidHeader = TRUE, 
+        
+        selectInput("mcpPath", label = "Choose type to cell to plot",
                   choices = c(
                     "T cells"="Tcells",
                     "CD8Tcells"="CD8Tcells",
@@ -537,16 +553,19 @@ library(shinyBS)
                     "Endothelial"="Endothelial" ,
                     "Fibroblasts"="Fibroblasts"
                     ),selected=1),
-     
-      plotOutput('boxMCP', inline=F, width = 700, height=500),
-      br(),br(),
-      box(width=NULL,status='info',title = h1('McpCounter projection',icon('table')),solidHeader = TRUE, 
-        withSpinner(DT::dataTableOutput("mcptable"), type = 8, color = "#CDCDE6", size = 1)
-      ),
-      plotOutput("allboxMCP", inline=F, width = 1500, height=1200)
+        withSpinner(
+          plotOutput('boxMCP'), 
+          type = 8, color = "#CDCDE6", size = 1)
+        ),
+       box(
+        width=6,status='success',title = h1('Choose one sample',icon('chart-simple')),solidHeader = TRUE, 
+        uiOutput('sampleTarget'),
+      withSpinner(plotOutput("densityPlot"), type = 8, color = "#CDCDE6", size = 1)
+
+      )),
 
 
-      ),
+      )),
 
 
 
