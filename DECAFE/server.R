@@ -43,12 +43,28 @@ library(dendextend)
 library(gplots)
 library(gridExtra)
 library(grid)
+library(ROTS)
+
 
 
 
 # Define server logic required to draw a histogram
 function(input, output, session) {
 # HOME Page
+
+
+observeEvent(input$lcms,{
+    title <- if(input$lcms == "rna") {
+      "DECAFE"
+    } else {
+      "DECAFE LC-MS/MS"
+    }
+
+    session$sendCustomMessage("changetitle", title)
+
+  })
+
+
 
 output$pca_Image <- renderImage({
 
@@ -104,6 +120,87 @@ output$annot_Image <- renderImage({
 
   }, deleteFile = FALSE)
 
+  # Color
+  output$theme <- renderUI({
+    s=""
+    if(input$lcms !="rna"){
+      s= tags$style(HTML("
+       
+      .main-header .logo {
+        font-family: 'Georgia', Times, 'Times New Roman', serif;
+        font-weight: bold;
+        font-size: 24px;
+      }
+
+      .box.box-solid.box-info>.box-header {
+        color:#fff;
+        background:#8ACAAD
+      }
+      .box.box-solid.box-info{
+        border-bottom-color:#8ACAAD;
+        border-left-color:#8ACAAD;
+        border-right-color:#8ACAAD;
+        border-top-color:#8ACAAD;
+      }
+
+      .box.box-solid.box-success>.box-header {
+        color:#fff;
+        background:#A5C2E3;
+      }
+
+      .box.box-solid.box-success{
+        border-bottom-color:#A5C2E3;
+        border-left-color:#A5C2E3;
+        border-right-color:#A5C2E3;
+        border-top-color:#A5C2E3;
+      }
+
+      .nav-tabs-custom>.nav-tabs {
+      margin: 0;
+      border-bottom-color: #f4f4f4;
+      border-top-right-radius: 3px;
+      border-top-left-radius: 3px;
+      background: #ddd;
+      }
+      
+      .progress-bar {
+        background-color: #A5C2E3;
+      }
+              
+      .btn-default {
+        background-color: #A5C2E3;
+        color: #fff;
+        border-color: #ddd;
+      }
+
+      .nav-tabs-custom>.nav-tabs>li.active {
+        border-top-color: #1D2C4C;
+      }
+      .skin-purple .main-header .navbar {
+        background-color: #1D2C4C;
+      }
+
+      .skin-purple .main-header .logo {
+      background-color: #1D2C4C;
+      color: #fff;
+      border-bottom: 0 solid transparent;
+      }
+      skin-purple .sidebar-menu>li.active>a, .skin-purple .sidebar-menu>li:hover>a {
+    color: #fff;
+    background: #1e282c;
+    border-left-color: #1D2C4C;
+}
+
+
+      "))
+    }
+
+    return(s)
+
+
+
+    })  
+
 
   # Overview Panel
   ## Reactive function
@@ -126,11 +223,13 @@ output$annot_Image <- renderImage({
   annotProcess <- reactive({
     annot = annotFile()
     annot$condshiny = apply(annot, 1, function(x) paste(colnames(annot),"_", x, collapse = ',', sep=''))
+    if(input$lcms=="rna"){
+
     if(input$sex){
       req(input$sexAnnot)
       sex= read.delim(input$sexAnnot$datapath,row.names=1)
       annot$sex = sex
-    }
+    }}
 
     return(annot)
   })
@@ -144,7 +243,7 @@ output$annot_Image <- renderImage({
     count = read.delim(input$file$datapath, sep='\t', row.names = 1, header=T,as.is=T)
     removeNotification(notif)
     
-    if(!all(as.matrix(count) == as.integer(as.matrix(count)))){
+    if(!all(as.matrix(count) == as.integer(as.matrix(count))) && input$lcms=="rna"){
       showModal(modalDialog(
         title = "Invalid input",
         "The  count matrix must not be normalized, only integer are accepted!",
@@ -156,7 +255,10 @@ output$annot_Image <- renderImage({
     'hs' = 'humanGeneannot.rds',
     'mm' = 'mouseGeneannot.rds',
     )
+
+    
     geneannot = readRDS(genefile)
+    if(input$lcms=="rna"){
     geneannot =  geneannot[rownames(count),]
 
     if (input$coding) {
@@ -191,7 +293,7 @@ output$annot_Image <- renderImage({
       geneannot = geneannot[-which(geneannot$seqname == X |geneannot$seqname == Y) , ]
       count = count[geneannot$GeneID  , ]
     
-    }
+    }}
 
     # if (input$sex) {
     #   count <- count[!grepl("^(Y|X|MT)$", geneannot$seqname), ]
@@ -205,13 +307,14 @@ output$annot_Image <- renderImage({
    # Create named vector will all annotation (condition)
   conditionVector <- reactive({
     annot = annotProcess()$condshiny
+
     name = unique(annot)
     num  = c(1:length(unique(name)))
 
     choice_table = data.frame(name, num)
     choix = setNames(as.numeric(choice_table$num), choice_table$name)
+    return(choix)
   })
-
 
   
 ## Output 
@@ -354,6 +457,9 @@ output$downloadUpsetPlot <- downloadHandler(
                   choices = conditionVector(), selected=2)
   })
 
+   
+
+
   phraserelou <-reactive({
     annot = annotProcess()
     cond1 = unique(annot$condshiny)[as.numeric(input$cond1)]
@@ -386,6 +492,7 @@ output$downloadUpsetPlot <- downloadHandler(
       annotGP1 = annot_gp1,
       annotGP2 = annot_gp2
     )
+
     return(res)
 
   })
@@ -425,39 +532,73 @@ output$downloadUpsetPlot <- downloadHandler(
 
     zero_threshold = as.numeric(input$zero_threshold)
     countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
-
-    annot_intersect$condshiny = as.factor(annot_intersect$condshiny)
-    A = as.character(unique(annot_intersect$condshiny)[1])
-    B = as.character(unique(annot_intersect$condshiny)[2])
-    annot_intersect$condshiny <- factor(annot_intersect$condshiny, levels = c(A, B))
-
+     condshiny = annot_intersect$condshiny
+     annot_intersect$condshiny = as.factor(annot_intersect$condshiny)
+      A = as.character(unique(annot_intersect$condshiny)[1])
+      B = as.character(unique(annot_intersect$condshiny)[2])
 
 
-    if(input$sex){
-      #annot_intersect$sex<- as.factor(annot_intersect$sex)
-      dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
-                                    colData = annot_intersect[,c('condshiny','sex')],
-                                    design = ~condshiny + sex)
+      annot_intersect$condshiny <- factor(annot_intersect$condshiny, levels = c(A, B))
+
+
+    if( input$lcms =="rna"){
+     
+
+
+      if(input$sex){
+        #annot_intersect$sex<- as.factor(annot_intersect$sex)
+        dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
+                                      colData = annot_intersect[,c('condshiny','sex')],
+                                      design = ~condshiny + sex)
+      }
+      else{
+        dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
+                                      colData = annot_intersect,
+                                      design = ~condshiny )
+      }
+
+      dds = dds[rowSums(counts(dds)) >= 10]
     }
     else{
-      dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
-                                    colData = annot_intersect,
-                                    design = ~condshiny )
-    }
+       if(input$normalized){
+        count_normalized=countfilt}
+      else{
 
-    dds = dds[rowSums(counts(dds)) >= 10]
+        count_normalized = countfilt / rowSums(countfilt)}
+
+
+    
+       
+        dds = ROTS(data = count_normalized, groups =condshiny , B = 100 , seed = 1234, log=FALSE)
+
+
+
+
+
+    }
     removeNotification(notif)
     return(dds)
   })
 
   vstNormalization_cond <- reactive({
+
     dds = DDS_cond()
-    notif <<- showNotification("VST", duration = 0)
-    normalized_counts =  assay(vst(dds))
+    
+    if(input$lcms=="rna"){
+      notif <<- showNotification("VST", duration = 0)
+      normalized_counts =  assay(vst(dds))
+      removeNotification(notif)
+    }
+    else{
+
+      normalized_counts =  dds$data#as.numeric()
+
+
+    }
 
     
 
-    removeNotification(notif)
+    
     return(normalized_counts)
 
   })
@@ -496,7 +637,7 @@ output$downloadUpsetPlot <- downloadHandler(
     zero_threshold = as.numeric(input$zero_threshold)
     countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
 
-
+    if(input$lcms =="rna"){
     if(input$sex){
       dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
                                     colData = annot_intersect,
@@ -515,7 +656,19 @@ output$downloadUpsetPlot <- downloadHandler(
     
       
     #normalized_counts = t(scale(t(normalized_counts), scale=FALSE)) # Normalization per gene 
-    removeNotification(notif)
+    removeNotification(notif)}
+    else{
+
+      if(input$normalized){
+        normalized_counts=countfilt
+      }
+      else{ 
+        normalized_counts = countfilt / rowSums(countfilt)
+      }
+
+
+
+    }
     return(list(normalized_counts=normalized_counts, annot_intersect=annot_intersect, count_intersect=count_intersect))
 
 
@@ -525,8 +678,13 @@ output$downloadUpsetPlot <- downloadHandler(
 
   desqNormalization_cond <- reactive({
     dds = DDS_cond()
-    dds2 = estimateSizeFactors(dds)
-    normalized_counts = counts(dds2, normalized = TRUE)
+
+    if(input$lcms =="rna"){
+      dds2 = estimateSizeFactors(dds)
+      normalized_counts = counts(dds2, normalized = TRUE)}
+    else{
+      normalized_counts = log2(dds$data)
+    }
     return(normalized_counts)
 
   })
@@ -544,13 +702,15 @@ countNormGenePlot <-reactive({
     norm1 = normalized_counts[as.numeric(input$geneTarget),intersect(annot_gp1, colnames(normalized_counts))]
     norm2 = normalized_counts[as.numeric(input$geneTarget),intersect(annot_gp2, colnames(normalized_counts))]
     
-    norm1_rm = as.vector(norm1)
-    norm2_rm = as.vector(norm2)
-    res = data.frame(
+    norm1_rm = as.vector(unlist(norm1))
+    norm2_rm = as.vector(unlist(norm2))
+
+    res = data.frame(cbind(
       count = c(norm1_rm, norm2_rm),
       condition = c(rep(annot_name_cond1,length(norm1_rm)), rep(annot_name_cond2,length(norm2_rm))),
       sampleID = c(intersect(annot_gp1, colnames(normalized_counts)), intersect(annot_gp2, colnames(normalized_counts)))
-    )
+    ))
+
     return(res)
   })
 
@@ -1033,6 +1193,10 @@ pca_alldownload <- reactive({
 
     notif <<- showNotification("Differential analysis in progress", duration = 0)
     nb_thread = as.numeric(input$nb_thread)
+    
+    geneannot = countFile()$geneannot
+    
+    if(input$lcms=="rna"){
     if(nb_thread > 1){
       BiocParallel::register(BiocParallel::MulticoreParam())
       dds = DESeq(dds,parallel = TRUE)
@@ -1040,13 +1204,36 @@ pca_alldownload <- reactive({
     else{
       dds = DESeq(dds,parallel = FALSE)
     }
-    geneannot = countFile()$geneannot
+    
     table = results(dds)
     removeNotification(notif)
     table$name = as.vector(geneannot[rownames(table), 'GeneName'])
     table = as.data.frame(table)
     # table = table[order(abs(table$stat),decreasing=TRUE),]
-    table = table[, c(7, 1:6)]
+    table = table[, c(7, 1:6)]}
+    else{
+
+      name = rownames(dds$data)
+
+      table = as.data.frame(
+        cbind(
+          name=name,
+          log2FoldChange=dds$logfc,
+          padj=dds$FDR,
+          pvalue=dds$pvalue,
+          stat=dds$d
+        )
+      )
+
+      table$padj = as.numeric(table$padj)
+      table$log2FoldChange= as.numeric(table$log2FoldChange)
+      table$stat = as.numeric(table$stat)
+
+
+
+    }
+
+
      
 
     return(list(deseq = dds, res = table) )
@@ -1057,6 +1244,8 @@ pca_alldownload <- reactive({
 
     table = resDeseq()$res
     tsPadj = as.numeric(input$ts_padj)
+    table$log2FoldChange= as.numeric(table$log2FoldChange)
+
     tsFC = 1
 
     table$diffexpressed = "NO"
@@ -1107,13 +1296,16 @@ pca_alldownload <- reactive({
       length = unit(0.01, "npc"), type = "closed", ends = "first"
     )
                 )
-        print(file)
+
         ggsave(file, volcanoplot,  width = 8, height = 6, units = "in", dpi = 300, device = input$format, bg='white')
       })
 
 
   output$degTable <- DT::renderDT(server = FALSE, {
     table = resDeseq()$res
+    table$padj = as.numeric(table$padj)
+    table$log2FoldChange= as.numeric(table$log2FoldChange)
+    table$stat = as.numeric(table$stat)
     table = table[order(abs(table$stat),decreasing=TRUE),]
     DT::datatable(
       table,
@@ -1150,10 +1342,12 @@ pca_alldownload <- reactive({
     genename_list = as.vector(resDeseq()$res$name)
 
     name = genename_list
+
     num  = c(1:length(name))
 
     choiceTable = data.frame(name, num)
     choix = setNames(as.numeric(choiceTable$num), choiceTable$name)
+
 
     return(list(choix_indice=choix, choix_name=choiceTable$name[choix]))
 
@@ -1167,6 +1361,7 @@ pca_alldownload <- reactive({
 # boxplot
  output$bpGeneTarget <- renderPlot({
     res = countNormGenePlot()
+
     res$count = as.numeric(res$count)
     
     res$genetarget = geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
@@ -1190,7 +1385,7 @@ pca_alldownload <- reactive({
   output$histGeneTarget <- renderPlot({
     res = countNormGenePlot()
     res$genetarget = geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
-    print(head(res))
+
     ggplot(res, aes(x=count, color=condition)) +
       geom_histogram(fill="white", alpha=0.5, position="identity") + 
       theme_minimal() + theme(legend.position="top", legend.text=element_text(size=10)) +  
@@ -1221,11 +1416,11 @@ output$sampleTarget2 <-renderUI({
 
 output$densityPlotgene <- renderPlot({
     res = countNormGenePlot()
+    res$count=as.numeric(res$count)
     res$genetarget = geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
     id = sampleChoice2()$choix_name[as.numeric(input$sampleChoiceTarget2)]
-    # print(id)
+
     sampletarget = as.numeric(res$count[which(res$sampleID == id)])
-    # print(sampletarget)
 
     p = ggplot(res, aes(x=count, fill = condition, color=condition)) +
     geom_density(alpha = 0.5)+scale_color_manual(values=c("lightcoral", '#4ab3d6'))+
@@ -1650,12 +1845,16 @@ output$downloadboxplot <- downloadHandler(
   mcpcounter <- eventReactive(input$gomcp,{
   annot_intersect=intersectCond()$annot
   genefile = countFile()$geneannot
-    normalized_counts = as.data.frame(vstNormalization_cond())
+  normalized_counts = vstNormalization_cond()
+
+    
+    if(input$lcms=="rna"){
+      normalized_counts = as.data.frame(vstNormalization_cond())
     normalized_counts$name = genefile[row.names(normalized_counts),'GeneName']
     normalized_counts$name[duplicated(normalized_counts$name)] <- NA
     normalized_counts=na.omit(normalized_counts)
     rownames(normalized_counts)=normalized_counts$name
-    normalized_counts$name=NULL
+    normalized_counts$name=NULL}
  
     mcp = CancerRNASig::mcpcount(normalized_counts,rownames(normalized_counts))
 
@@ -1679,6 +1878,21 @@ output$downloadboxplot <- downloadHandler(
 
 
     })
+   conditionMCP <- reactive({
+    mcpi = mcpcounter()$mcp
+    name = colnames(mcpi)
+    num  = colnames(mcpi)
+
+    choice_table = data.frame(name, num)
+    choix = setNames(choice_table$num, choice_table$name)
+    return(choix)
+  })
+
+     output$mcpCond <-renderUI({
+
+    selectInput("mcpPath", label = "Choose type to cell to plot",
+                  choices = conditionMCP(), selected=1)
+  })
 
   
   output$mcptable <- DT::renderDT(server = FALSE, {
@@ -1767,14 +1981,14 @@ output$allboxMCP <- renderPlot({
     )
         
     })
-    print(df_list)
+
 
     df_combined = do.call(rbind, df_list)
     df_combined$McpCounterValue = as.numeric(df_combined$McpCounterValue)
     df_combined$Condition = factor(df_combined$Condition, levels = c(A, B))
-    
+    ncol = (length(colnames(mcpi)) %/% 2 + ifelse((length(colnames(mcpi)) %% 2) ==1,1,0))
     ggboxplot(df_combined, x = "Condition", y = "McpCounterValue", color = "Condition", outlier.shape = NA, main = "", legend = "top", xlab=FALSE) +
-        facet_wrap(~ Metric, ncol = 5) + theme( axis.text.x=element_blank()) + 
+        facet_wrap(~ Metric, ncol = ncol) + theme( axis.text.x=element_blank()) + 
         scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
         stat_summary(fun.y = mean, geom = "point", shape = 20, size = 3, color = "#262686", position = position_dodge(width = 0.75)) +
         stat_compare_means(method = "t.test",label = "p.format") +

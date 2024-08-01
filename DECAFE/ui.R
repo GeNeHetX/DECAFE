@@ -24,17 +24,24 @@ library(plotly)
 library(htmltools)
 library(shinyBS)
 
+
 # Define UI for application that draws a histogram
 
   dashboardPage(skin = "purple",
   dashboardHeader(
             
-    title = "DECAFE"
+    title = "DECAFE",titleWidth=300
+ 
+    #textOutput('title')
+    
 
   
 ),
   dashboardSidebar(
+    width=300,
     sidebarMenu(
+      selectInput('lcms', 'Choose your data type', choices = list(RNASeq='rna', "LC-MS/MS"='lcms')),
+
       menuItem("Home", tabName = "home",icon=shiny::icon('home')),
      
       menuItem("Analysis", tabName = "tab1",icon=icon('arrows-rotate')),
@@ -98,11 +105,18 @@ library(shinyBS)
       }
         
               
-    ")),htmlDependency(
+    ")),uiOutput('theme'),
+
+    htmlDependency(
       "font-awesome", "5.3.1", "www/shared/fontawesome", package = "shiny",
                stylesheet = c("css/all.min.css", "css/v4-shims.min.css")
     ),
+    tags$script(HTML('Shiny.addCustomMessageHandler("changetitle", function(x) {$(".logo").html(x);document.title=x});')),
+
+    
     tags$head(tags$script('
+      
+
       // Define function to set height of "map" and "map_container"
       setHeight = function() {
         var window_height = $(window).height();
@@ -132,6 +146,9 @@ library(shinyBS)
       Shiny.onInputChange("pltChange", obj);
     
       });
+
+      
+
       ')),
 
        tabItems(
@@ -322,11 +339,15 @@ library(shinyBS)
             ),
             column(width = 3,
               selectInput('org', 'Choose your species', choices = list(Human='hs', Mouse='mm')),#, Other='oth'))
+              conditionalPanel("input.lcms=='rna'",
               radioButtons('coding', label= div('Use only coding genes',icon('circle-info')), choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = FALSE),
               bsTooltip("coding",title="Remove all non-coding genes from analysis"),
               radioButtons('sex', label=div('Sex-independent analysis',icon('circle-info')), choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = FALSE),
               bsTooltip('sex',title="Remove all gene in chrs X/Y from analysis"),
-              conditionalPanel(condition="input.sex=='TRUE'", fileInput('sexAnnot','Load sex information'))
+              conditionalPanel(condition="input.sex=='TRUE'", fileInput('sexAnnot','Load sex information'))),
+              conditionalPanel("input.lcms=='lcms'",
+                radioButtons('normalized', 'Matrix already normalized', choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = TRUE),
+                )
               
               # conditionalPanel("input.org == 'oth'", fileInput('genefile', 'Load Gene Annotation'))
             ),
@@ -527,32 +548,34 @@ library(shinyBS)
       fluidRow(column(width=12,
       box(width=12,status='success',title = h1('All immune cell famillies',icon('chart-simple')),solidHeader = TRUE, 
       withSpinner(
-      plotOutput("allboxMCP", inline=F, width = 1500, height=1200), 
+      plotOutput("allboxMCP"#, inline=F, width = 1500
+        , height=800
+        ), 
       type = 8, color = "#CDCDE6", size = 1)))),
 
       br(),br(),
       fluidRow(column(width=12,
-      box(width=NULL,status='info',title = h1('McpCounter projection',icon('table')),solidHeader = TRUE, 
+      box(width=12,status='info',title = h1('McpCounter projection',icon('table')),solidHeader = TRUE, 
         withSpinner(DT::dataTableOutput("mcptable"), type = 8, color = "#CDCDE6", size = 1)
       ))),
        br(),br(),
        fluidRow(column(width=12,
       box(
         width=6,status='success',title = h1('Choose one immune cell familly',icon('chart-simple')),solidHeader = TRUE, 
-        
-        selectInput("mcpPath", label = "Choose type to cell to plot",
-                  choices = c(
-                    "T cells"="Tcells",
-                    "CD8Tcells"="CD8Tcells",
-                    "Cytotox.lymph"="Cytotox.lymph",
-                    "NK" = "NK",
-                    "B.lineage"="B.lineage",
-                    "Mono.lineage"="Mono.lineage",    
-                  "Myeloid.dendritic" ="Myeloid.dendritic",
-                    "Neutrophils"="Neutrophils",
-                    "Endothelial"="Endothelial" ,
-                    "Fibroblasts"="Fibroblasts"
-                    ),selected=1),
+        uiOutput('mcpCond'),
+        # selectInput("mcpPath", label = "Choose type to cell to plot",
+        #           choices = c(
+        #             "T cells"="Tcells",
+        #             "CD8Tcells"="CD8Tcells",
+        #             "Cytotox.lymph"="Cytotox.lymph",
+        #             "NK" = "NK",
+        #             "B.lineage"="B.lineage",
+        #             "Mono.lineage"="Mono.lineage",    
+        #           "Myeloid.dendritic" ="Myeloid.dendritic",
+        #             "Neutrophils"="Neutrophils",
+        #             "Endothelial"="Endothelial" ,
+        #             "Fibroblasts"="Fibroblasts"
+        #             ),selected=1),
         withSpinner(
           plotOutput('boxMCP'), 
           type = 8, color = "#CDCDE6", size = 1)
