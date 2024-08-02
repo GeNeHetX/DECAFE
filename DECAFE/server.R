@@ -1405,6 +1405,28 @@ pca_alldownload <- reactive({
       stat_summary(fun.y=mean, geom="point", shape=20, size=5, color="#262686", fill="#262686")
   })
 
+  output$bpGeneTarget_Ttest <- renderPlot({
+    res = countNormGenePlot()
+
+    res$count = as.numeric(res$count)
+    
+    res$genetarget = geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
+    #padj = resDeseq()$res$padj[which(resDeseq()$res$name == res$genetarget)]
+   annot = annotProcess()
+    cond1 = unique(annot$condshiny)[as.numeric(input$cond1)]
+    cond2 = unique(annot$condshiny)[as.numeric(input$cond2)]
+
+    ggplot(res, aes(x=condition,y=count, color=condition)) + geom_boxplot() +
+      rotate_x_text(45)+ labs(x = "dispersion", y = paste0('count normDESq2 of target gene : ',res$genetarget))+
+      scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
+      scale_x_discrete(labels=NULL) +  theme_minimal() + theme(legend.position="right", legend.text=element_text(size=10)) + 
+       stat_compare_means(method = "t.test",label = "p.format") + 
+      geom_signif(comparisons = list(c(cond1, cond2)), map_signif_level = TRUE, textsize = 3.5, vjust = -0.5,  y.position = "y.position",test="t.test") +       
+
+      stat_summary(fun.y=mean, geom="point", shape=20, size=5, color="#262686", fill="#262686")
+  })
+
+
   output$histGeneTarget <- renderPlot({
     res = countNormGenePlot()
     res$genetarget = geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]

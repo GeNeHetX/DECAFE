@@ -496,7 +496,16 @@ library(shinyBS)
         box(width=12, status = 'success', solidHeader = TRUE, title = h3("Gene Target Boxplot", icon('chart-simple')),
           withSpinner(plotOutput('bpGeneTarget'), type = 8, color = "#CDCDE6", size = 1)
         )
+        ),
+        conditionalPanel("input.lcms=='lcms'",
+          column(width=6,
+        box(width=12, status = 'success', solidHeader = TRUE, title = h3("Gene Target Boxplot (pval t.test)", icon('chart-simple')),
+          withSpinner(plotOutput('bpGeneTarget_Ttest'), type = 8, color = "#CDCDE6", size = 1)
         )
+        ),
+
+
+          )
 
       
     )),
