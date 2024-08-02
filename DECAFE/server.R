@@ -1091,12 +1091,23 @@ pca_alldownload <- reactive({
     count_intersect = intersect$count
     geneannot = countFile()$geneannot
 
+    if(input$lcms =="rna"){
     tab = as.data.frame(
       cbind(
         name = as.vector(geneannot[rownames(count_intersect),'GeneName']),
         contrib = contrib
       )
+    )}
+    else{
+      tab = as.data.frame(
+      cbind(
+        name = as.vector(rownames(count_intersect)),
+        contrib = contrib
+      )
     )
+
+
+    }
     tab = tab[order(abs(as.numeric(tab$contrib)),decreasing=TRUE),]
     rownames(tab)= NULL
 
@@ -1141,12 +1152,23 @@ pca_alldownload <- reactive({
     geneannot = countFile()$geneannot
 
 
+    if(input$lcms =="rna"){
     tab = as.data.frame(
       cbind(
         name = as.vector(geneannot[rownames(count_intersect),'GeneName']),
         contrib = contrib
       )
+    )}
+    else{
+      tab = as.data.frame(
+      cbind(
+        name = as.vector(rownames(count_intersect)),
+        contrib = contrib
+      )
     )
+
+
+    }
     tab = tab[order(abs(as.numeric(tab$contrib)),decreasing=TRUE),]
     rownames(tab)= NULL
 
