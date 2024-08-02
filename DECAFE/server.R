@@ -1701,7 +1701,7 @@ output$downloadboxplot <- downloadHandler(
     df$sign = sign(df$NES)
     df$sign[df$sign == -1] <- "suppressed"
     df$sign[df$sign == 1]<- "activated"
-
+    df$sign = as.factor(df$sign, levels=c("suppressed","activated"))
     df$pathway = str_replace_all(df$pathway,'_',' ')
     df$pathway=str_replace_all(df$pathway, "(.{25})([^\\s])", "\\1\\2-\n")
 
