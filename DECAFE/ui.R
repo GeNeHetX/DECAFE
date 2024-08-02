@@ -347,6 +347,7 @@ library(shinyBS)
               conditionalPanel(condition="input.sex=='TRUE'", fileInput('sexAnnot','Load sex information'))),
               conditionalPanel("input.lcms=='lcms'",
                 radioButtons('normalized', 'Matrix already normalized', choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = TRUE),
+                radioButtons('adlc', 'Choose type of differential analysis', choices = list("ROTS"="ROTS", "t.test"="t.test"), inline=TRUE, selected = "ROTS")
                 )
               
               # conditionalPanel("input.org == 'oth'", fileInput('genefile', 'Load Gene Annotation'))

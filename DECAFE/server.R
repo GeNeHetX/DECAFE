@@ -566,11 +566,47 @@ output$downloadUpsetPlot <- downloadHandler(
 
         count_normalized = countfilt / rowSums(countfilt)}
 
+
+        if(input$adlc=="ROTS"){
+
         condshiny[which(condshiny == A)] <- paste0("B",condshiny[which(condshiny == A)] )
         condshiny[which(condshiny == B)] <- paste0("A",condshiny[which(condshiny == B)] )
     
        
-        dds = ROTS(data = count_normalized, groups =condshiny , B = 100 , seed = 1234, log=FALSE)
+        dds = ROTS(data = count_normalized, groups =condshiny , B = 100 , seed = 1234, log=FALSE)}
+
+        else{
+          
+          cond1 = row.names(annot_intersect[which(annot_intersect$condshiny == A),])
+          cond2  = row.names(annot_intersect[which(annot_intersect$condshiny == B),])
+          row1 = count_normalized[1,]
+    
+          res= apply(count_normalized,1, \(x) t.test(x[cond1],x[cond2]))
+          pval = sapply(res,\(x) x$p.value)
+          stat = sapply(res,\(x) x$stat)
+          meanControl = sapply(res, \(x) x$estimate[1])
+          meanCond = sapply(res, \(x) x$estimate[2])
+
+          
+          dds= list(
+            name = names(res),
+            pvalue= pval,
+            d= stat,
+            meanControl=meanControl,
+            meanCond=meanCond
+
+          )
+   
+          dds$logfc= log2(as.numeric(dds$meanCond)/as.numeric(dds$meanControl))
+
+
+          dds$FDR = p.adjust(dds$pvalue,method="BH")
+          dds$data=count_normalized[,c(cond1,cond2)]
+         
+
+
+
+        }
 
 
 
@@ -1235,7 +1271,7 @@ pca_alldownload <- reactive({
     # table = table[order(abs(table$stat),decreasing=TRUE),]
     table = table[, c(7, 1:6)]}
     else{
-
+     
       name = rownames(dds$data)
 
       table = as.data.frame(
@@ -1247,6 +1283,9 @@ pca_alldownload <- reactive({
           stat=dds$d
         )
       )
+    
+        
+
 
       table$padj = as.numeric(table$padj)
       table$log2FoldChange= as.numeric(table$log2FoldChange)
