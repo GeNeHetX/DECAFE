@@ -566,7 +566,8 @@ output$downloadUpsetPlot <- downloadHandler(
 
         count_normalized = countfilt / rowSums(countfilt)}
 
-
+        condshiny[which(condshiny == A)] <- paste0("B",condshiny[which(condshiny == A)] )
+        condshiny[which(condshiny == B)] <- paste0("A",condshiny[which(condshiny == B)] )
     
        
         dds = ROTS(data = count_normalized, groups =condshiny , B = 100 , seed = 1234, log=FALSE)
