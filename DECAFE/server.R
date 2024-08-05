@@ -1640,17 +1640,22 @@ output$downloadboxplot <- downloadHandler(
     splitcolpath = strsplit(res$pathway, '_:_')
     res$collection = sapply(splitcolpath, function(x) x[1])
     res$pathway = sapply(splitcolpath, function(x) x[2])
+    clean_names <- sub("GOMF_|HP_|GOBP_|GOCC_", "", res$pathway)
     res$pathway = str_replace_all(res$pathway, '_', ' ')
+
+    test_transformed = readRDS("goID.rds")
+    indices <- match(clean_names, test_transformed)
+    res$GO_ID <- names(test_transformed)[indices]
     removeNotification(notif)
 
     lE_list = res$leadingEdge
     lE_vector = sapply(lE_list, paste, collapse=", ")
     res$leadingEdge = lE_vector
-    res = as.data.frame(na.omit(res))
+    res = as.data.frame(res[!is.na(res$pathway), ])
     # res_sig = res[which(as.numeric(res$pval) < 0.05),]
     res_sig = res
     res_sort = res_sig[order(abs(as.numeric(res_sig$NES)),decreasing=TRUE),]
-    res_sort = res_sort[, c("collection", "pathway", "pval", "padj", "ES","NES", "size", "leadingEdge")]
+    res_sort = res_sort[, c("collection","GO_ID", "pathway", "pval", "padj", "ES","NES", "size", "leadingEdge")]
 
     return(list(sort=res_sort,orig = res.original, vec = vec, pathways=pathways ))
   })
