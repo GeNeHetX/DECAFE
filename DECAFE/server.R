@@ -581,7 +581,7 @@ output$downloadUpsetPlot <- downloadHandler(
           cond2  = row.names(annot_intersect[which(annot_intersect$condshiny == B),])
           row1 = count_normalized[1,]
     
-          res= apply(count_normalized,1, \(x) t.test(x[cond1],x[cond2]))
+          res= apply(count_normalized,1, \(x) t.test(x[cond1],x[cond2],paired=input$paired))
           pval = sapply(res,\(x) x$p.value)
           stat = sapply(res,\(x) x$stat)
           meanControl = sapply(res, \(x) x$estimate[1])
@@ -598,6 +598,9 @@ output$downloadUpsetPlot <- downloadHandler(
           )
    
           dds$logfc= log2(as.numeric(dds$meanCond)/as.numeric(dds$meanControl))
+          if(input$paired){
+            dds$logfc = sign(dds$meanControl) * log2(abs(dds$meanControl))
+          }
 
 
           dds$FDR = p.adjust(dds$pvalue,method="BH")
@@ -1459,7 +1462,7 @@ pca_alldownload <- reactive({
       rotate_x_text(45)+ labs(x = "dispersion", y = paste0('count normDESq2 of target gene : ',res$genetarget))+
       scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
       scale_x_discrete(labels=NULL) +  theme_minimal() + theme(legend.position="right", legend.text=element_text(size=10)) + 
-       stat_compare_means(method = "t.test",label = "p.format") + 
+       stat_compare_means(method = "t.test",label = "p.format",paired=input$paired) + 
       geom_signif(comparisons = list(c(cond1, cond2)), map_signif_level = TRUE, textsize = 3.5, vjust = -0.5,  y.position = "y.position",test="t.test") +       
 
       stat_summary(fun.y=mean, geom="point", shape=20, size=5, color="#262686", fill="#262686")
