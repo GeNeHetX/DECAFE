@@ -1280,7 +1280,7 @@ pca_alldownload <- reactive({
           log2FoldChange=dds$logfc,
           padj=dds$FDR,
           pvalue=dds$pvalue,
-          stat=dds$d
+          stat= sign(dds$logfc) * abs(dds$d)
         )
       )
     
