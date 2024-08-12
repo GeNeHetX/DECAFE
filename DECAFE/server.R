@@ -125,7 +125,7 @@ output$annot_Image <- renderImage({
     filename = "annot.png"
  
     list(src = filename,
-      width = 1400,
+      width = 1200,
       alt = "overview RNA-Seq")
 
   }, deleteFile = FALSE)
@@ -143,6 +143,19 @@ output$count_Image <- renderImage({
 
 
 },deleteFile=FALSE)
+
+
+
+output$MCP_Image <- renderImage({
+
+    filename = "mcpcount.png"
+ 
+    list(src = filename,
+      width = 1000,
+      alt = "overview RNA-Seq")
+
+  }, deleteFile = FALSE)
+
 
   # Color
   output$theme <- renderUI({

@@ -331,6 +331,19 @@ library(shinyBS)
                         
                         
 
+            ),
+           box(width = 12, title = h2('Microenvironment Cell Populations-counter (MCP-counter)', icon('circle-nodes')), status = 'success', solidHeader = TRUE, collapsible = TRUE,
+              fluidRow(
+                column(width = 12,                      
+                       "MCP-counter is a method for quantifying the abundance of eight immune and two stromal cell populations in tissues using transcriptomic data. 
+                       It has been validated with mRNA mixtures and immunohistochemistry, outperforming previous methods. MCP-counter helps analyze immune infiltrates in 
+                       healthy tissues and tumors, aiding in patient stratification and survival predictions for certain cancers.", align="justify"), br(),
+                        br(),br(),
+                        column(width = 12, align = "center",
+                        imageOutput("MCP_Image"))), 
+                        
+                        
+
             )
                      
 
