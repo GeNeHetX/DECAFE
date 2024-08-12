@@ -120,6 +120,20 @@ output$annot_Image <- renderImage({
 
   }, deleteFile = FALSE)
 
+output$count_Image <- renderImage({
+
+  if(input$lcms=="rna")
+  filename = "count.png"
+  else
+  filename = "countprot.png"
+
+  list(src = filename,
+      width = 1000,
+      alt = "overview")
+
+
+},deleteFile=FALSE)
+
   # Color
   output$theme <- renderUI({
     s=""

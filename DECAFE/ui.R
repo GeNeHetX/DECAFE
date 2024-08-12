@@ -219,6 +219,9 @@ library(shinyBS)
                        "You have to upload the RNA-Seq count matrix with Sample_ID as column names and genes as row names, it must be a .tsv file.
                        This matrix is created with the sequencing output. It is mapped onto a reference genome to identify which genes are present in the sample, then the number found for each gene is counted.", br(),
                         br(),
+                        column(width = 12, align = "center",
+                         imageOutput("count_Image")),
+                        br(),
                         strong('Annotation file:'),
                        "It must be a .tsv file or .txt file with tabulation separator. The annotation file must contain only the samples to be studied, the first column is the Sample_ID and other columns are the annotations you want to use to create your groups in the analysis. Be careful to select only your samples of interest and your corresponding annotations. Any superfluous information will be taken into account as a comparison modality in the analysis.", br(),
                          br(),br(),
