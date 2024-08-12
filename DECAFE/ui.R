@@ -579,12 +579,36 @@ library(shinyBS)
         box(width=12,status='success',title = h1('Tree Pathways',icon('square-poll-horizontal')),solidHeader = TRUE, 
           column(width = 8, sliderInput("k",label = "Number of different groups", min = 1, max =20, value = 5,step=1)),
           withSpinner(plotOutput("treePlot", inline=F, width = 1200, height=1500), type = 8, color = "#CDCDE6", size = 1), style = 'display:block;width:100%;overflow-y: scroll')
-      )
-      )
+      ))),
+      
+      
+      tabPanel("ORA",
+  fluidRow(
+    column(width = 4,
+      selectInput("topgen", 
+                  label = "Choose a modality to select your top genes:",
+                  choices = c("UPgene_fromDGE", "DOWNgene_fromDGE", "UP+DOWNgene_fromDGE")), #"PCA_genecontrib_dim1", "PCA_genecontrib_dim2")),
+      br(), 
+      conditionalPanel(
+        condition = "input.topgen == 'UPgene_fromDGE' || input.topgen == 'DOWNgene_fromDGE' || input.topgen == 'UP+DOWNgene_fromDGE'",
+        sliderInput("lfcThreshold", label = "Threshold minimum for log2FoldChange:", min=0, max=2, value=1, step=1),
+        uiOutput('nbtopgene')
+      )),
+
+    column(width = 4,    
+      uiOutput('dbpath2'),br(),
+      actionButton('goora', label = 'Run ORA', icon('play')),br()
+    )
+  ),
+
+  fluidRow(
+    column(width = 12,
+      box(width = 12, status = 'info', title = h1('Table of ORA results', icon('table')), solidHeader = TRUE, 
+          withSpinner(DT::dataTableOutput("oratable"), type = 8, color = "#CDCDE6", size = 1)
+      )))),
 
 
-
-      ),tabPanel("MCPcounter",
+      tabPanel("MCPcounter",
       actionButton('gomcp',label="Run MCPcounter",icon('play')),br(),br(),br(),
       fluidRow(column(width=12,
       box(width=12,status='success',title = h1('All immune cell famillies',icon('chart-simple')),solidHeader = TRUE, 

@@ -1998,6 +1998,113 @@ output$downloadboxplot <- downloadHandler(
   output$gseaPlot<-renderPlot({ gseaTablePlot() })
 
 
+
+### ORA 
+  select_topgene <- reactive({
+    table = resDeseq()$res
+    tsPadj = as.numeric(input$ts_padj)
+    table$log2FoldChange= as.numeric(table$log2FoldChange)
+
+    tsFC = as.numeric(input$lfcThreshold)  
+
+    if (input$topgen == 'UPgene_fromDGE'){
+        table = table[which(table$log2FoldChange > tsFC & table$padj < tsPadj), ]
+        topgen = table$name
+    }
+    if (input$topgen == 'DOWNgene_fromDGE'){
+        table = table[which(table$log2FoldChange < -tsFC & table$padj < tsPadj),]
+        topgen = table$name
+    }
+    if (input$topgen == 'UP+DOWNgene_fromDGE'){
+        up_df <- table[which(table$log2FoldChange > tsFC & table$padj < tsPadj), ]
+        down_df <- table[which(table$log2FoldChange < -tsFC & table$padj < tsPadj),]
+        combined_table <- rbind(up_df, down_df)  # Combiner les deux sous-ensembles
+        topgen <- combined_table$name
+    }
+
+    # if (input$topgen == "PCA_genecontrib_dim1"){
+    #     table = geneTopDim1()
+    #     topgen=table$name[which(rank(- table$contrib, ties.method = "first")< length(table$name)*0.01)] 
+    # }
+    # if (input$topgen == "PCA_genecontrib_dim2"){
+    #     table = geneTopDim2()
+    #     topgen=table$name[which(rank(- table$contrib, ties.method = "first")< length( table$name)*0.01)] 
+    # }
+    return(list(topgen = topgen, long=length(unique(topgen)), table=table))})
+
+  
+  printnbgene <-reactive({
+    nbtopgene=select_topgene()$long
+    indication=p(icon('circle-info'),paste0("You have ",nbtopgene," genes for ORA"))
+    return(indication)})
+
+  output$nbtopgene<- renderUI(printnbgene())
+
+  output$dbpath2 <- renderUI({
+    selectInput('path_list', label = 'Select list of pathways', choices= appendCollection()$namesp, multiple = TRUE)
+  })
+
+  ora <- eventReactive(input$goora,{
+    pathways_list = appendCollection()$pathways
+    pathwaySelect = input$path_list
+    pathways_list = pathways_list[pathwaySelect]
+    
+    pathways = pathways_list[[1]]
+    names(pathways) = paste0(pathwaySelect[1], '_:_', names(pathways))
+    if (length(pathways_list) > 1){
+    for (i in 2:length(pathways_list)){
+      path_temp = pathways_list[[i]]
+      names(path_temp) = paste0(pathwaySelect[i], '_:_', names(path_temp))
+      pathways = append(pathways, path_temp)
+    }}   
+    topgen=unique(select_topgene()$topgen)
+    table=select_topgene()$table
+    res=fora(pathways, topgen, table$name, minSize = 2)
+    res=res[which(res$pval<0.05),]
+      lE_list = res$overlapGenes
+      LEn=sapply(lE_list, length)
+      lE_vector = sapply(lE_list, paste, collapse=", ")
+      res$overlapGenes = lE_vector
+      res$LEsize=LEn
+      
+     return(as.data.frame(na.omit(res[order(res$pval),])))
+
+})
+
+  output$oratable <- DT::renderDT(server = FALSE, {
+    data = ora()
+    
+    DT::datatable(
+      data,
+      extensions = c("Buttons"),
+      options = list(
+        scrollX = TRUE,
+        dom = 'Bfrtip',
+        buttons = list(
+          list(extend = "copy", text = "Copy", filename = "mcptable",
+               exportOptions = list(
+                 modifier = list(page = "current")
+               )
+          ),
+          list(extend = "csv", text = "CSV", filename = "mcptable",
+               exportOptions = list(
+                 modifier = list(page = "all")
+               )
+          ),
+          list(extend = "excel", text = "Excel", filename = "mcptable",
+               exportOptions = list(
+                 modifier = list(page = "all")
+               )
+          )
+        )
+      )
+    )
+  })
+
+
+
+
+### mcp counter
   mcpcounter <- eventReactive(input$gomcp,{
   annot_intersect=intersectCond()$annot
   genefile = countFile()$geneannot
