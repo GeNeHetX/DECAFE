@@ -109,6 +109,16 @@ output$gsea_Image <- renderImage({
 
   }, deleteFile = FALSE)
 
+output$ORA_Image <- renderImage({
+
+    filename = "ora.png"
+ 
+    list(src = filename,
+      width = 1000,
+      alt = "overview RNA-Seq")
+
+  }, deleteFile = FALSE)
+
 
 
 output$annot_Image <- renderImage({

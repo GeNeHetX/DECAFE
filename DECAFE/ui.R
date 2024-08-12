@@ -318,7 +318,20 @@ library(shinyBS)
                          <p>Where R_i and S_i represent the cumulative positive and negative expression differences up to gene i, respectively, in the ranked list. N_1 and N_2 are the total numbers of genes in the two compared groups.</p>
                          "), align="justify")) 
 
-                        )
+            ),
+           box(width = 12, title = h2('Over-Representation Analysis (ORA)', icon('circle-nodes')), status = 'success', solidHeader = TRUE, collapsible = TRUE,
+              fluidRow(
+                column(width = 12,                      
+                       "Over-Representation Analysis (ORA) is a statistical method used to determine if certain gene categories (like metabolic pathways) are overrepresented
+                        in a list of interest. ORA compares the number of genes in a category within the list to what would be expected by chance, typically using a model based 
+                        on the hypergeometric distribution. This approach calculates a p-value to assess the probability that the observed enrichment is due to random chance.", align="justify"), br(),
+                        br(),br(),
+                        column(width = 12, align = "center",
+                        imageOutput("ORA_Image"))), 
+                        
+                        
+
+            )
                      
 
            ),
