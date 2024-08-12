@@ -165,7 +165,7 @@ library(shinyBS)
                        strong("Date :"), "February 2024", br(),
                        strong("Contact :"), "audrey1.beaufils@inserm.fr, camille.pignolet@inserm.fr", br(),
                        strong("GitHub :"), a("GeNeHetX", href = "https://github.com/GeNeHetX/"), br(), br(),
-
+                       conditionalPanel("input.lcms=='rna'",
                       "RNA-Seq analysis is a multi-step process used to extract meaningful information from raw sequencing data:", br(), br(),
                       column(width = 12, align = "center",
                         imageOutput("rna_Image")),
@@ -195,7 +195,7 @@ library(shinyBS)
                       strong("Visualization and Interpretation:"),"The final step of RNA-Seq analysis involves visualizing and interpreting the results. This may involve generating 
                       visual representations such as heatmaps, volcano plots, or pathway diagrams to illustrate the patterns and relationships within the data. Through 
                       careful interpretation of the results in the context of existing biological knowledge, researchers can derive valuable insights into the underlying molecular 
-                      mechanisms driving the observed expression changes.", br(),br(), align="justify"))),
+                      mechanisms driving the observed expression changes.", br(),br(), align="justify")))),
 
         
                        
@@ -264,6 +264,7 @@ library(shinyBS)
                         ),
                      
                        
+         conditionalPanel("input.lcms=='rna'",              
          box(width = 12, title = h2('Differential Expression Analysis by DESeq2', icon('dna')), status = 'success', solidHeader = TRUE, collapsible = TRUE,
               fluidRow(
                 column(width = 12,         
@@ -289,7 +290,7 @@ library(shinyBS)
                          <p>Where Y_i represents the number of reads associated with gene i, μ_i is the average expression level of gene i, and θ is a global dispersion parameter. Differences in expression between groups are estimated from this model, and a Wald test is used to assess their significance.</p>
                          "), align="justify")) 
 
-                       ),
+                       )),
                        
 
            box(width = 12, title = h2('Gene Set Enrichment Analysis (GSEA)', icon('circle-nodes')), status = 'success', solidHeader = TRUE, collapsible = TRUE,
@@ -332,7 +333,7 @@ library(shinyBS)
                         
 
             ),
-           box(width = 12, title = h2('Microenvironment Cell Populations-counter (MCP-counter)', icon('circle-nodes')), status = 'success', solidHeader = TRUE, collapsible = TRUE,
+           box(width = 12, title = h2('Microenvironment Cell Populations-counter (MCP-counter) ', icon('droplet')), status = 'success', solidHeader = TRUE, collapsible = TRUE,
               fluidRow(
                 column(width = 12,                      
                        "MCP-counter is a method for quantifying the abundance of eight immune and two stromal cell populations in tissues using transcriptomic data. 

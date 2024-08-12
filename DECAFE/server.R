@@ -122,7 +122,10 @@ output$ORA_Image <- renderImage({
 
 
 output$annot_Image <- renderImage({
+  if(input$lcms=="rna")
     filename = "annot.png"
+  else
+    filename = "annotprot.png"
  
     list(src = filename,
       width = 1200,
