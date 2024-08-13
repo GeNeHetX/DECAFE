@@ -604,6 +604,7 @@ library(shinyBS)
   fluidRow(
     column(width = 12,
       box(width = 12, status = 'info', title = h1('Barplot', icon('chart-simple')), solidHeader = TRUE, 
+        fluidRow(column(width = 8, sliderInput("nbBarplot",label = "Number of pathways to display", min = 1, max =100, value = 50,step=1))),
         withSpinner(plotOutput("oraplot", height = 1000, width = "90%"), type = 8, color = "#CDCDE6", size = 1))))),
 
 

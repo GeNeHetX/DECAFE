@@ -2138,6 +2138,7 @@ pathSigCollection <- reactive({
     res$pathway = sapply(splitcolpath, function(x) x[2])
     clean_names <- sub("GOMF_|HP_|GOBP_|GOCC_", "", res$pathway)
     res$pathway = str_replace_all(res$pathway, '_', ' ')
+    res$GeneRatio = as.numeric(res$overlap)/ as.numeric(res$size)
 
     test_transformed = readRDS("goID.rds")
     indices <- match(clean_names, test_transformed)
@@ -2145,7 +2146,7 @@ pathSigCollection <- reactive({
 
     res = as.data.frame(res[!is.na(res$pathway), ])
     res = res[order(abs(as.numeric(res$pval)),decreasing=FALSE),]
-    res = res[, c("collection","GO_ID", "pathway", "pval", "padj", "overlap", "size", "overlapGenes")]
+    res = res[, c("collection","GO_ID", "pathway", "pval", "padj", "overlap", "size","GeneRatio", "overlapGenes")]
     return(as.data.frame(res))
 
 
@@ -2185,7 +2186,21 @@ pathSigCollection <- reactive({
 
   output$oraplot = renderPlot({
   data = ora()
-  genekitr::plotEnrich(data, plot_type = "bar")
+  data= data[which(data$pval < 0.05),]
+  data=data[order(data$pval),]
+  data=head(data,min(as.numeric(input$nbBarplot),nrow(data)))
+  ggplot(data, aes(x=pathway, y=GeneRatio,fill=-log10(pval))) + 
+  geom_bar(stat = "identity") +
+  coord_flip() +
+    scale_fill_gradient(low = "blue", high = "red", name = "-log10(p-value)") +
+    labs(
+        title = "Bar plot of pathways by Gene ratio and p-value",
+        x = "Gene ratio (overlap / size)",
+        y = "Pathways"
+    ) +
+    theme_minimal() +
+    theme(axis.text.y = element_text(size = 10))
+  
 })
 
 
