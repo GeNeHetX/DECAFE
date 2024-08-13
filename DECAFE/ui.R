@@ -670,16 +670,24 @@ library(shinyBS)
   fluidRow(
             column(width = 12,
             box(width = 12, status = 'info', title = h1("Design your own count matrix", icon('table')), solidHeader = TRUE, collapsible=TRUE,
+              fluidRow(
+              column(width = 3,
+              fileInput('file2', 'Load Count Matrix .tsv')),
+              column(width = 3,
+              fileInput('annot-file2',"Load the annot file .tsv"))),
                 fluidRow(
                     box(width = 4, title = h2('Normalization', icon('table')), collapsible = TRUE,
                       fluidRow(column(width=12,
                         radioButtons("normalize","Choose type of normalization",c("None"="no","Variance Stabilizing Transformation (VST)"="vst","DESeq2 normalization"="deseq"))
 
                       ))),
-                    box(width = 4, title = h2('Genes custom', icon('magnifying-glass')), collapsible = TRUE,
-                      fluidRow(column(width=12,
-                        checkboxGroupInput("gene_custom","Choose customization",choiceNames=list("1000 most variant genes","Center by gene"), choiceValues = list("mostvar","center"))
-                      ))),
+                    box(width = 4, title = h2('Genes custom', icon('magnifying-glass')), 
+                    collapsible = TRUE,
+                    fluidRow(column(width = 12,
+                        checkboxGroupInput(inputId = "gene_custom", label = "Choose customization",choiceNames = list("Gives value of x", "Center by gene"),choiceValues = list("mostvar", "center")))),
+                        conditionalPanel(condition = "input.gene_custom.indexOf('mostvar') !== -1", numericInput(inputId = "num_mostvar",label = ":", value = 1000)
+                    )
+                  ),
                     box(width = 4, title = h2('Online tools', icon('globe')), collapsible = TRUE,
                       fluidRow())
                         

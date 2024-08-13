@@ -242,9 +242,100 @@ output$MCP_Image <- renderImage({
     })  
 
 
-  # Overview Panel
-  ## Reactive function
 
+  ##################################PAGE TOOLS########################################""
+  annotFile2 <-reactive({
+    req(input$'annot-file2')
+      annot = read.delim(input$'annot-file'$datapath, row.names = 1)
+      count = countFile2()$count
+    if(length(intersect(rownames(annot), colnames(count)))==0)
+    showModal(modalDialog(
+        title = "Invalid input",
+        "The intersection between colnames of count matrix and rownames of annotation is empty!",
+        easyClose = TRUE
+      ))
+    return(annot)
+  })
+
+  countFile2 <-reactive({
+    req(input$file2)
+
+    notif <<- showNotification("Opening count matrix in progress", duration = 0)
+    count = read.delim(input$file$datapath, sep='\t', row.names = 1, header=T,as.is=T)
+    removeNotification(notif)
+    
+    if(!all(as.matrix(count) == as.integer(as.matrix(count))) && input$lcms=="rna"){
+      showModal(modalDialog(
+        title = "Invalid input",
+        "The  count matrix must not be normalized, only integer are accepted!",
+        easyClose = TRUE
+      ))
+    }
+
+    genefile = switch(input$org, 
+    'hs' = 'humanGeneannot.rds',
+    'mm' = 'mouseGeneannot.rds',
+    )
+
+    
+    geneannot = readRDS(genefile)
+    if(input$lcms=="rna"){
+    geneannot =  geneannot[rownames(count),]
+
+    if (input$coding) {
+      geneannot = geneannot[which(geneannot$biotype == 'protein_coding'), ]
+      count = count[geneannot$GeneID, ]
+    }
+
+    if( input$sex) {
+          observeEvent(input$sex, {
+          showModal(modalDialog(
+        title = "Upload Sex Information",
+        "Upload a TSV file with 1 column representing the sex of your samples in the same order as your metadata TSV file.",
+        footer = tagList(
+          actionButton("dismiss_modal", "Dismiss")
+        ),
+        easyClose = FALSE 
+      ))
+    })
+
+    observeEvent(input$dismiss_modal, {
+      removeModal()  
+    })
+
+      X = switch(input$org, 
+        'hs' = 'X',
+        'mm' = 'mmuX',
+      )
+      Y = switch(input$org, 
+        'hs' = 'Y',
+        'mm' = 'mmuY',
+      )
+      geneannot = geneannot[-which(geneannot$seqname == X |geneannot$seqname == Y) , ]
+      count = count[geneannot$GeneID  , ]
+    
+    }}
+    
+    return(list(count=count, geneannot=geneannot))
+  })
+
+    annotProcess2 <- reactive({
+    annot = annotFile2()
+    annot$condshiny = apply(annot, 1, function(x) paste(colnames(annot),"_", x, collapse = ',', sep=''))
+    if(input$lcms=="rna"){
+
+    if(input$sex){
+      req(input$sexAnnot)
+      sex= read.delim(input$sexAnnot$datapath,row.names=1)
+      annot$sex = sex
+    }}
+
+    return(annot)
+  })
+  #########################################################
+
+
+  # Overview Panel
   # Open annotation file
   annotFile <-reactive({
     req(input$'annot-file')
