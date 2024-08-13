@@ -698,7 +698,11 @@ library(shinyBS)
                             
                             ), align="justify")) 
 
-                ),br(),br()
+                ),br(),br(),
+              conditionalPanel("input.lcms=='lcms'",
+                strong("Warnings")," : For LCMS data, the DESeq2 and VST normalization are only adapted for transcriptomic data",br(),br()
+
+              )
 
 
               ,
