@@ -582,30 +582,28 @@ library(shinyBS)
       ))),
       
       
-      tabPanel("ORA",
+    tabPanel("ORA",
   fluidRow(
-    column(width = 4,
+    column(width = 3,
       selectInput("topgen", 
                   label = "Choose a modality to select your top genes:",
-                  choices = c("UPgene_fromDGE", "DOWNgene_fromDGE", "UP+DOWNgene_fromDGE")), #"PCA_genecontrib_dim1", "PCA_genecontrib_dim2")),
-      br(), 
-      conditionalPanel(
-        condition = "input.topgen == 'UPgene_fromDGE' || input.topgen == 'DOWNgene_fromDGE' || input.topgen == 'UP+DOWNgene_fromDGE'",
-        sliderInput("lfcThreshold", label = "Threshold minimum for log2FoldChange:", min=0, max=2, value=1, step=1),
-        uiOutput('nbtopgene')
-      )),
-
+                  choices = c("UPgene_fromDGE", "DOWNgene_fromDGE", "UP+DOWNgene_fromDGE","PCA_genecontrib_dim1", "PCA_genecontrib_dim2")),br(), 
+      uiOutput('nbtopgene'),br(),
+      conditionalPanel(condition = "input.topgen == 'UPgene_fromDGE' || input.topgen == 'DOWNgene_fromDGE' || input.topgen == 'UP+DOWNgene_fromDGE'",
+        radioButtons("lfcThreshold", label = "Threshold minimum for log2FoldChange:", choices = c(0, 1, 2), inline = TRUE, selected = 1))),
     column(width = 4,    
       uiOutput('dbpath2'),br(),
-      actionButton('goora', label = 'Run ORA', icon('play')),br()
-    )
-  ),
-
+      actionButton('goora', label = 'Run ORA', icon('play')),br())),br(),
   fluidRow(
     column(width = 12,
       box(width = 12, status = 'info', title = h1('Table of ORA results', icon('table')), solidHeader = TRUE, 
-          withSpinner(DT::dataTableOutput("oratable"), type = 8, color = "#CDCDE6", size = 1)
-      )))),
+        actionButton('browsebutton2', 'More info about selected pathway', icon('globe')),
+        textOutput('comment2'),br(),
+        withSpinner(DT::dataTableOutput("oratable"), type = 8, color = "#CDCDE6", size = 1)))),
+  fluidRow(
+    column(width = 12,
+      box(width = 12, status = 'info', title = h1('Barplot', icon('chart-simple')), solidHeader = TRUE, 
+        withSpinner(plotOutput("oraPlot", height = 1000, width = "90%"), type = 8, color = "#CDCDE6", size = 1))))),
 
 
       tabPanel("MCPcounter",

@@ -13,7 +13,7 @@
 #   install.packages("BiocManager")
 # BiocManager::install(new_packages,update=FALSE)
 packages <- c("shiny", "DT", "shinydashboard", "shinycssloaders", "BiocManager", "ggplot2", "plotly", "reshape2", "factoextra", "FactoMineR", "devtools", "ggupset", 
-"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ggdendro", "dendextend","gplots","svglite", "shinyBS","grid","gridExtra","ROTS")
+"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ggdendro", "dendextend","gplots","svglite", "shinyBS","grid","gridExtra","ROTS","patchwork")
 new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
 if(length(new_packages)) {
   if (!requireNamespace("BiocManager", quietly = TRUE)) {
@@ -44,7 +44,7 @@ library(gplots)
 library(gridExtra)
 library(grid)
 library(ROTS)
-
+library(patchwork)
 
 
 
@@ -1791,6 +1791,33 @@ output$downloadboxplot <- downloadHandler(
     return(paste0('Opening url for : ', clickpath))
   })
 
+browse2 <- eventReactive(input$browsebutton2, {
+    species = switch(input$org, 
+    'hs' = 'human',
+    'mm' = 'mouse',
+    )
+    indice_clickpath = input$ora_rows_selected
+    if (length(indice_clickpath) == 1){
+    clickpath = ora()$sort[indice_clickpath, 'pathway']
+    clickpath = str_replace_all(clickpath, ' ', '_')
+    if(ora()$sort[indice_clickpath, 'collection']=='sigGeNeHetX'){
+      load('signatures.rda')
+      annot = signatures$annotation
+      pmid = strsplit(strsplit(annot[clickpath,'src'],';')[[1]][2],'[.]')[[1]][2]
+      url = paste0('https://pubmed.ncbi.nlm.nih.gov/',pmid,'/')
+    }else{
+      url = paste0("https://www.gsea-msigdb.org/gsea/msigdb/", species, "/geneset/", clickpath ,".html")
+    }
+    browseURL(url)
+    return(clickpath)
+}})
+
+  output$comment2 <- renderText({
+    clickpath = browse2()
+    clickpath = str_replace_all(clickpath, '_', ' ')
+    return(paste0('Opening url for : ', clickpath))
+  })
+
 
 
   graph <- reactive({
@@ -2022,14 +2049,14 @@ output$downloadboxplot <- downloadHandler(
         topgen <- combined_table$name
     }
 
-    # if (input$topgen == "PCA_genecontrib_dim1"){
-    #     table = geneTopDim1()
-    #     topgen=table$name[which(rank(- table$contrib, ties.method = "first")< length(table$name)*0.01)] 
-    # }
-    # if (input$topgen == "PCA_genecontrib_dim2"){
-    #     table = geneTopDim2()
-    #     topgen=table$name[which(rank(- table$contrib, ties.method = "first")< length( table$name)*0.01)] 
-    # }
+    if (input$topgen == "PCA_genecontrib_dim1"){
+        table = geneTopDim1()
+        topgen=table$name[1:ceiling(length(table$name) * 0.01)] 
+    }
+    if (input$topgen == "PCA_genecontrib_dim2"){
+        table = geneTopDim2()
+        topgen=table$name[1:ceiling(length(table$name) * 0.01)] 
+    }
     return(list(topgen = topgen, long=length(unique(topgen)), table=table))})
 
   
@@ -2077,6 +2104,7 @@ output$downloadboxplot <- downloadHandler(
     DT::datatable(
       data,
       extensions = c("Buttons"),
+      selection = 'single',
       options = list(
         scrollX = TRUE,
         dom = 'Bfrtip',
@@ -2101,6 +2129,11 @@ output$downloadboxplot <- downloadHandler(
     )
   })
 
+
+  output$oraplot = renderPlot({
+  data = ora()
+  plotEnrich(data, plot_type = "bar")
+})
 
 
 
