@@ -678,14 +678,32 @@ library(shinyBS)
               column(width=3,
                 selectInput('org2', 'Choose your species', choices = list(Human='hs', Mouse='mm'))
               ),
-              column(width=3,
+              column(width=3,br(),
                 actionButton('gocustom',label="Run Custom",icon('play'))
               )
               ),
+              fluidRow(
+                column(width=12,
+
+                  tags$details(
+                            tags$summary(strong("TIPS")),
+
+                      column(width = 12, 
+                          strong("PCA of DECAFE "), "    : VST normalization + Center by genes + Most variant genes",br(),
+                          strong("Heatmap of DECAFE"), " : VST normalization + Center by genes + Most variant genes", br(),
+                          strong("Boxplot of DECAFE"), " : DESeq2 normalization",br(),
+                          strong("For the Morpheus format"), " : remember to check the conversion to gene name."
+                            
+                            ), align="justify")) 
+
+                ),br(),br()
+
+
+              ,
                 fluidRow(
                     box(width = 4, title = h2('Normalization', icon('table')), collapsible = TRUE,
                       fluidRow(column(width=12,
-                        radioButtons("normalize","Choose type of normalization",c("None"="no","Variance Stabilizing Transformation (VST)"="vst","DESeq2 normalization"="deseq", "Upper Quartile normalization"="uqnorm"))
+                        radioButtons("normalize","Choose type of normalization",c("None"="no","Variance Stabilizing Transformation (VST)"="vst","DESeq2 normalization"="deseq", "Upper Quartile normalization"="uqnorm")),br(),br(),br(),br()
                       ))),
                     box(width = 4, title = h2('Genes custom', icon('magnifying-glass')), 
                     collapsible = TRUE,
@@ -697,13 +715,13 @@ library(shinyBS)
                         ),
                     box(width = 4, title = h2('Online tools', icon('globe')), collapsible = TRUE,
                       fluidRow(column(width=12,
-                          radioButtons("morpheus","MORPHEUS format ",c("Yes"=TRUE,"No"=FALSE), selected=FALSE)
+                          radioButtons("morpheus","MORPHEUS format ",c("Yes"=TRUE,"No"=FALSE), selected=FALSE,inline=TRUE)
                         )),br(),
                       fluidRow(    
                         column(width = 12, p("Here are some useful complementary tools:"),
                         tags$a(href = "https://software.broadinstitute.org/morpheus/", "MORPHEUS heatmap interactive", target = "_blank"), br(),      
                         tags$a(href = "https://www.bioinformatics.com.cn/srplot", "Science and Research online plot", target = "_blank"), br(),
-                        tags$a(href = "https://maayanlab.cloud/Enrichr/", "EnrichR gene set enrichment analysis tools", target ="_blank"))))
+                        tags$a(href = "https://maayanlab.cloud/Enrichr/", "EnrichR gene set enrichment analysis tools", target ="_blank"),br(),br(),br())))
                           
                           )),
             fluidRow(column(width=12,
