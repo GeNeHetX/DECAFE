@@ -679,19 +679,14 @@ library(shinyBS)
                     box(width = 4, title = h2('Normalization', icon('table')), collapsible = TRUE,
                       fluidRow(column(width=12,
                         radioButtons("normalize","Choose type of normalization",c("None"="no","Variance Stabilizing Transformation (VST)"="vst","DESeq2 normalization"="deseq", "Upper Quartile normalization"="uqnorm"))
-
                       ))),
                     box(width = 4, title = h2('Genes custom', icon('magnifying-glass')), 
                     collapsible = TRUE,
                     fluidRow(column(width = 12,
                         checkboxGroupInput(inputId = "gene_custom", label = "Choose customization",choiceNames = list("X most variant genes", "Center by gene"),choiceValues = list("mostvar", "center")))),
-                        conditionalPanel(condition = "input.gene_custom.indexOf('mostvar') !== -1", numericInput(inputId = "num_mostvar",label = "X equals ?", value = 1000)
-                    )
-                  ),
+                        conditionalPanel(condition = "input.gene_custom.indexOf('mostvar') !== -1", numericInput(inputId = "num_mostvar",label = "X equals ?", value = 1000))),
                     box(width = 4, title = h2('Online tools', icon('globe')), collapsible = TRUE,
                       fluidRow())
-                        
-
                           )))))
 
 )))
