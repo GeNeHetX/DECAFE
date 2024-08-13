@@ -686,7 +686,12 @@ library(shinyBS)
                         checkboxGroupInput(inputId = "gene_custom", label = "Choose customization",choiceNames = list("X most variant genes", "Center by gene"),choiceValues = list("mostvar", "center")))),
                         conditionalPanel(condition = "input.gene_custom.indexOf('mostvar') !== -1", numericInput(inputId = "num_mostvar",label = "X equals ?", value = 1000))),
                     box(width = 4, title = h2('Online tools', icon('globe')), collapsible = TRUE,
-                      fluidRow())
+                      fluidRow(    
+                        column(width = 12, p("Here are some useful complementary tools:"),
+                        tags$a(href = "https://software.broadinstitute.org/morpheus/", "MORPHEUS heatmap interactive", target = "_blank"), br(),      
+                        tags$a(href = "https://www.bioinformatics.com.cn/srplot", "Science and Research online plot", target = "_blank"), br(),
+                        tags$a(href = "https://maayanlab.cloud/Enrichr/", "EnrichR gene set enrichment analysis tools", target ="_blank"))))
+                          
                           )))))
 
 )))
