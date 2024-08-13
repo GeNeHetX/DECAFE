@@ -2248,6 +2248,18 @@ pathSigCollection <- reactive({
 
   output$gseaPlot<-renderPlot({ gseaTablePlot() })
 
+  output$downloadGSEA <- downloadHandler(
+      filename = function() {
+            paste0("GSEA_table_plot",'_', Sys.Date(), ".",input$format)
+      },
+      content = function(file) {
+         plot=gseaTablePlot()
+      
+
+        ggsave(file, plot, width = 8, height = 16, units = "in", dpi = 300, device = input$format,bg='white')
+      })
+
+
 
 
 ### ORA 
@@ -2369,7 +2381,7 @@ pathSigCollection <- reactive({
   })
 
 
-  output$oraplot = renderPlot({
+  output$oraplot = renderPlotly({
   data = ora()
   data= data[which(data$pval < 0.05),]
   data=data[order(data$pval),]
@@ -2505,6 +2517,43 @@ pathSigCollection <- reactive({
 
     })
 
+  output$downloadOneMCP <- downloadHandler(
+      filename = function() {
+            paste0("MCP_Boxplot_",input$mcpPath,'_', Sys.Date(), ".",input$format)
+      },
+      content = function(file) {
+         path = input$mcpPath
+    mcp = mcpcounter()
+    proj1= as.data.frame(mcp$mcp1)
+    proj2=as.data.frame(mcp$mcp2)
+
+    annot = annotProcess()
+    cond1 = unique(annot$condshiny)[as.numeric(input$cond1)]
+    cond2 = unique(annot$condshiny)[as.numeric(input$cond2)]
+
+    df = as.data.frame(
+      rbind(
+        cbind(McpCounterValue=as.numeric(proj1[,path]),Condition=rep(cond1,nrow(proj1))),
+        cbind(McpCounterValue=as.numeric(proj2[,path]),Condition=rep(cond2,nrow(proj2)))
+      )
+    )
+
+    df$McpCounterValue=as.numeric(df$McpCounterValue)
+    df$Score = factor(df$Condition,levels = c(cond1,cond2))
+    
+    
+      plot=ggboxplot(df,x="Condition",y="McpCounterValue",color="Condition",outlier.shape=NA,remove="outlier", main = "",legend="bottom",ylab=path, xlab=FALSE) +
+      scale_color_manual(values=c("lightcoral", '#4ab3d6')) +  theme( axis.text.x=element_blank()) + 
+      stat_summary(fun.y = mean, geom = "point", shape = 20, size = 3, color = "#262686", position = position_dodge(width = 0.75)) +
+      stat_compare_means(method = "t.test",label = "p.format") + 
+      geom_signif(comparisons = list(c(cond1, cond2)), map_signif_level = TRUE, textsize = 3.5, vjust = -0.5,  y.position = "y.position",test="t.test")       
+
+      
+
+        ggsave(file, plot, width = 5, height = 7, units = "in", dpi = 300, device = input$format,bg='white')
+      })
+
+
 output$allboxMCP <- renderPlot({
 
     mcpi = mcpcounter()$mcp
@@ -2545,6 +2594,53 @@ output$allboxMCP <- renderPlot({
 
 })
   # Boxplot Panel
+
+output$downloadAllMCP <- downloadHandler(
+      filename = function() {
+            paste(gsub(" ", "_", 'MCP_allBoxplot'), "_", Sys.Date(), ".",input$format, sep = "")
+      },
+      content = function(file) {
+        
+        mcpi = mcpcounter()$mcp
+    df = as.data.frame(mcpi)
+    annot_intersect=intersectCond()$annot
+    
+    A = as.character(unique(annot_intersect$condshiny)[1])
+    B = as.character(unique(annot_intersect$condshiny)[2])
+
+
+    cond1 = row.names(annot_intersect[which(annot_intersect$condshiny == A),])
+    cond2  = row.names(annot_intersect[which(annot_intersect$condshiny == B),])
+
+    proj1 = df[cond1, ]
+    proj2 = df[cond2, ]
+    
+    df_list = lapply(names(df), function(col) {
+      as.data.frame(
+      rbind(
+        cbind(McpCounterValue=as.numeric(proj1[,col]),Condition=rep(A,nrow(proj1)),Metric=col),
+        cbind(McpCounterValue=as.numeric(proj2[,col]),Condition=rep(B,nrow(proj2)),Metric=col)
+      )
+    )
+        
+    })
+
+
+    df_combined = do.call(rbind, df_list)
+    df_combined$McpCounterValue = as.numeric(df_combined$McpCounterValue)
+    df_combined$Condition = factor(df_combined$Condition, levels = c(A, B))
+    ncol = (length(colnames(mcpi)) %/% 2 + ifelse((length(colnames(mcpi)) %% 2) ==1,1,0))
+    plot=ggboxplot(df_combined, x = "Condition", y = "McpCounterValue", color = "Condition", outlier.shape = NA, main = "", legend = "top", xlab=FALSE) +
+        facet_wrap(~ Metric, ncol = ncol) + theme( axis.text.x=element_blank()) + 
+        scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
+        stat_summary(fun.y = mean, geom = "point", shape = 20, size = 3, color = "#262686", position = position_dodge(width = 0.75)) +
+        stat_compare_means(method = "t.test",label = "p.format") +
+        geom_signif(comparisons = list(c(A, B)), map_signif_level = TRUE, textsize = 3.5, vjust = -0.5,  y.position = "y.position",test="t.test")  
+
+
+        ggsave(file, plot, width = 16, height = 12, units = "in", dpi = 300, device = input$format,bg='white')
+      })
+
  
 
 sampleChoice <- reactive({
