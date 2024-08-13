@@ -600,11 +600,11 @@ library(shinyBS)
       box(width = 12, status = 'info', title = h1('Table of ORA results', icon('table')), solidHeader = TRUE, 
         actionButton('browsebutton2', 'More info about selected pathway', icon('globe')),
         textOutput('comment2'),br(),
-        withSpinner(DT::dataTableOutput("oratable"), type = 8, color = "#CDCDE6", size = 1)))),
+        withSpinner(DT::dataTableOutput("ora"), type = 8, color = "#CDCDE6", size = 1)))),
   fluidRow(
     column(width = 12,
       box(width = 12, status = 'info', title = h1('Barplot', icon('chart-simple')), solidHeader = TRUE, 
-        withSpinner(plotOutput("oraPlot", height = 1000, width = "90%"), type = 8, color = "#CDCDE6", size = 1))))),
+        withSpinner(plotOutput("oraplot", height = 1000, width = "90%"), type = 8, color = "#CDCDE6", size = 1))))),
 
 
       tabPanel("MCPcounter",

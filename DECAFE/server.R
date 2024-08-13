@@ -13,7 +13,7 @@
 #   install.packages("BiocManager")
 # BiocManager::install(new_packages,update=FALSE)
 packages <- c("shiny", "DT", "shinydashboard", "shinycssloaders", "BiocManager", "ggplot2", "plotly", "reshape2", "factoextra", "FactoMineR", "devtools", "ggupset", 
-"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ggdendro", "dendextend","gplots","svglite", "shinyBS","grid","gridExtra","ROTS","patchwork")
+"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ggdendro", "dendextend","gplots","svglite", "shinyBS","grid","gridExtra","ROTS","patchwork","genekitr")
 new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
 if(length(new_packages)) {
   if (!requireNamespace("BiocManager", quietly = TRUE)) {
@@ -1798,9 +1798,9 @@ browse2 <- eventReactive(input$browsebutton2, {
     )
     indice_clickpath = input$ora_rows_selected
     if (length(indice_clickpath) == 1){
-    clickpath = ora()$sort[indice_clickpath, 'pathway']
+    clickpath = ora()[indice_clickpath, 'pathway']
     clickpath = str_replace_all(clickpath, ' ', '_')
-    if(ora()$sort[indice_clickpath, 'collection']=='sigGeNeHetX'){
+    if(ora()[indice_clickpath, 'collection']=='sigGeNeHetX'){
       load('signatures.rda')
       annot = signatures$annotation
       pmid = strsplit(strsplit(annot[clickpath,'src'],';')[[1]][2],'[.]')[[1]][2]
@@ -2127,17 +2127,31 @@ pathSigCollection <- reactive({
     table=select_topgene()$table
     res=fora(pathways, topgen, table$name, minSize = 2)
     res=res[which(res$pval<0.05),]
-      lE_list = res$overlapGenes
-      LEn=sapply(lE_list, length)
-      lE_vector = sapply(lE_list, paste, collapse=", ")
-      res$overlapGenes = lE_vector
-      res$LEsize=LEn
-      
-     return(as.data.frame(na.omit(res[order(res$pval),])))
+    lE_list = res$overlapGenes
+    LEn=sapply(lE_list, length)
+    lE_vector = sapply(lE_list, paste, collapse=", ")
+    res$overlapGenes = lE_vector
+    res$LEsize=LEn
+
+    splitcolpath = strsplit(res$pathway, '_:_')
+    res$collection = sapply(splitcolpath, function(x) x[1])
+    res$pathway = sapply(splitcolpath, function(x) x[2])
+    clean_names <- sub("GOMF_|HP_|GOBP_|GOCC_", "", res$pathway)
+    res$pathway = str_replace_all(res$pathway, '_', ' ')
+
+    test_transformed = readRDS("goID.rds")
+    indices <- match(clean_names, test_transformed)
+    res$GO_ID <- names(test_transformed)[indices]
+
+    res = as.data.frame(res[!is.na(res$pathway), ])
+    res = res[order(abs(as.numeric(res$pval)),decreasing=FALSE),]
+    res = res[, c("collection","GO_ID", "pathway", "pval", "padj", "overlap", "size", "overlapGenes")]
+    return(as.data.frame(res))
+
 
 })
 
-  output$oratable <- DT::renderDT(server = FALSE, {
+  output$ora <- DT::renderDT(server = FALSE, {
     data = ora()
     
     DT::datatable(
@@ -2171,7 +2185,7 @@ pathSigCollection <- reactive({
 
   output$oraplot = renderPlot({
   data = ora()
-  plotEnrich(data, plot_type = "bar")
+  genekitr::plotEnrich(data, plot_type = "bar")
 })
 
 
