@@ -1818,7 +1818,20 @@ browse2 <- eventReactive(input$browsebutton2, {
     return(paste0('Opening url for : ', clickpath))
   })
 
+pathSigCollection <- reactive({
+    res = gsea()$sort
+    res_sig = res[which(as.numeric(res$pval) < 0.05),"pathway"]
+    if(length(res_sig)==0){
+      res_sig = c("No pathways significant")
 
+    }
+    
+    return(list(names=res_sig))
+  })
+
+  output$pathwaysSelect <- renderUI({
+    selectInput('path_plot', label = 'Select list of pathways to plot', choices= pathSigCollection()$names, multiple = TRUE)
+  })
 
   graph <- reactive({
     res <- gsea()$sort
@@ -1854,10 +1867,14 @@ browse2 <- eventReactive(input$browsebutton2, {
 
     }, width = 1200, height = 1300, res = 96)
 
+  
   dotplotGSEA<- reactive({
     df <- gsea()$sort
     colnames(df)[which(colnames(df)=='size')]<-"Count"
     colnames(df)[which(colnames(df)=='p.adj')]<-"padj"
+    if(! is.null(input$path_plot) ){
+      df = df[which(df$pathway %in% input$path_plot),]
+    }
 
     df$sign = sign(df$NES)
     df$sign[df$sign == -1] <- "suppressed"
@@ -1866,20 +1883,28 @@ browse2 <- eventReactive(input$browsebutton2, {
     df$pathway = str_replace_all(df$pathway,'_',' ')
     df$pathway=str_replace_all(df$pathway, "(.{25})([^\\s])", "\\1\\2-\n")
 
+
     activated = df[which(df$NES > 0),]
     activated = activated[1:min(nrow(activated),as.numeric(input$nbDotplot)),]
     suppressed = df[which(df$NES < 0),]
     suppressed = suppressed[1:min(nrow(suppressed),as.numeric(input$nbDotplot)),]
 
+
     sub = as.data.frame(rbind(activated,suppressed))
-    sub =  sub[order(abs(sub$NES)),]
+    if(is.null(input$path_plot)){
+      sub = sub[which(sub$pval < 0.05),]
+      sub =  head(sub[order(abs(sub$NES),decreasing=T),],min(nrow(sub),10))
+    }
+    else{
+      sub =  sub[order(abs(sub$NES),decreasing=T),]
+    }
 
 
     if(length(unique(df$sign))==2){
-    plot=ggplot(sub, aes(x=NES, y=pathway, colour=padj, size=Count)) +
+    plot=ggplot(sub, aes(x=NES, y=pathway, colour=pval, size=Count)) +
     geom_point() + facet_grid(.~sign,scales="free_x")+scale_color_gradient(low="red", high="blue")+ylab(NULL)}
     else{
-        plot=ggplot(sub, aes(x=NES, y=pathway, colour=padj, size=Count)) +
+        plot=ggplot(sub, aes(x=NES, y=pathway, colour=pval, size=Count)) +
     geom_point()+scale_color_gradient(low="red", high="blue")+ylab(NULL)
     }
     return(plot)
@@ -2011,11 +2036,25 @@ browse2 <- eventReactive(input$browsebutton2, {
 
 
 
-  gseaTablePlot<-reactive({
+
+ gseaTablePlot<-reactive({
     gsea = gsea()
     xgsea = gsea$orig
-    xgsea=xgsea[which(as.numeric(xgsea$padj) < 0.05),]
-    xgsea_sub=head(xgsea[order(abs(xgsea$NES),decreasing=TRUE),],input$nbGseaPlot)
+    xgsea=xgsea[which(as.numeric(xgsea$pval) < 0.05),]
+    
+    if(!is.null(input$path_plot)){
+
+      splitcolpath = strsplit(xgsea$pathway, '_:_')
+      pathway = sapply(splitcolpath, function(x) x[2])
+      clean_names <- sub("GOMF_|HP_|GOBP_|GOCC_", "", pathway)
+      pathway = str_replace_all(pathway, '_', ' ')
+ 
+      num = which(pathway  %in% input$path_plot  )
+      xgsea_sub=xgsea[as.numeric(num),]
+   
+    }else{
+      xgsea_sub=head(xgsea[order(abs(xgsea$NES),decreasing=TRUE),],10)
+    }
     plot=qGseaTable(gsea$pathways[xgsea_sub$pathway],gsea$vec,xgsea)
     return(plot)
 
