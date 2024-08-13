@@ -674,7 +674,14 @@ library(shinyBS)
               column(width = 3,
               fileInput('file2', 'Load Count Matrix .tsv')),
               column(width = 3,
-              fileInput('annot-file2',"Load the annot file .tsv"))),
+              fileInput('annot-file2',"Load the annot file .tsv")),
+              column(width=3,
+                selectInput('org2', 'Choose your species', choices = list(Human='hs', Mouse='mm'))
+              ),
+              column(width=3,
+                actionButton('gocustom',label="Run Custom",icon('play'))
+              )
+              ),
                 fluidRow(
                     box(width = 4, title = h2('Normalization', icon('table')), collapsible = TRUE,
                       fluidRow(column(width=12,
@@ -683,15 +690,29 @@ library(shinyBS)
                     box(width = 4, title = h2('Genes custom', icon('magnifying-glass')), 
                     collapsible = TRUE,
                     fluidRow(column(width = 12,
-                        checkboxGroupInput(inputId = "gene_custom", label = "Choose customization",choiceNames = list("X most variant genes", "Center by gene"),choiceValues = list("mostvar", "center")))),
-                        conditionalPanel(condition = "input.gene_custom.indexOf('mostvar') !== -1", numericInput(inputId = "num_mostvar",label = "X equals ?", value = 1000))),
+                        checkboxGroupInput(inputId = "geneCustom", label = "Choose customization",choiceNames = list("X most variant genes", "Center by gene","Convert GeneID (ENS) to GeneName"),choiceValues = list("mostvar", "center","genename")))),
+                        conditionalPanel(condition = "input.geneCustom.indexOf('mostvar') !== -1", numericInput(inputId = "num_mostvar",label = "X equals ?", value = 1000)),
+                        sliderInput("zero_threshold2",label = "Frequency of zero per gene to remove",
+                        min = 0, max =0.8, value = 0.5,step=0.1)
+                        ),
                     box(width = 4, title = h2('Online tools', icon('globe')), collapsible = TRUE,
+                      fluidRow(column(width=12,
+                          radioButtons("morpheus","MORPHEUS format ",c("Yes"=TRUE,"No"=FALSE), selected=FALSE)
+                        )),br(),
                       fluidRow(    
                         column(width = 12, p("Here are some useful complementary tools:"),
                         tags$a(href = "https://software.broadinstitute.org/morpheus/", "MORPHEUS heatmap interactive", target = "_blank"), br(),      
                         tags$a(href = "https://www.bioinformatics.com.cn/srplot", "Science and Research online plot", target = "_blank"), br(),
                         tags$a(href = "https://maayanlab.cloud/Enrichr/", "EnrichR gene set enrichment analysis tools", target ="_blank"))))
                           
-                          )))))
+                          )),
+            fluidRow(column(width=12,
+            box(width = 12, status = 'info', title = h1("Customized matrix", icon('table')), solidHeader = TRUE, collapsible=TRUE,
+              
+                
+                withSpinner(dataTableOutput('customTable'), type = 8, color = "#CDCDE6", size = 1)
+              )
+
+            )))))
 
 )))

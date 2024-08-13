@@ -246,7 +246,7 @@ output$MCP_Image <- renderImage({
   ##################################PAGE TOOLS########################################""
   annotFile2 <-reactive({
     req(input$'annot-file2')
-      annot = read.delim(input$'annot-file'$datapath, row.names = 1)
+      annot = read.delim(input$'annot-file2'$datapath, row.names = 1)
       count = countFile2()$count
     if(length(intersect(rownames(annot), colnames(count)))==0)
     showModal(modalDialog(
@@ -261,7 +261,7 @@ output$MCP_Image <- renderImage({
     req(input$file2)
 
     notif <<- showNotification("Opening count matrix in progress", duration = 0)
-    count = read.delim(input$file$datapath, sep='\t', row.names = 1, header=T,as.is=T)
+    count = read.delim(input$file2$datapath, sep='\t', row.names = 1, header=T,as.is=T)
     removeNotification(notif)
     
     if(!all(as.matrix(count) == as.integer(as.matrix(count))) && input$lcms=="rna"){
@@ -272,49 +272,14 @@ output$MCP_Image <- renderImage({
       ))
     }
 
-    genefile = switch(input$org, 
+    genefile = switch(input$org2, 
     'hs' = 'humanGeneannot.rds',
     'mm' = 'mouseGeneannot.rds',
     )
 
     
     geneannot = readRDS(genefile)
-    if(input$lcms=="rna"){
-    geneannot =  geneannot[rownames(count),]
-
-    if (input$coding) {
-      geneannot = geneannot[which(geneannot$biotype == 'protein_coding'), ]
-      count = count[geneannot$GeneID, ]
-    }
-
-    if( input$sex) {
-          observeEvent(input$sex, {
-          showModal(modalDialog(
-        title = "Upload Sex Information",
-        "Upload a TSV file with 1 column representing the sex of your samples in the same order as your metadata TSV file.",
-        footer = tagList(
-          actionButton("dismiss_modal", "Dismiss")
-        ),
-        easyClose = FALSE 
-      ))
-    })
-
-    observeEvent(input$dismiss_modal, {
-      removeModal()  
-    })
-
-      X = switch(input$org, 
-        'hs' = 'X',
-        'mm' = 'mmuX',
-      )
-      Y = switch(input$org, 
-        'hs' = 'Y',
-        'mm' = 'mmuY',
-      )
-      geneannot = geneannot[-which(geneannot$seqname == X |geneannot$seqname == Y) , ]
-      count = count[geneannot$GeneID  , ]
     
-    }}
     
     return(list(count=count, geneannot=geneannot))
   })
@@ -322,16 +287,151 @@ output$MCP_Image <- renderImage({
     annotProcess2 <- reactive({
     annot = annotFile2()
     annot$condshiny = apply(annot, 1, function(x) paste(colnames(annot),"_", x, collapse = ',', sep=''))
-    if(input$lcms=="rna"){
 
-    if(input$sex){
-      req(input$sexAnnot)
-      sex= read.delim(input$sexAnnot$datapath,row.names=1)
-      annot$sex = sex
-    }}
+
 
     return(annot)
   })
+  
+
+    UQnorm=function (rawcounts)
+{
+    log2(1 + (t(t(rawcounts)/apply(rawcounts, 2, function(x) {
+        quantile(x[which(x > 0)], probs = 0.75)
+    })) * 1000))
+}
+getUniqueGeneMat=function(m,g,w){
+
+  if(!all.equal(nrow(m),length(g),length(w))){
+    stop("nrow of m should be equal to lenght of g and w")
+  }
+  i=order(w,decreasing=T)
+
+  oki=i[which(!duplicated(g[i]) & !g[i]%in% c("---"," ","",NA))]
+
+  okm=m[oki,]
+  rownames(okm)=g[oki]
+  okm
+}
+
+normAll <-eventReactive(input$gocustom,{
+
+    count = countFile2()$count
+    annot = annotProcess2()
+
+    count_intersect = count[, intersect(rownames(annot), colnames(count))]
+    annot_intersect= as.data.frame(annot[intersect(rownames(annot), colnames(count)), ])
+
+    zero_threshold = as.numeric(input$zero_threshold2)
+    countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
+
+    count_normalized = countfilt
+
+    if(input$normalize %in% c("vst", "deseq") ){ 
+      dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
+                                    colData = annot_intersect,
+                                    design = ~condshiny )
+
+      dds = dds[rowSums(counts(dds)) >= 10]
+      if(input$normalize=="vst"){
+
+        count_normalized =  assay(vst(dds))
+      }
+      else{
+
+        dds2 = estimateSizeFactors(dds)
+        count_normalized = counts(dds2, normalized = TRUE)
+      }
+    }
+    else{
+      if(input$normalize =="uqnorm"){
+
+      count_normalized = UQnorm(countfilt)
+    }
+    }
+
+
+    if( "mostvar" %in% input$geneCustom){
+
+      gvar = apply(count_normalized, 1, sd) 
+      mostvargenes = order(gvar, decreasing=TRUE)[1:as.numeric(input$num_mostvar)]
+      count_normalized= count_normalized[mostvargenes,]
+    }
+  
+    if( "center" %in% input$geneCustom ){
+
+      count_normalized = as.data.frame(t(scale(t(count_normalized), scale=FALSE))) # Normalization per gene 
+    } 
+
+    if("genename" %in% input$geneCustom){
+
+      genefile = switch(input$org2, 
+      'hs' = 'humanGeneannot.rds',
+      'mm' = 'mouseGeneannot.rds',
+       )
+        geneannot = readRDS(genefile)
+        count_normalized = count_normalized[geneannot$GeneID,]
+        count_normalized = getUniqueGeneMat(count_normalized, geneannot$GeneName, rowMeans(count_normalized))
+    }
+    if(input$morpheus){
+
+      annot_intersect$condshiny = NULL
+      annot_intersect = as.data.frame(annot_intersect)
+
+      annot_filter = as.data.frame(as.matrix(annot_intersect[colnames(count_normalized), ],ncol=1 ))
+      rownames(annot_filter) = colnames(count_normalized)
+      colnames(annot_filter) = colnames(annot_intersect)
+
+      count_normalized = count_normalized[,rownames(annot_filter)]
+
+      annot_t = as.data.frame(t(annot_filter))
+      colnames(annot_t) = rownames(annot_filter)
+
+
+      count_normalized = as.data.frame(rbind(annot_t, count_normalized))
+
+
+    }
+    return(list(normalized=count_normalized, annot_intersect=annot_intersect, count_intersect=count_intersect))
+  })
+
+
+  output$customTable <- DT::renderDT(server = FALSE, {
+
+    DT::datatable(
+      normAll()$normalized,
+      extensions = c("Buttons"),
+      options = list(
+        scrollX = TRUE,
+        dom = 'Bfrtip',
+        buttons = list(
+          list(extend = "copy", text = "Copy", filename = "annot",
+               exportOptions = list(
+                 modifier = list(page = "current")
+               )
+          ),
+          list(extend = "csv", text = "CSV", filename = "annot",
+               exportOptions = list(
+                 modifier = list(page = "all")
+               )
+          ),
+          list(extend = "excel", text = "Excel", filename = "annot",
+               exportOptions = list(
+                 modifier = list(page = "all")
+               )
+          ),
+          list(extend = "csv", text = "TXT", filename = "annot", 
+                fieldSeparator = "\t",  # Séparateur de tabulation
+                extension = ".txt",      # Extension de fichier
+                exportOptions = list(
+                  modifier = list(page = "all")
+                )
+          )
+        ) 
+    ))
+  })
+
+
   #########################################################
 
 
@@ -761,15 +861,9 @@ output$downloadUpsetPlot <- downloadHandler(
       removeNotification(notif)
     }
     else{
-
       normalized_counts =  dds$data#as.numeric()
 
-
     }
-
-    
-
-    
     return(normalized_counts)
 
   })
