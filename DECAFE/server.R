@@ -44,7 +44,6 @@ library(gplots)
 library(gridExtra)
 library(grid)
 library(ROTS)
-library(patchwork)
 
 
 
