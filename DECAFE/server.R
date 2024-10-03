@@ -363,7 +363,6 @@ normAll <-eventReactive(input$gocustom,{
     } 
 
     if("genename" %in% input$geneCustom){
-
       genefile = switch(input$org2, 
       'hs' = 'humanGeneannot.rds',
       'mm' = 'mouseGeneannot.rds',
@@ -373,7 +372,6 @@ normAll <-eventReactive(input$gocustom,{
         count_normalized = getUniqueGeneMat(count_normalized, geneannot$GeneName, rowMeans(count_normalized))
     }
     if(input$morpheus){
-
       annot_intersect$condshiny = NULL
       annot_intersect = as.data.frame(annot_intersect)
 
@@ -390,12 +388,29 @@ normAll <-eventReactive(input$gocustom,{
       count_normalized = as.data.frame(rbind(annot_t, count_normalized))
 
 
+
     }
     return(list(normalized=count_normalized, annot_intersect=annot_intersect, count_intersect=count_intersect))
   })
+filename_custom <-renderText({
+
+  file=paste0("count_normalize-",input$normalize)
+  if("genename" %in% input$geneCustom){
+      file = paste0(file,'_geneName')
+    }
+    if(input$morpheus){
+      file = paste0(file,'_Morpheus')
 
 
-  output$customTable <- DT::renderDT(server = FALSE, {
+    }
+
+    return(file)
+
+
+})
+
+
+  output$customTable <- DT::renderDT(server = TRUE, {
 
     DT::datatable(
       normAll()$normalized,
@@ -404,22 +419,22 @@ normAll <-eventReactive(input$gocustom,{
         scrollX = TRUE,
         dom = 'Bfrtip',
         buttons = list(
-          list(extend = "copy", text = "Copy", filename = "annot",
+          list(extend = "copy", text = "Copy", filename = filename_custom(),
                exportOptions = list(
                  modifier = list(page = "current")
                )
           ),
-          list(extend = "csv", text = "CSV", filename = "annot",
+          list(extend = "csv", text = "CSV", filename = filename_custom(),
                exportOptions = list(
                  modifier = list(page = "all")
                )
           ),
-          list(extend = "excel", text = "Excel", filename = "annot",
+          list(extend = "excel", text = "Excel", filename = filename_custom(),
                exportOptions = list(
                  modifier = list(page = "all")
                )
           ),
-          list(extend = "csv", text = "TXT", filename = "annot", 
+          list(extend = "csv", text = "TXT", filename = filename_custom(), 
                 fieldSeparator = "\t",  # Séparateur de tabulation
                 extension = ".txt",      # Extension de fichier
                 exportOptions = list(
@@ -1590,7 +1605,7 @@ pca_alldownload <- reactive({
       })
 
 
-  output$degTable <- DT::renderDT(server = FALSE, {
+  output$degTable <- DT::renderDT(server = TRUE, {
     table = resDeseq()$res
     table$padj = as.numeric(table$padj)
     table$log2FoldChange= as.numeric(table$log2FoldChange)
