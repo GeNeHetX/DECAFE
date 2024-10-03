@@ -413,14 +413,37 @@ filename_custom <-renderText({
 
 })
 
-output$downloadCustomDT <- downloadHandler(
+output$downloadCustomDT_CSV <- downloadHandler(
       filename = function() {
-            paste0(filename_custom(),'.' ,input$format_custom)
+            paste0(filename_custom(),'.csv')
       },
       content = function(file) { 
-        sep= ifelse (input$format_custom=="csv",",","\t")
+        sep= ","
           
        write.table(normAll()$normalized,file,sep=sep)
+      })
+
+output$downloadCustomDT_TXT <- downloadHandler(
+      filename = function() {
+            paste0(filename_custom(),'.txt')
+      },
+      content = function(file) { 
+        sep= "\t"
+          
+       write.table(normAll()$normalized,file,sep=sep)
+      })
+
+
+
+output$downloadCustomDT_XLSX <- downloadHandler(
+      filename = function() {
+            paste0(filename_custom(),'.xlsx')
+      },
+      content = function(file) { 
+      xlsx::write.xlsx(normAll()$normalized, file, sheetName = "Sheet1",
+  col.names = TRUE, row.names = TRUE, append = FALSE)
+
+
       })
 
 
@@ -428,36 +451,38 @@ output$downloadCustomDT <- downloadHandler(
 
     DT::datatable(
       normAll()$normalized,
-      extensions = c("Buttons"),
+      #extensions = c("Buttons"),
       options = list(
         scrollX = TRUE,
         dom = 'Bfrtip',
-        buttons = list(
-          list(extend = "copy", text = "Copy", filename = filename_custom(),
-               exportOptions = list(
-                 modifier = list(page = "current")
-               )
-          ),
-          list(extend = "csv", text = "CSV", filename = filename_custom(),
-               exportOptions = list(
-                 modifier = list(page = "all")
-               )
-          ),
-          list(extend = "excel", text = "Excel", filename = filename_custom(),
-               exportOptions = list(
-                 modifier = list(page = "all")
-               )
-          ),
-          list(extend = "csv", text = "TXT", filename = filename_custom(), 
-                fieldSeparator = "\t",  # Séparateur de tabulation
-                extension = ".txt",      # Extension de fichier
-                exportOptions = list(
-                  modifier = list(page = "all")
-                )
+         buttons = list(
+        #   list(extend = "copy", text = "Copy", filename = filename_custom(), 
+        #        exportOptions = list(
+        #          modifier = list(page = "current")
+        #        )
+        #   ),
+        #   list(extend = "csv", text = "CSV", filename = filename_custom(),
+        #        exportOptions = list(
+        #          modifier = list(page = "all")
+        #        )
+        #   ),
+        #   list(extend = "excel", text = "Excel", filename = filename_custom(),
+        #        exportOptions = list(
+        #          modifier = list(page = "all")
+        #        )
+        #   ),
+        #   list(extend = "csv", text = "TXT", filename = filename_custom(), 
+        #         fieldSeparator = "\t",  # Séparateur de tabulation
+        #         extension = ".txt",      # Extension de fichier
+        #         exportOptions = list(
+        #           modifier = list(page = "all")
+        #         )
           )
         ) 
-    ))
+    )
   })
+
+
 
 
   #########################################################
@@ -1627,30 +1652,50 @@ pca_alldownload <- reactive({
     table = table[order(abs(table$stat),decreasing=TRUE),]
     DT::datatable(
       table,
-      extensions = c("Buttons"),
+      #extensions = c("Buttons"),
       options = list(
         dom = 'Bfrtip', 
         scrollX = TRUE,
-        buttons = list(
-          list(extend = "copy", text = "Copy", filename = "res_deseq",
-               exportOptions = list(
-                 modifier = list(page = "current")
-               )
-          ),
-          list(extend = "csv", text = "CSV", filename = "res_deseq",
-               exportOptions = list(
-                 modifier = list(page = "all")
-               )
-          ),
-          list(extend = "excel", text = "Excel", filename = "res_deseq",
-               exportOptions = list(
-                 modifier = list(page = "all")
-               )
-          )
-        )
+         buttons = list(
+        #   list(extend = "copy", text = "Copy", filename = "res_deseq",
+        #        exportOptions = list(
+        #          modifier = list(page = "current")
+        #        )
+        #   ),
+        #   list(extend = "csv", text = "CSV", filename = "res_deseq",
+        #        exportOptions = list(
+        #          modifier = list(page = "all")
+        #        )
+        #   ),
+        #   list(extend = "excel", text = "Excel", filename = "res_deseq",
+        #        exportOptions = list(
+        #          modifier = list(page = "all")
+        #        )
+        #   )
+         )
       )
     )
   })
+
+  output$downloadAD_CSV <- downloadHandler(
+      filename = function() {
+            paste0("res_deseq",'.csv')
+      },
+      content = function(file) { 
+        sep= ","
+          
+       write.table(resDeseq()$res,file,sep=sep)
+      })
+
+output$downloadAD_TXT <- downloadHandler(
+      filename = function() {
+            paste0("res_deseq",'.txt')
+      },
+      content = function(file) { 
+        sep= "\t"
+          
+       write.table(resDeseq()$res,file,sep=sep)
+      })
 
   # Boxplot Panel
   geneTargetChoice <- reactive({

@@ -507,6 +507,7 @@ library(shinyBS)
     fluidRow(
     column(width=12,
       box(width=NULL,status='info',title = h1('Table of results',icon('table')),solidHeader = TRUE, 
+        downloadButton('downloadAD_CSV',"CSV"),downloadButton('downloadAD_TXT',"TXT"),
         withSpinner(DT::dataTableOutput("degTable"), type = 8, color = "#CDCDE6", size = 1)
       )
     )
@@ -732,8 +733,9 @@ library(shinyBS)
                           )),
             fluidRow(column(width=12,
             box(width = 12, status = 'info', title = h1("Customized matrix", icon('table')), solidHeader = TRUE, collapsible=TRUE,
-              fluidRow(column(width=3,selectInput('format_custom', 'Choose your format', choices = list(CSV='csv', TXT='txt'))),
-              downloadButton('downloadCustomDT')),
+              #fluidRow(column(width=3,selectInput('format_custom', 'Choose your format', choices = list(CSV='csv', TXT='txt'))),
+              downloadButton('downloadCustomDT_CSV',"CSV"),downloadButton('downloadCustomDT_TXT',"TXT"),#downloadButton('downloadCustomDT_XLSX',"Excel"),
+              #),
               
                 
                 withSpinner(dataTableOutput('customTable'), type = 8, color = "#CDCDE6", size = 1)
