@@ -368,8 +368,11 @@ normAll <-eventReactive(input$gocustom,{
       'mm' = 'mouseGeneannot.rds',
        )
         geneannot = readRDS(genefile)
-        count_normalized = count_normalized[geneannot$GeneID,]
-        count_normalized = getUniqueGeneMat(count_normalized, geneannot$GeneName, rowMeans(count_normalized))
+
+        count_normalized = count_normalized[intersect(geneannot$GeneID,rownames(count_normalized)),]
+
+        count_normalized = getUniqueGeneMat(count_normalized, geneannot$GeneName[which(geneannot$GeneID %in% rownames(count_normalized))], rowMeans(count_normalized))
+
     }
     if(input$morpheus){
       annot_intersect$condshiny = NULL
