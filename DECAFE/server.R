@@ -390,11 +390,12 @@ normAll <-eventReactive(input$gocustom,{
 
       count_normalized = as.data.frame(rbind(annot_t, count_normalized))
 
-
+      #write.csv(count_normalized,"count_morpheus.csv")
 
     }
     return(list(normalized=count_normalized, annot_intersect=annot_intersect, count_intersect=count_intersect))
   })
+
 filename_custom <-renderText({
 
   file=paste0("count_normalize-",input$normalize)
@@ -411,6 +412,16 @@ filename_custom <-renderText({
 
 
 })
+
+output$downloadCustomDT <- downloadHandler(
+      filename = function() {
+            paste0(filename_custom(),'.' ,input$format_custom)
+      },
+      content = function(file) { 
+        sep= ifelse (input$format_custom=="csv",",","\t")
+          
+       write.table(normAll()$normalized,file,sep=sep)
+      })
 
 
   output$customTable <- DT::renderDT(server = TRUE, {

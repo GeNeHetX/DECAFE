@@ -732,6 +732,8 @@ library(shinyBS)
                           )),
             fluidRow(column(width=12,
             box(width = 12, status = 'info', title = h1("Customized matrix", icon('table')), solidHeader = TRUE, collapsible=TRUE,
+              fluidRow(column(width=3,selectInput('format_custom', 'Choose your format', choices = list(CSV='csv', TXT='txt'))),
+              downloadButton('downloadCustomDT')),
               
                 
                 withSpinner(dataTableOutput('customTable'), type = 8, color = "#CDCDE6", size = 1)
