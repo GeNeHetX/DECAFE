@@ -244,7 +244,7 @@ library(shinyBS)
                         imageOutput("pca_Image"))), 
 
                         tags$details(
-                            tags$summary(strong("More information")),
+                            tags$summary(strong("Click for more information")),
 
                       column(width = 12, 
                             "PCA is based on fundamental mathematical concepts such as the eigenvalue and eigenvector decomposition of a covariance matrix. 
@@ -277,7 +277,7 @@ library(shinyBS)
                        imageOutput("anaDiff_Image"))),
                        
                        tags$details(
-                            tags$summary(strong("More information")),
+                            tags$summary(strong("Click for more information")),
 
                       column(width = 12, 
                             "Differential analysis, as performed by DESeq2, involves the use of advanced statistical models based on the negative binomial distribution to model 
@@ -306,7 +306,7 @@ library(shinyBS)
                         imageOutput("gsea_Image"))), 
                         
                         tags$details(
-                            tags$summary(strong("More information")),
+                            tags$summary(strong("Click for more information")),
 
                       column(width = 12, 
                             "GSEA uses rank statistic calculations to assess the enrichment of gene sets associated with specific biological pathways or cellular functions. First, genes are 
@@ -424,21 +424,76 @@ library(shinyBS)
          )
     ),
     tabPanel("Heatmap", height = 1000,
-          fluidRow(
+      fluidRow(
         box(class = "map_container",width=12,status='success',title = h2('Heatmap of normalize count',icon('chart-simple')),solidHeader = TRUE,
-            column(width=2,
-        numericInput("nb_gene_heat", "Number of most variable Gene", min = 10, step = 1, max = 1000,value = 1000),
-        uiOutput('nbGene2'),
-             selectInput("data_heat", label = "Choose sample to visualize",
-                  choices = list("All" = "all", "Just the two conditions" = "cond"),selected = "cond"),
+            
+            column(width=3,
+              numericInput("nb_gene_heat", "Number of most variable Gene", min = 10, step = 1, max = 1000,value = 1000),
+              uiOutput('nbGene2')),
+            column(width=3,
+              selectInput("data_heat", label = "Choose sample to visualize",
+                  choices = list("All" = "all", "Just the two conditions" = "cond"),selected = "cond"
+              )),
+            column(width=2,br(),
+              downloadButton("downloadHeatmap", "Download heatmap", icon('download'))),
+            column(width=1),
               
-              downloadButton("downloadHeatmap", "Download heatmap", icon('download')), br(), br(),
+
+              column(width=3, br(),actionButton("custom_heat","Customization"),
+               br(), br(),
+               conditionalPanel("input.custom_heat %2 == 1",
+            
+                  column(width = 12, 
+                    fileInput('hm_file', "Upload additionnal annotation"),
+                    selectInput("hm_dendro", "Choose which dendrogramm to display", 
+                      choices = list(
+                        None="none",
+                        Column="column",
+                        Row = "row",
+                        Both = "both"
+                      ), selected = "column"
+                    ),
+
+                    selectInput('hm_hclust', 'Choose your agglomeration method', 
+                      choices = list(
+                        Ward='ward.D2', 
+                        Single='single',
+                        Complete="complete",
+                        "Average (UPGMA)"="average", 
+                        WPGMA="mcquitty",
+                        "Median (WPGMC)" = "median", 
+                        "Centroid (UPGMC)"="centroid"
+                      ), selected = "ward.D2"
+                    ),
+                    
+                    selectInput('hm_dist', 'Choose your distance method', 
+                      choices = list(
+                        Euclidean='euclidean', 
+                        Maximum='maximum',
+                        Manhattan="manhattan",
+                        "Canberra"="canberra",
+                        Binary="binary",
+                        "Minkowski" = "minkowski"#, 
+                        #"Spearman correlation"="spearman",
+                        #"Pearson correlation"="pearson"
+                      ), selected= "euclidean"
+                    ),
+                    selectInput('hm_gene', 'Choose Gene type', 
+                      choices = list(
+                        "Gene ID (ENS)"='id', 
+                        "Gene Name"='name'
+                      ), selected= "name"
+                    ),
+
+                    actionButton('goHeat', label='Customize Heatmap', icon('play'))
+                            
+                  ), align="justify")
           
             ),
-           column(width=1),
-            column(width=9, 
+        
+            column(width=12, 
           withSpinner(plotOutput("heatMap", width = "95%", height=1200), type = 8, color = "#CDCDE6", size = 1), style = 'display:block;width:100%'
-        ),
+        )
         )),
         
     ),
@@ -689,7 +744,7 @@ library(shinyBS)
                 column(width=12,
 
                   tags$details(
-                            tags$summary(strong("TIPS")),
+                            tags$summary(strong("Click for TIPS")),
 
                       column(width = 12, 
                           strong("PCA of DECAFE "), "    : VST normalization + Center by genes + Most variant genes",br(),

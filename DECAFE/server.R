@@ -21,6 +21,7 @@ if(length(new_packages)) {
   }
   BiocManager::install(new_packages, update = FALSE)
 }
+source("heatmap3_func.R")
 
 options(shiny.maxRequestSize=100000*1024^2)
 library(shiny)
@@ -1070,44 +1071,151 @@ heatmapData <- reactive({
 })
 
 output$heatMap <- renderPlot({
-
   data_heatmap = heatmapData()
   gvar = data_heatmap$gvar
   normalized_counts = data_heatmap$normalized_counts
-  condition = data_heatmap$condition
   mostvargenes = order(gvar, decreasing=TRUE)[1:as.numeric(input$nb_gene_heat)]
-  
-  if (length(unique(condition)) == 2){
-    palette.annot =c("#CDCDE6", '#262686')}
-  else {
-    set.seed(Sys.Date())
-    palette.annot = sapply(1:length(unique(condition)),function(x) paste0('#',paste0(sample(c(0:9,LETTERS[1:6]),6,T),collapse='')))}
-  condition.colors = palette.annot
+
+  if(input$goHeat == 0 ){ # Default Heatmap 
+
+    condition = data_heatmap$condition
   
   
+    if (length(unique(condition)) == 2){
+      palette.annot =c("#CDCDE6", '#262686')
+    }
+    else {
+      set.seed(Sys.Date())
+      palette.annot = sapply(1:length(unique(condition)),function(x) paste0('#',paste0(sample(c(0:9,LETTERS[1:6]),6,T),collapse='')))
+    }
 
-  gplots::heatmap.2(x=normalized_counts[mostvargenes,], 
-    dendrogram="column",
-    srtCol=45,
-    col = "bluered",
-    scale="none",
-    trace="none",
-    ColSideColors=condition.colors[ as.factor(condition)],
-    labRow=FALSE,
-    #ylab="Genes",
-    xlab=NULL,margins = c(15, 3),
-    keysize = 0.5,
-    key.par = list(cex=1),
-  )
+    condition.colors = palette.annot
+  
+  
 
-  legend("left",
-    legend=paste0(sapply(strsplit(unique(condition),','),paste,collapse = '\n'),'\n'),
-    fill=condition.colors[ unique(as.factor(condition))], 
-    cex=0.7
-  )
+    gplots::heatmap.2(
+      x=normalized_counts[mostvargenes,], 
+      dendrogram="column",
+      srtCol=45,
+      col = "bluered",
+      scale="none",
+      trace="none",
+      ColSideColors=condition.colors[ as.factor(condition)],
+      labRow=FALSE,
+      #ylab="Genes",
+      xlab=NULL,margins = c(15, 3),
+      keysize = 0.5,
+      key.par = list(cex=1),key.title = "Gene Expression"
+    )
 
+    legend("left",
+      legend=paste0(sapply(strsplit(unique(condition),','),paste,collapse = '\n'),'\n'),
+      fill=condition.colors[ unique(as.factor(condition))], 
+      cex=0.7
+    )
+  }
+  else{ # Customized heatmap 
 
+    annot= read.delim(input$hm_file$datapath, row.names = 1)
+    annotation = annot[intersect(rownames(annot), colnames(normalized_counts)),]
 
+    variable_type = apply(annotation,2, function(x){
+       ifelse(
+        (length(na.omit(as.numeric(x)))> length(x)/2 && any(grepl(".",x))), # If numeric + float 
+        TRUE, # Continuous varaible
+        FALSE # Discrete 
+      )
+        
+
+    })
+
+    continuous = annotation[,which(variable_type),drop=FALSE]
+    discrete = annotation[,which(!variable_type),drop=FALSE]
+
+    annotation = annotation[,c(colnames(discrete),colnames(continuous))]
+
+    colors_disc <- apply(discrete, 2, function(x) {
+
+      num_colors <- length(unique(x))
+      hue_offset <- sample(1:360, 1)
+      hues <- seq(hue_offset, hue_offset + 360, length = num_colors + 1) %% 360
+      col_values <- hcl(h = hues, c = sample(70:100, 1), l = sample(50:80, 1))
+      setNames(col_values[as.factor(x)], unique(x))
+    })
+
+    if(ncol(continuous) >0) {
+      colors_cont <- apply(continuous,2,function(x){
+        x=as.numeric(x)
+        num_colors <- 2
+        hue_offset <- sample(1:360, 1)
+        hues <- seq(hue_offset, hue_offset + 360, length = num_colors + 1) %% 360
+        col_values <- hcl(h = hues, c = sample(70:100, 1), l = sample(50:80, 1))
+        gradient <- colorRampPalette(c(col_values[1], col_values[2]))(10*length(x))
+        gradient[as.numeric(cut(x, breaks = 10*length(x)))]
+      })
+    }
+
+    normalized_counts=normalized_counts[mostvargenes,]
+    modality_table <- list()
+
+    for (col_name in colnames(discrete)) {
+      modality_table[[col_name]] <- data.frame(
+        modality = paste0(col_name, '_', unique(discrete[,col_name])),
+        color = unique(colors_disc[,col_name])
+      )
+    }
+
+    legend_items <- do.call(rbind, modality_table)
+
+    if("name" == input$hm_gene) { # Convert GeneID to GeneName
+      genefile = switch(input$org, 
+        'hs' = 'humanGeneannot.rds',
+        'mm' = 'mouseGeneannot.rds',
+      )
+      
+      geneannot = readRDS(genefile)
+      normalized_counts = normalized_counts[intersect(geneannot$GeneID,rownames(normalized_counts)),]
+      normalized_counts = getUniqueGeneMat(normalized_counts, geneannot$GeneName[which(geneannot$GeneID %in% rownames(normalized_counts))], rowMeans(normalized_counts))
+    }
+
+    # Plot
+    heatmap.3(
+          normalized_counts, na.rm = TRUE, scale = "none", dendrogram = input$hm_dendro,
+          distfun = input$hm_dist, hclustfun = input$hm_hclust, key = TRUE, density.info = "none",
+          trace = "none", KeyValueName = "Gene Expression", ColSideColors = cbind(colors_disc,colors_cont),
+          Rowv = TRUE, Colv = TRUE, symbreaks = FALSE, labCol = FALSE,
+          labRow = rownames(normalized_counts), cexRow = 1,keysize=0.8,
+          col = "bluered", ColSideColorsSize = 2, RowSideColorsSize = 1
+    )
+    # Discrete value legend
+    legend( 
+      0,0.8, legend = legend_items$modality, 
+      border = FALSE, bty = "n", y.intersp = 0.7, cex = 0.7, 
+      fill = legend_items$color
+    )  
+
+    # Continuous value legend
+    start_y <- 0.7 
+    height <- 0.1
+
+    for(i in 1:ncol(continuous)){
+      bottom_y = start_y - height * (i - 1)
+      par(fig=c(0, 0.1,bottom_y - height, bottom_y), new=TRUE, mar=c(1, 1, 1, 1))
+
+      z <- seq(min(as.numeric(continuous[,i])), max(as.numeric(continuous[,i])))
+      image(
+        z=matrix(seq(0, 1, length=ncol(continuous)*10), nrow=1),
+        col=colors_cont[,i], 
+        xaxt="n", yaxt="n", bty="n"
+      )
+      axis(
+        4, at=seq(0, 1, length=5), 
+        labels=round(seq(min(as.numeric(continuous[,i])), max(as.numeric(continuous[,i])), length=5), 2), 
+        las=1, cex.axis=0.7
+      )
+      title(colnames(continuous)[i])
+    }
+  }
 })
 output$downloadHeatmap <- downloadHandler(
       filename = function() {
@@ -1119,42 +1227,146 @@ output$downloadHeatmap <- downloadHandler(
       contentType = "application/pdf",
       content = function(file) { 
           
-data_heatmap = heatmapData()
-  gvar = data_heatmap$gvar
-  normalized_counts = data_heatmap$normalized_counts
-  condition = data_heatmap$condition
-  mostvargenes = order(gvar, decreasing=TRUE)[1:as.numeric(input$nb_gene_heat)]
-  
-  if (length(unique(condition)) == 2){
-    palette.annot =c("#CDCDE6", '#262686')}
-  else {
-    set.seed(Sys.Date())
-    palette.annot = sapply(1:length(unique(condition)),function(x) paste0('#',paste0(sample(c(0:9,LETTERS[1:6]),6,T),collapse='')))}
-  condition.colors = palette.annot
+        data_heatmap = heatmapData()
+        gvar = data_heatmap$gvar
+        normalized_counts = data_heatmap$normalized_counts
+        condition = data_heatmap$condition
+        mostvargenes = order(gvar, decreasing=TRUE)[1:as.numeric(input$nb_gene_heat)]
 
-  if(input$format == 'png')
-    pdf(file,onefile = F,width = 10,height = 8)
-  else
-    svg(file,onefile = F,width = 10,height = 8) 
-  
+        if(input$format == 'png')
+          pdf(file,onefile = F,width = 10,height = 8)
+        else
+          svg(file,onefile = F,width = 10,height = 8) 
+        
+        if(input$goHeat == 0 ){ # Default heatmap
+          if (length(unique(condition)) == 2){
+            palette.annot =c("#CDCDE6", '#262686')
+          }
+          else {
+            set.seed(Sys.Date())
+            palette.annot = sapply(1:length(unique(condition)),function(x) paste0('#',paste0(sample(c(0:9,LETTERS[1:6]),6,T),collapse='')))
+          }
+          condition.colors = palette.annot 
 
-  gplots::heatmap.2(x=normalized_counts[mostvargenes,], 
-    dendrogram="column",
-    srtCol=45,
-    col = "bluered",
-    scale="none",
-    trace="none",
-    ColSideColors=condition.colors[ as.factor(condition)],
-    labRow=FALSE,
-    #ylab="Genes",
-    xlab=NULL,margins = c(15, 3),
-  )
+          gplots::heatmap.2(x=normalized_counts[mostvargenes,], 
+            dendrogram="column",
+            srtCol=45,
+            col = "bluered",
+            scale="none",
+            trace="none",
+            ColSideColors=condition.colors[ as.factor(condition)],
+            labRow=FALSE,
+            #ylab="Genes",
+            xlab=NULL,margins = c(15, 3),key.title = "Gene Expression"
+          )
 
-  legend("left",
-    legend=paste0(sapply(strsplit(unique(condition),','),paste,collapse = '\n'),'\n'),
-    fill=condition.colors[ unique(as.factor(condition))], 
-    cex=0.7
-  )
+          legend("left",
+            legend=paste0(sapply(strsplit(unique(condition),','),paste,collapse = '\n'),'\n'),
+            fill=condition.colors[ unique(as.factor(condition))], 
+            cex=0.7
+          )
+        }
+        else{
+          annot= read.delim(input$hm_file$datapath, row.names = 1)
+          annotation = annot[intersect(rownames(annot), colnames(normalized_counts)),]
+          variable_type = apply(annotation,2, function(x){
+            ifelse(
+              (length(na.omit(as.numeric(x)))> length(x)/2 && any(grepl(".",x))), # If numeric + float 
+              TRUE, # Continuous varaible
+              FALSE # Discrete 
+            )
+          })
+
+          continuous = annotation[,which(variable_type),drop=FALSE]
+          discrete = annotation[,which(!variable_type),drop=FALSE]
+
+          annotation = annotation[,c(colnames(discrete),colnames(continuous))]
+
+          colors_disc <- apply(discrete, 2, function(x) {
+
+            num_colors <- length(unique(x))
+            hue_offset <- sample(1:360, 1)
+            hues <- seq(hue_offset, hue_offset + 360, length = num_colors + 1) %% 360
+            col_values <- hcl(h = hues, c = sample(70:100, 1), l = sample(50:80, 1))
+            setNames(col_values[as.factor(x)], unique(x))
+          })
+
+          if(ncol(continuous) >0) {
+            colors_cont <- apply(continuous,2,function(x){
+              x=as.numeric(x)
+              num_colors <- 2
+              hue_offset <- sample(1:360, 1)
+              hues <- seq(hue_offset, hue_offset + 360, length = num_colors + 1) %% 360
+              col_values <- hcl(h = hues, c = sample(70:100, 1), l = sample(50:80, 1))
+              gradient <- colorRampPalette(c(col_values[1], col_values[2]))(10*length(x))
+              gradient[as.numeric(cut(x, breaks = 10*length(x)))]
+            })
+          }
+
+          normalized_counts=normalized_counts[mostvargenes,]
+          modality_table <- list()
+
+          for (col_name in colnames(discrete)) {
+            modality_table[[col_name]] <- data.frame(
+              modality = paste0(col_name, '_', unique(discrete[,col_name])),
+              color = unique(colors_disc[,col_name])
+            )
+          }
+
+          legend_items <- do.call(rbind, modality_table)
+
+          if("name" == input$hm_gene) { # Convert GeneID to GeneName
+            genefile = switch(input$org, 
+              'hs' = 'humanGeneannot.rds',
+              'mm' = 'mouseGeneannot.rds',
+            )
+            
+            geneannot = readRDS(genefile)
+            normalized_counts = normalized_counts[intersect(geneannot$GeneID,rownames(normalized_counts)),]
+            normalized_counts = getUniqueGeneMat(normalized_counts, geneannot$GeneName[which(geneannot$GeneID %in% rownames(normalized_counts))], rowMeans(normalized_counts))
+          }
+
+          # Plot
+          heatmap.3(
+                normalized_counts, na.rm = TRUE, scale = "none", dendrogram = input$hm_dendro,
+                distfun = input$hm_dist, hclustfun = input$hm_hclust, key = TRUE, density.info = "none",
+                trace = "none", KeyValueName = "Gene Expression", ColSideColors = cbind(colors_disc,colors_cont),
+                Rowv = TRUE, Colv = TRUE, symbreaks = FALSE, labCol = FALSE,
+                labRow = rownames(normalized_counts), cexRow = 1,keysize=0.8,
+                col = "bluered", ColSideColorsSize = 2, RowSideColorsSize = 1
+          )
+          # Discrete value legend
+          legend( 
+            0,0.8, legend = legend_items$modality, 
+            border = FALSE, bty = "n", y.intersp = 0.7, cex = 0.7, 
+            fill = legend_items$color
+          )  
+
+          # Continuous value legend
+          start_y <- 0.7 
+          height <- 0.1
+
+          for(i in 1:ncol(continuous)){
+            bottom_y = start_y - height * (i - 1)
+            par(fig=c(0, 0.1,bottom_y - height, bottom_y), new=TRUE, mar=c(1, 1, 1, 1))
+
+            z <- seq(min(as.numeric(continuous[,i])), max(as.numeric(continuous[,i])))
+            image(
+              z=matrix(seq(0, 1, length=ncol(continuous)*10), nrow=1),
+              col=colors_cont[,i], 
+              xaxt="n", yaxt="n", bty="n"
+            )
+            axis(
+              4, at=seq(0, 1, length=5), 
+              labels=round(seq(min(as.numeric(continuous[,i])), max(as.numeric(continuous[,i])), length=5), 2), 
+              las=1, cex.axis=0.7
+            )
+            title(colnames(continuous)[i])
+          }
+        }
+
+
+
         dev.off()   
       })
 
