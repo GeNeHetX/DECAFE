@@ -13,7 +13,7 @@
 #   install.packages("BiocManager")
 # BiocManager::install(new_packages,update=FALSE)
 packages <- c("shiny", "DT", "shinydashboard", "shinycssloaders", "BiocManager", "ggplot2", "plotly", "reshape2", "factoextra", "FactoMineR", "devtools", "ggupset", 
-"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ggdendro", "dendextend","gplots","svglite", "shinyBS","grid","gridExtra","ROTS")
+"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ggdendro", "dendextend","gplots","svglite", "shinyBS","grid","gridExtra","ROTS", "circlize")
 new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
 if(length(new_packages)) {
   if (!requireNamespace("BiocManager", quietly = TRUE)) {
@@ -46,6 +46,7 @@ library(gridExtra)
 library(grid)
 library(ROTS)
 library(svglite)
+library(circlize)
 
 
 
@@ -1181,6 +1182,10 @@ output$heatMap <- renderPlot({
       normalized_counts = getUniqueGeneMat(normalized_counts, geneannot$GeneName[which(geneannot$GeneID %in% rownames(normalized_counts))], rowMeans(normalized_counts))
     }
 
+    max_abs_value <- max(abs(normalized_counts), na.rm = TRUE)
+    color_palette <- colorRampPalette(c("blue", "white", "red"))(100)
+    breaks <- seq(-max_abs_value, max_abs_value, length.out = length(color_palette) + 1)
+
     # Plot
     heatmap.3(
           normalized_counts, na.rm = TRUE, scale = "none", dendrogram = input$hm_dendro,
@@ -1188,7 +1193,7 @@ output$heatMap <- renderPlot({
           trace = "none", KeyValueName = "Gene Expression", ColSideColors = cbind(colors_disc,colors_cont),
           Rowv = TRUE, Colv = TRUE, symbreaks = FALSE, labCol = FALSE,
           labRow = rownames(normalized_counts), cexRow = 1,keysize=0.8,
-          col = "bluered", ColSideColorsSize = 2, RowSideColorsSize = 1
+          col = color_palette, breaks = breaks, ColSideColorsSize = 2, RowSideColorsSize = 1
     )
     # Discrete value legend
     legend( 
@@ -1329,6 +1334,10 @@ output$downloadHeatmap <- downloadHandler(
             normalized_counts = getUniqueGeneMat(normalized_counts, geneannot$GeneName[which(geneannot$GeneID %in% rownames(normalized_counts))], rowMeans(normalized_counts))
           }
 
+          max_abs_value <- max(abs(normalized_counts), na.rm = TRUE)
+          color_palette <- colorRampPalette(c("blue", "white", "red"))(100)
+          breaks <- seq(-max_abs_value, max_abs_value, length.out = length(color_palette) + 1)
+
           # Plot
           heatmap.3(
                 normalized_counts, na.rm = TRUE, scale = "none", dendrogram = input$hm_dendro,
@@ -1336,7 +1345,7 @@ output$downloadHeatmap <- downloadHandler(
                 trace = "none", KeyValueName = "Gene Expression", ColSideColors = colors_reactive(),
                 Rowv = TRUE, Colv = TRUE, symbreaks = FALSE, labCol = FALSE,
                 labRow = rownames(normalized_counts), cexRow = 1,keysize=0.8,
-                col = "bluered", ColSideColorsSize = 2, RowSideColorsSize = 1
+                col = color_palette, breaks = breaks, ColSideColorsSize = 2, RowSideColorsSize = 1
           )
           # Discrete value legend
           legend( 
