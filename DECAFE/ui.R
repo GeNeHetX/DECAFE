@@ -439,12 +439,15 @@ library(shinyBS)
             column(width=1),
               
 
-              column(width=3, br(),actionButton("custom_heat","Customization"),
+              column(width=3, br(),actionButton("custom_heat","Design your heatmap"),
                br(), br(),
                conditionalPanel("input.custom_heat %2 == 1",
             
                   column(width = 12, 
                     fileInput('hm_file', "Upload additionnal annotation"),
+                    p(icon('circle-info'),"Add new annotation columns: Quantitative=numbers separated by a point not a comma, Qualitative: no accents and no special characters"),
+                    br(),
+                    
                     selectInput("hm_dendro", "Choose which dendrogramm to display", 
                       choices = list(
                         None="none",
@@ -459,25 +462,27 @@ library(shinyBS)
                         Ward='ward.D2', 
                         Single='single',
                         Complete="complete",
-                        "Average (UPGMA)"="average", 
-                        WPGMA="mcquitty",
-                        "Median (WPGMC)" = "median", 
-                        "Centroid (UPGMC)"="centroid"
+                        "Average (UPGMA)"="average" 
+                        #WPGMA="mcquitty",
+                        #"Median (WPGMC)" = "median", 
+                        #"Centroid (UPGMC)"="centroid"
                       ), selected = "ward.D2"
-                    ),
+                    ),bsTooltip('hm_hclust',title="Ward: <br> Minimizes cluster variance, Complete: <br> Maximizes inter-cluster distance, Average: <br> Balances cluster distances, <br> Single: <br> Closest points linkage"),
+                
                     
                     selectInput('hm_dist', 'Choose your distance method', 
                       choices = list(
                         Euclidean='euclidean', 
-                        Maximum='maximum',
-                        Manhattan="manhattan",
-                        "Canberra"="canberra",
-                        Binary="binary",
-                        "Minkowski" = "minkowski"#, 
+                        Maximum='maximum'
+                        #Manhattan="manhattan",
+                        #"Canberra"="canberra",
+                        #Binary="binary",
+                        #"Minkowski" = "minkowski", 
                         #"Spearman correlation"="spearman",
                         #"Pearson correlation"="pearson"
                       ), selected= "euclidean"
-                    ),
+                    ),bsTooltip('hm_dist',title="Euclidean: <br> Usual direct distance (multiscale), Maximum: <br> Largest single-axis difference"),
+
                     selectInput('hm_gene', 'Choose Gene type', 
                       choices = list(
                         "Gene ID (ENS)"='id', 
@@ -485,7 +490,7 @@ library(shinyBS)
                       ), selected= "name"
                     ),
 
-                    actionButton('goHeat', label='Customize Heatmap', icon('play'))
+                    actionButton('goHeat', label='Run custom', icon('play'))
                             
                   ), align="justify")
           

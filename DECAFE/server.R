@@ -45,6 +45,7 @@ library(gplots)
 library(gridExtra)
 library(grid)
 library(ROTS)
+library(svglite)
 
 
 
@@ -714,7 +715,7 @@ output$downloadUpsetPlot <- downloadHandler(
         if(input$format == 'png')
           pdf(file,onefile = F,width = 15,height = 8)
         else
-          svg(file,onefile = F,width = 15,height = 8) 
+          svglite(file,width = 15,height = 8) 
 
 
         upset_plot = upset(df, main.bar.color = '#262686',
@@ -1069,6 +1070,7 @@ heatmapData <- reactive({
 
 
 })
+colors_reactive <- reactiveVal(NULL)
 
 output$heatMap <- renderPlot({
   data_heatmap = heatmapData()
@@ -1090,7 +1092,7 @@ output$heatMap <- renderPlot({
     }
 
     condition.colors = palette.annot
-  
+    
   
 
     gplots::heatmap.2(
@@ -1113,6 +1115,7 @@ output$heatMap <- renderPlot({
       fill=condition.colors[ unique(as.factor(condition))], 
       cex=0.7
     )
+     colors_reactive(condition.colors[ as.factor(condition)])
   }
   else{ # Customized heatmap 
 
@@ -1193,7 +1196,7 @@ output$heatMap <- renderPlot({
       border = FALSE, bty = "n", y.intersp = 0.7, cex = 0.7, 
       fill = legend_items$color
     )  
-
+    colors_reactive(cbind(colors_disc,colors_cont))
     # Continuous value legend
     start_y <- 0.7 
     height <- 0.1
@@ -1236,7 +1239,7 @@ output$downloadHeatmap <- downloadHandler(
         if(input$format == 'png')
           pdf(file,onefile = F,width = 10,height = 8)
         else
-          svg(file,onefile = F,width = 10,height = 8) 
+          svglite(file,width = 10,height = 8) 
         
         if(input$goHeat == 0 ){ # Default heatmap
           if (length(unique(condition)) == 2){
@@ -1254,7 +1257,7 @@ output$downloadHeatmap <- downloadHandler(
             col = "bluered",
             scale="none",
             trace="none",
-            ColSideColors=condition.colors[ as.factor(condition)],
+            ColSideColors=colors_reactive(),
             labRow=FALSE,
             #ylab="Genes",
             xlab=NULL,margins = c(15, 3),key.title = "Gene Expression"
@@ -1330,7 +1333,7 @@ output$downloadHeatmap <- downloadHandler(
           heatmap.3(
                 normalized_counts, na.rm = TRUE, scale = "none", dendrogram = input$hm_dendro,
                 distfun = input$hm_dist, hclustfun = input$hm_hclust, key = TRUE, density.info = "none",
-                trace = "none", KeyValueName = "Gene Expression", ColSideColors = cbind(colors_disc,colors_cont),
+                trace = "none", KeyValueName = "Gene Expression", ColSideColors = colors_reactive(),
                 Rowv = TRUE, Colv = TRUE, symbreaks = FALSE, labCol = FALSE,
                 labRow = rownames(normalized_counts), cexRow = 1,keysize=0.8,
                 col = "bluered", ColSideColorsSize = 2, RowSideColorsSize = 1
@@ -2098,7 +2101,7 @@ output$downloadboxplot <- downloadHandler(
               print(boxplot)
             dev.off()}   
         else{
-          svg(file, width = 10, height = 8)
+          svglite(file, width = 10, height = 8)
             print(ggarrange(histo, boxplot,
           labels = c("A", "B"),
           ncol = 2, nrow = 1))
