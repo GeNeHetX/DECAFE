@@ -1285,109 +1285,123 @@ output$downloadHeatmap <- downloadHandler(
             cex=0.7
           )
         }
-        else{
-          annot= read.delim(input$hm_file$datapath, row.names = 1)
-          annotation = annot[intersect(rownames(annot), colnames(normalized_counts)),]
-          variable_type = apply(annotation,2, function(x){
-            ifelse(
-              (length(na.omit(as.numeric(x)))> length(x)/2 && any(grepl(".",x))), # If numeric + float 
-              TRUE, # Continuous varaible
-              FALSE # Discrete 
-            )
-          })
+        else{ # Customized heatmap 
 
-          continuous = annotation[,which(variable_type),drop=FALSE]
-          discrete = annotation[,which(!variable_type),drop=FALSE]
+    annot= read.delim(input$hm_file$datapath, row.names = 1)
+    annotation = as.data.frame(annot[intersect(rownames(annot), colnames(normalized_counts)),])
 
-          annotation = annotation[,c(colnames(discrete),colnames(continuous))]
+    print('aaaa')
 
-          colors_disc <- apply(discrete, 2, function(x) {
+    print(class(annotation))
+    variable_type = apply(annotation,2, function(x){
+      print('bbb')
+       ifelse(
+        (length(na.omit(as.numeric(x)))> length(x)/2 && any(grepl(".",x))), # If numeric + float 
+        TRUE, # Continuous varaible
+        FALSE # Discrete 
+      )
+        
 
-            num_colors <- length(unique(x))
-            hue_offset <- sample(1:360, 1)
-            hues <- seq(hue_offset, hue_offset + 360, length = num_colors + 1) %% 360
-            col_values <- hcl(h = hues, c = sample(70:100, 1), l = sample(50:80, 1))
-            setNames(col_values[as.factor(x)], unique(x))
-          })
+    })
+    print('ccc')
 
-          if(ncol(continuous) >0) {
-            colors_cont <- apply(continuous,2,function(x){
-              x=as.numeric(x)
-              num_colors <- 2
-              hue_offset <- sample(1:360, 1)
-              hues <- seq(hue_offset, hue_offset + 360, length = num_colors + 1) %% 360
-              col_values <- hcl(h = hues, c = sample(70:100, 1), l = sample(50:80, 1))
-              gradient <- colorRampPalette(c(col_values[1], col_values[2]))(10*length(x))
-              gradient[as.numeric(cut(x, breaks = 10*length(x)))]
-            })
-          }
+    continuous = annotation[,which(variable_type),drop=FALSE]
+    discrete = annotation[,which(!variable_type),drop=FALSE]
 
-          normalized_counts=normalized_counts[mostvargenes,]
-          modality_table <- list()
+    annotation = annotation[,c(colnames(discrete),colnames(continuous))]
+print('ccc')
+    colors_disc <- apply(discrete, 2, function(x) {
 
-          for (col_name in colnames(discrete)) {
-            modality_table[[col_name]] <- data.frame(
-              modality = paste0(col_name, '_', unique(discrete[,col_name])),
-              color = unique(colors_disc[,col_name])
-            )
-          }
+      num_colors <- length(unique(x))
+      hue_offset <- sample(1:360, 1)
+      hues <- seq(hue_offset, hue_offset + 360, length = num_colors + 1) %% 360
+      col_values <- hcl(h = hues, c = sample(70:100, 1), l = sample(50:80, 1))
+      setNames(col_values[as.factor(x)], unique(x))
+    })
+print('ccc')
+    csc = colors_disc
+    if(ncol(continuous) >0) {
+      colors_cont <- apply(continuous,2,function(x){
+        x=as.numeric(x)
+        num_colors <- 2
+        hue_offset <- sample(1:360, 1)
+        hues <- seq(hue_offset, hue_offset + 360, length = num_colors + 1) %% 360
+        col_values <- hcl(h = hues, c = sample(70:100, 1), l = sample(50:80, 1))
+        gradient <- colorRampPalette(c(col_values[1], col_values[2]))(10*length(x))
+        gradient[as.numeric(cut(x, breaks = 10*length(x)))]
+        csc=cbind(colors_disc,colors_cont)
+      })
+    }
+print('ccc')
+    normalized_counts=normalized_counts[mostvargenes,]
+    modality_table <- list()
 
-          legend_items <- do.call(rbind, modality_table)
+    for (col_name in colnames(discrete)) {
+      modality_table[[col_name]] <- data.frame(
+        modality = paste0(col_name, '_', unique(discrete[,col_name])),
+        color = unique(colors_disc[,col_name])
+      )
+    }
 
-          if("name" == input$hm_gene) { # Convert GeneID to GeneName
-            genefile = switch(input$org, 
-              'hs' = 'humanGeneannot.rds',
-              'mm' = 'mouseGeneannot.rds',
-            )
-            
-            geneannot = readRDS(genefile)
-            normalized_counts = normalized_counts[intersect(geneannot$GeneID,rownames(normalized_counts)),]
-            normalized_counts = getUniqueGeneMat(normalized_counts, geneannot$GeneName[which(geneannot$GeneID %in% rownames(normalized_counts))], rowMeans(normalized_counts))
-          }
+    legend_items <- do.call(rbind, modality_table)
 
-          max_abs_value <- max(abs(normalized_counts), na.rm = TRUE)
-          color_palette <- colorRampPalette(c("blue", "white", "red"))(100)
-          breaks <- seq(-max_abs_value, max_abs_value, length.out = length(color_palette) + 1)
+    if("name" == input$hm_gene) { # Convert GeneID to GeneName
+      genefile = switch(input$org, 
+        'hs' = 'humanGeneannot.rds',
+        'mm' = 'mouseGeneannot.rds',
+      )
+      
+      geneannot = readRDS(genefile)
+      normalized_counts = normalized_counts[intersect(geneannot$GeneID,rownames(normalized_counts)),]
+      normalized_counts = getUniqueGeneMat(normalized_counts, geneannot$GeneName[which(geneannot$GeneID %in% rownames(normalized_counts))], rowMeans(normalized_counts))
+    }
 
-          # Plot
-          heatmap.3(
-                normalized_counts, na.rm = TRUE, scale = "none", dendrogram = input$hm_dendro,
-                distfun = input$hm_dist, hclustfun = input$hm_hclust, key = TRUE, density.info = "none",
-                trace = "none", KeyValueName = "Gene Expression", ColSideColors = colors_reactive(),
-                Rowv = TRUE, Colv = TRUE, symbreaks = FALSE, labCol = FALSE,
-                labRow = rownames(normalized_counts), cexRow = 1,keysize=0.8,
-                col = color_palette, breaks = breaks, ColSideColorsSize = 2, RowSideColorsSize = 1
-          )
-          # Discrete value legend
-          legend( 
-            0,0.8, legend = legend_items$modality, 
-            border = FALSE, bty = "n", y.intersp = 0.7, cex = 0.7, 
-            fill = legend_items$color
-          )  
+    max_abs_value <- max(abs(normalized_counts), na.rm = TRUE)
+    color_palette <- colorRampPalette(c("blue", "white", "red"))(100)
+    breaks <- seq(-max_abs_value, max_abs_value, length.out = length(color_palette) + 1)
+    print('ddd')
+    # Plot
+    heatmap.3(
+          normalized_counts, na.rm = TRUE, scale = "none", dendrogram = input$hm_dendro,
+          distfun = input$hm_dist, hclustfun = input$hm_hclust, key = TRUE, density.info = "none",
+          trace = "none", KeyValueName = "Gene Expression", ColSideColors = csc,
+          Rowv = TRUE, Colv = TRUE, symbreaks = FALSE, labCol = FALSE,
+          labRow = rownames(normalized_counts), cexRow = 1,keysize=0.8,
+          col = color_palette, breaks = breaks, ColSideColorsSize = 2, RowSideColorsSize = 1
+    )
+    # Discrete value legend
+    legend( 
+      0,0.8, legend = legend_items$modality, 
+      border = FALSE, bty = "n", y.intersp = 0.7, cex = 0.7, 
+      fill = legend_items$color
+    )  
+    colors_reactive(csc)
+    # Continuous value legend
+    start_y <- 0.7 
+    height <- 0.1
+    print('eee')
+    print(head(continuous))
+    print(ncol(continuous))
+    if(ncol(continuous) > 0){
+      for(i in 1:ncol(continuous)){
+        bottom_y = start_y - height * (i - 1)
+        par(fig=c(0, 0.1,bottom_y - height, bottom_y), new=TRUE, mar=c(1, 1, 1, 1))
 
-          # Continuous value legend
-          start_y <- 0.7 
-          height <- 0.1
-
-          for(i in 1:ncol(continuous)){
-            bottom_y = start_y - height * (i - 1)
-            par(fig=c(0, 0.1,bottom_y - height, bottom_y), new=TRUE, mar=c(1, 1, 1, 1))
-
-            z <- seq(min(as.numeric(continuous[,i])), max(as.numeric(continuous[,i])))
-            image(
-              z=matrix(seq(0, 1, length=ncol(continuous)*10), nrow=1),
-              col=colors_cont[,i], 
-              xaxt="n", yaxt="n", bty="n"
-            )
-            axis(
-              4, at=seq(0, 1, length=5), 
-              labels=round(seq(min(as.numeric(continuous[,i])), max(as.numeric(continuous[,i])), length=5), 2), 
-              las=1, cex.axis=0.7
-            )
-            title(colnames(continuous)[i])
-          }
-        }
-
+        z <- seq(min(as.numeric(continuous[,i])), max(as.numeric(continuous[,i])))
+        image(
+          z=matrix(seq(0, 1, length=ncol(continuous)*10), nrow=1),
+          col=colors_cont[,i], 
+          xaxt="n", yaxt="n", bty="n"
+        )
+        axis(
+          4, at=seq(0, 1, length=5), 
+          labels=round(seq(min(as.numeric(continuous[,i])), max(as.numeric(continuous[,i])), length=5), 2), 
+          las=1, cex.axis=0.7
+        )
+        title(colnames(continuous)[i])
+      }
+    }
+  }
 
 
         dev.off()   
