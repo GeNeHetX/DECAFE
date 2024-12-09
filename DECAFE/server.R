@@ -938,6 +938,9 @@ output$downloadUpsetPlot <- downloadHandler(
 
 
     })
+  output$geneTargetHeatmap <-renderUI({  
+  numericInput("nb_gene_heat", "Number of most variable Gene", min = 10, step = 1, max = 1000,value = min(1000,as.numeric(geneFiltered()$filtered )))
+ })
 
   output$nbGene <- renderUI({
     return(
@@ -1162,8 +1165,9 @@ print('ccc')
         col_values <- hcl(h = hues, c = sample(70:100, 1), l = sample(50:80, 1))
         gradient <- colorRampPalette(c(col_values[1], col_values[2]))(10*length(x))
         gradient[as.numeric(cut(x, breaks = 10*length(x)))]
-        csc=cbind(colors_disc,colors_cont)
+        
       })
+      csc=cbind(colors_disc,colors_cont)
     }
 print('ccc')
     normalized_counts=normalized_counts[mostvargenes,]
@@ -1188,7 +1192,7 @@ print('ccc')
       normalized_counts = normalized_counts[intersect(geneannot$GeneID,rownames(normalized_counts)),]
       normalized_counts = getUniqueGeneMat(normalized_counts, geneannot$GeneName[which(geneannot$GeneID %in% rownames(normalized_counts))], rowMeans(normalized_counts))
     }
-
+    print(normalized_counts)
     max_abs_value <- max(abs(normalized_counts), na.rm = TRUE)
     color_palette <- colorRampPalette(c("blue", "white", "red"))(100)
     breaks <- seq(-max_abs_value, max_abs_value, length.out = length(color_palette) + 1)
@@ -1211,7 +1215,8 @@ print('ccc')
     colors_reactive(csc)
     # Continuous value legend
     start_y <- 0.7 
-    height <- 0.1
+    height <- (start_y/ (ncol(continuous)+1))
+    print(height)
     print('eee')
     print(head(continuous))
     print(ncol(continuous))
@@ -1220,7 +1225,7 @@ print('ccc')
         bottom_y = start_y - height * (i - 1)
         par(fig=c(0, 0.1,bottom_y - height, bottom_y), new=TRUE, mar=c(1, 1, 1, 1))
 
-        z <- seq(min(as.numeric(continuous[,i])), max(as.numeric(continuous[,i])))
+        z <- seq(min(as.numeric(continuous[,i]),na.rm=T), max(as.numeric(continuous[,i]),na.rm=T))
         image(
           z=matrix(seq(0, 1, length=ncol(continuous)*10), nrow=1),
           col=colors_cont[,i], 
@@ -1228,7 +1233,7 @@ print('ccc')
         )
         axis(
           4, at=seq(0, 1, length=5), 
-          labels=round(seq(min(as.numeric(continuous[,i])), max(as.numeric(continuous[,i])), length=5), 2), 
+          labels=round(seq(min(as.numeric(continuous[,i]),na.rm=T), max(as.numeric(continuous[,i]),na.rm=T), length=5), 2), 
           las=1, cex.axis=0.7
         )
         title(colnames(continuous)[i])
@@ -1253,9 +1258,9 @@ output$downloadHeatmap <- downloadHandler(
         mostvargenes = order(gvar, decreasing=TRUE)[1:as.numeric(input$nb_gene_heat)]
 
         if(input$format == 'png')
-          pdf(file,onefile = F,width = 10,height = 8)
+          pdf(file,onefile = F,width = 20,height = 16)
         else
-          svglite(file,width = 10,height = 8) 
+          svglite(file,width = 20,height = 16) 
         
         if(input$goHeat == 0 ){ # Default heatmap
           if (length(unique(condition)) == 2){
@@ -1287,6 +1292,7 @@ output$downloadHeatmap <- downloadHandler(
         }
         else{ # Customized heatmap 
 
+   
     annot= read.delim(input$hm_file$datapath, row.names = 1)
     annotation = as.data.frame(annot[intersect(rownames(annot), colnames(normalized_counts)),])
 
@@ -1329,8 +1335,9 @@ print('ccc')
         col_values <- hcl(h = hues, c = sample(70:100, 1), l = sample(50:80, 1))
         gradient <- colorRampPalette(c(col_values[1], col_values[2]))(10*length(x))
         gradient[as.numeric(cut(x, breaks = 10*length(x)))]
-        csc=cbind(colors_disc,colors_cont)
+        
       })
+      csc=cbind(colors_disc,colors_cont)
     }
 print('ccc')
     normalized_counts=normalized_counts[mostvargenes,]
@@ -1355,7 +1362,7 @@ print('ccc')
       normalized_counts = normalized_counts[intersect(geneannot$GeneID,rownames(normalized_counts)),]
       normalized_counts = getUniqueGeneMat(normalized_counts, geneannot$GeneName[which(geneannot$GeneID %in% rownames(normalized_counts))], rowMeans(normalized_counts))
     }
-
+    print(normalized_counts)
     max_abs_value <- max(abs(normalized_counts), na.rm = TRUE)
     color_palette <- colorRampPalette(c("blue", "white", "red"))(100)
     breaks <- seq(-max_abs_value, max_abs_value, length.out = length(color_palette) + 1)
@@ -1378,16 +1385,18 @@ print('ccc')
     colors_reactive(csc)
     # Continuous value legend
     start_y <- 0.7 
-    height <- 0.1
+    height <- (start_y/ (ncol(continuous)+1))
+    print(height)
     print('eee')
     print(head(continuous))
     print(ncol(continuous))
     if(ncol(continuous) > 0){
       for(i in 1:ncol(continuous)){
         bottom_y = start_y - height * (i - 1)
+
         par(fig=c(0, 0.1,bottom_y - height, bottom_y), new=TRUE, mar=c(1, 1, 1, 1))
 
-        z <- seq(min(as.numeric(continuous[,i])), max(as.numeric(continuous[,i])))
+        z <- seq(min(as.numeric(continuous[,i]),na.rm=T), max(as.numeric(continuous[,i]),na.rm=T))
         image(
           z=matrix(seq(0, 1, length=ncol(continuous)*10), nrow=1),
           col=colors_cont[,i], 
@@ -1395,16 +1404,14 @@ print('ccc')
         )
         axis(
           4, at=seq(0, 1, length=5), 
-          labels=round(seq(min(as.numeric(continuous[,i])), max(as.numeric(continuous[,i])), length=5), 2), 
+          labels=round(seq(min(as.numeric(continuous[,i]),na.rm=T), max(as.numeric(continuous[,i]),na.rm=T), length=5), 2), 
           las=1, cex.axis=0.7
         )
         title(colnames(continuous)[i])
       }
     }
   }
-
-
-        dev.off()   
+  dev.off()
       })
 
 

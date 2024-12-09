@@ -428,7 +428,7 @@ library(shinyBS)
         box(class = "map_container",width=12,status='success',title = h2('Heatmap of normalize count',icon('chart-simple')),solidHeader = TRUE,
             
             column(width=3,
-              numericInput("nb_gene_heat", "Number of most variable Gene", min = 10, step = 1, max = 1000,value = 1000),
+              uiOutput('geneTargetHeatmap'),
               uiOutput('nbGene2')),
             column(width=3,
               selectInput("data_heat", label = "Choose sample to visualize",
