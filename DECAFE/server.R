@@ -801,10 +801,10 @@ output$downloadUpsetPlot <- downloadHandler(
     annot_intersect= as.data.frame(annot[intersect(rownames(annot), colnames(count)), ])
 
     # annot_intersect$condshiny = apply(annot_intersect,1,function(x) paste(colnames(annot_intersect), "_", x, collapse=','))
-
+    print(annot)
     res = list(
       annot=annot_intersect,
-      count=count_intersect
+      count=count_intersect[,rownames(annot_intersect)]
     )
 
     return(res)
@@ -1063,9 +1063,12 @@ heatmapData <- reactive({
     intersect = intersectCond()
     count_intersect = intersect$count
     annot_intersect= intersect$annot
-    condition = annot_intersect$condshiny
+    condition = annot_intersect[colnames(normalized_counts),]$condshiny
     normalized_counts = t(scale(t(normalized_counts), scale=FALSE)) # Normalization per gene 
     gvar = apply(normalized_counts, 1, sd) 
+
+    print(normalized_counts)
+    print(annot_intersect)
     
 
   }
@@ -1096,8 +1099,7 @@ output$heatMap <- renderPlot({
     }
 
     condition.colors = palette.annot
-    
-  
+
 
     gplots::heatmap.2(
       x=normalized_counts[mostvargenes,], 
@@ -1124,13 +1126,14 @@ output$heatMap <- renderPlot({
   else{ # Customized heatmap 
 
     annot= read.delim(input$hm_file$datapath, row.names = 1)
-    annotation = as.data.frame(annot[intersect(rownames(annot), colnames(normalized_counts)),])
 
-    print('aaaa')
+    annotation =annot[intersect(rownames(annot), colnames(normalized_counts)), , drop = FALSE]
 
-    print(class(annotation))
+    annotation= annotation[colnames(normalized_counts), , drop = FALSE]
+
+
     variable_type = apply(annotation,2, function(x){
-      print('bbb')
+
        ifelse(
         (length(na.omit(as.numeric(x)))> length(x)/2 && any(grepl(".",x))), # If numeric + float 
         TRUE, # Continuous varaible
@@ -1139,13 +1142,13 @@ output$heatMap <- renderPlot({
         
 
     })
-    print('ccc')
+
 
     continuous = annotation[,which(variable_type),drop=FALSE]
     discrete = annotation[,which(!variable_type),drop=FALSE]
 
     annotation = annotation[,c(colnames(discrete),colnames(continuous))]
-print('ccc')
+
     colors_disc <- apply(discrete, 2, function(x) {
 
       num_colors <- length(unique(x))
@@ -1154,7 +1157,7 @@ print('ccc')
       col_values <- hcl(h = hues, c = sample(70:100, 1), l = sample(50:80, 1))
       setNames(col_values[as.factor(x)], unique(x))
     })
-print('ccc')
+
     csc = colors_disc
     if(ncol(continuous) >0) {
       colors_cont <- apply(continuous,2,function(x){
@@ -1169,7 +1172,7 @@ print('ccc')
       })
       csc=cbind(colors_disc,colors_cont)
     }
-print('ccc')
+
     normalized_counts=normalized_counts[mostvargenes,]
     modality_table <- list()
 
@@ -1192,11 +1195,11 @@ print('ccc')
       normalized_counts = normalized_counts[intersect(geneannot$GeneID,rownames(normalized_counts)),]
       normalized_counts = getUniqueGeneMat(normalized_counts, geneannot$GeneName[which(geneannot$GeneID %in% rownames(normalized_counts))], rowMeans(normalized_counts))
     }
-    print(normalized_counts)
+
     max_abs_value <- max(abs(normalized_counts), na.rm = TRUE)
     color_palette <- colorRampPalette(c("blue", "white", "red"))(100)
     breaks <- seq(-max_abs_value, max_abs_value, length.out = length(color_palette) + 1)
-    print('ddd')
+
     # Plot
     heatmap.3(
           normalized_counts, na.rm = TRUE, scale = "none", dendrogram = input$hm_dendro,
@@ -1216,10 +1219,7 @@ print('ccc')
     # Continuous value legend
     start_y <- 0.7 
     height <- (start_y/ (ncol(continuous)+1))
-    print(height)
-    print('eee')
-    print(head(continuous))
-    print(ncol(continuous))
+
     if(ncol(continuous) > 0){
       for(i in 1:ncol(continuous)){
         bottom_y = start_y - height * (i - 1)
@@ -1294,13 +1294,15 @@ output$downloadHeatmap <- downloadHandler(
 
    
     annot= read.delim(input$hm_file$datapath, row.names = 1)
-    annotation = as.data.frame(annot[intersect(rownames(annot), colnames(normalized_counts)),])
 
-    print('aaaa')
+    annotation =annot[intersect(rownames(annot), colnames(normalized_counts)), , drop = FALSE]
 
-    print(class(annotation))
+    annotation= annotation[colnames(normalized_counts), , drop = FALSE]
+
+
+
     variable_type = apply(annotation,2, function(x){
-      print('bbb')
+
        ifelse(
         (length(na.omit(as.numeric(x)))> length(x)/2 && any(grepl(".",x))), # If numeric + float 
         TRUE, # Continuous varaible
@@ -1309,13 +1311,13 @@ output$downloadHeatmap <- downloadHandler(
         
 
     })
-    print('ccc')
+
 
     continuous = annotation[,which(variable_type),drop=FALSE]
     discrete = annotation[,which(!variable_type),drop=FALSE]
 
     annotation = annotation[,c(colnames(discrete),colnames(continuous))]
-print('ccc')
+
     colors_disc <- apply(discrete, 2, function(x) {
 
       num_colors <- length(unique(x))
@@ -1324,7 +1326,7 @@ print('ccc')
       col_values <- hcl(h = hues, c = sample(70:100, 1), l = sample(50:80, 1))
       setNames(col_values[as.factor(x)], unique(x))
     })
-print('ccc')
+
     csc = colors_disc
     if(ncol(continuous) >0) {
       colors_cont <- apply(continuous,2,function(x){
@@ -1339,7 +1341,7 @@ print('ccc')
       })
       csc=cbind(colors_disc,colors_cont)
     }
-print('ccc')
+
     normalized_counts=normalized_counts[mostvargenes,]
     modality_table <- list()
 
@@ -1362,11 +1364,11 @@ print('ccc')
       normalized_counts = normalized_counts[intersect(geneannot$GeneID,rownames(normalized_counts)),]
       normalized_counts = getUniqueGeneMat(normalized_counts, geneannot$GeneName[which(geneannot$GeneID %in% rownames(normalized_counts))], rowMeans(normalized_counts))
     }
-    print(normalized_counts)
+
     max_abs_value <- max(abs(normalized_counts), na.rm = TRUE)
     color_palette <- colorRampPalette(c("blue", "white", "red"))(100)
     breaks <- seq(-max_abs_value, max_abs_value, length.out = length(color_palette) + 1)
-    print('ddd')
+
     # Plot
     heatmap.3(
           normalized_counts, na.rm = TRUE, scale = "none", dendrogram = input$hm_dendro,
@@ -1386,10 +1388,7 @@ print('ccc')
     # Continuous value legend
     start_y <- 0.7 
     height <- (start_y/ (ncol(continuous)+1))
-    print(height)
-    print('eee')
-    print(head(continuous))
-    print(ncol(continuous))
+
     if(ncol(continuous) > 0){
       for(i in 1:ncol(continuous)){
         bottom_y = start_y - height * (i - 1)
