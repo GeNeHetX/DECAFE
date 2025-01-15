@@ -821,6 +821,7 @@ output$downloadUpsetPlot <- downloadHandler(
     countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
      condshiny = annot_intersect$condshiny
      annot_intersect$condshiny = as.factor(annot_intersect$condshiny)
+    
       A = as.character(unique(annot_intersect$condshiny)[1])
       B = as.character(unique(annot_intersect$condshiny)[2])
 
