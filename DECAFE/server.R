@@ -801,7 +801,7 @@ output$downloadUpsetPlot <- downloadHandler(
     annot_intersect= as.data.frame(annot[intersect(rownames(annot), colnames(count)), ])
 
     # annot_intersect$condshiny = apply(annot_intersect,1,function(x) paste(colnames(annot_intersect), "_", x, collapse=','))
-    print(annot)
+
     res = list(
       annot=annot_intersect,
       count=count_intersect[,rownames(annot_intersect)]
@@ -1068,8 +1068,7 @@ heatmapData <- reactive({
     normalized_counts = t(scale(t(normalized_counts), scale=FALSE)) # Normalization per gene 
     gvar = apply(normalized_counts, 1, sd) 
 
-    print(normalized_counts)
-    print(annot_intersect)
+
     
 
   }
@@ -1414,7 +1413,48 @@ output$downloadHeatmap <- downloadHandler(
   dev.off()
       })
 
+HeatmapDataplot <- reactive({
 
+          
+        data_heatmap = heatmapData()
+        gvar = data_heatmap$gvar
+        normalized_counts = data_heatmap$normalized_counts
+        condition = data_heatmap$condition
+        mostvargenes = order(gvar, decreasing=TRUE)[1:as.numeric(input$nb_gene_heat)]
+
+   
+
+    normalized_counts=normalized_counts[mostvargenes,]
+
+
+    
+
+    if("name" == input$hm_gene && input$goHeat != 0 ) { # Convert GeneID to GeneName
+      genefile = switch(input$org, 
+        'hs' = 'humanGeneannot.rds',
+        'mm' = 'mouseGeneannot.rds',
+      )
+      
+      geneannot = readRDS(genefile)
+      normalized_counts = normalized_counts[intersect(geneannot$GeneID,rownames(normalized_counts)),]
+      normalized_counts = getUniqueGeneMat(normalized_counts, geneannot$GeneName[which(geneannot$GeneID %in% rownames(normalized_counts))], rowMeans(normalized_counts))
+    }
+    return(normalized_counts)
+
+})
+
+
+
+
+output$downloadHeatmapdata<- downloadHandler(
+      filename = function() {
+            paste0("heatmap_data",'.csv')
+      },
+      content = function(file) { 
+        sep= ","
+          
+       write.table(HeatmapDataplot(),file,sep=sep,quote=F)
+      })
 
 #PCA
   pcaVST <- reactive({

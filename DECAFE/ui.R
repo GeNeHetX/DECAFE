@@ -427,15 +427,19 @@ library(shinyBS)
       fluidRow(
         box(class = "map_container",width=12,status='success',title = h2('Heatmap of normalize count',icon('chart-simple')),solidHeader = TRUE,
             
-            column(width=3,
+            column(width=2,
               uiOutput('geneTargetHeatmap'),
               uiOutput('nbGene2')),
-            column(width=3,
+            column(width=2,
               selectInput("data_heat", label = "Choose sample to visualize",
                   choices = list("All" = "all", "Just the two conditions" = "cond"),selected = "cond"
               )),
             column(width=2,br(),
               downloadButton("downloadHeatmap", "Download heatmap", icon('download'))),
+            column(width=2,br(),
+              downloadButton("downloadHeatmapdata", "Download Data", icon('download'))
+
+              ),
             column(width=1),
               
 
