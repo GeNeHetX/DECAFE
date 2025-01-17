@@ -1213,12 +1213,16 @@ output$heatMap <- renderPlot({
     color_palette <- colorRampPalette(c("blue", "white", "red"))(100)
     breaks <- seq(-max_abs_value, max_abs_value, length.out = length(color_palette) + 1)
 
+    labCol = FALSE
+    if(input$colnames_hetmap)
+      labCol = colnames(normalized_counts)
+
     # Plot
     heatmap.3(
           normalized_counts, na.rm = TRUE, scale = "none", dendrogram = input$hm_dendro,
           distfun = input$hm_dist, hclustfun = input$hm_hclust, key = TRUE, density.info = "none",
           trace = "none", KeyValueName = "Gene Expression", ColSideColors = csc,
-          Rowv = TRUE, Colv = TRUE, symbreaks = FALSE, labCol = FALSE,
+          Rowv = TRUE, Colv = TRUE, symbreaks = FALSE, labCol = labCol,
           labRow = rownames(normalized_counts), cexRow = 1,keysize=0.8,
           col = color_palette, breaks = breaks, ColSideColorsSize = 2, RowSideColorsSize = 1
     )
@@ -1383,11 +1387,16 @@ output$downloadHeatmap <- downloadHandler(
     breaks <- seq(-max_abs_value, max_abs_value, length.out = length(color_palette) + 1)
 
     # Plot
+    labCol = FALSE
+    if(input$colnames_hetmap)
+      labCol = colnames(normalized_counts)
+
+    # Plot
     heatmap.3(
           normalized_counts, na.rm = TRUE, scale = "none", dendrogram = input$hm_dendro,
           distfun = input$hm_dist, hclustfun = input$hm_hclust, key = TRUE, density.info = "none",
           trace = "none", KeyValueName = "Gene Expression", ColSideColors = csc,
-          Rowv = TRUE, Colv = TRUE, symbreaks = FALSE, labCol = FALSE,
+          Rowv = TRUE, Colv = TRUE, symbreaks = FALSE, labCol = labCol,
           labRow = rownames(normalized_counts), cexRow = 1,keysize=0.8,
           col = color_palette, breaks = breaks, ColSideColorsSize = 2, RowSideColorsSize = 1
     )

@@ -493,6 +493,12 @@ library(shinyBS)
                         "Gene Name"='name'
                       ), selected= "name"
                     ),
+                    selectInput('colnames_hetmap', 'Write samples names', 
+                      choices = list(
+                        "Yes"=TRUE, 
+                        "No"=FALSE
+                      ), selected= "Yes"
+                    ),
 
                     actionButton('goHeat', label='Run custom', icon('play'))
                             
