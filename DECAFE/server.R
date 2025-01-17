@@ -926,13 +926,25 @@ output$downloadUpsetPlot <- downloadHandler(
   })
 
   geneFiltered <- reactive({
+    if(input$data_heat =="all"){
+      count_intersect =  vstAll()$normalized_counts
+    annot_intersect = vstAll()$annot_intersect
+
+    normalized_counts = t(scale(t(count_intersect), scale=FALSE)) # Normalization per gene 
+    gvar = apply(normalized_counts, 1, sd) 
+    zero_threshold = as.numeric(input$zero_threshold)
+    countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
+
+
+
+    }else{
     intersect = intersectCond()
 
     count_intersect = intersect$count
     annot_intersect = intersect$annot
 
     zero_threshold = as.numeric(input$zero_threshold)
-    countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
+    countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]}
 
     return(list(filtered=nrow(countfilt),total=nrow(count_intersect)))
 
@@ -1072,6 +1084,7 @@ heatmapData <- reactive({
     
 
   }
+
   return(list(gvar=gvar, normalized_counts = normalized_counts,condition=condition))
 
 
@@ -1464,16 +1477,19 @@ output$downloadHeatmapdata<- downloadHandler(
     annot_intersect= intersect$annot
 
     vst = vstNormalization_cond()
+
     vst = t(scale(t(vst), scale=FALSE)) # Normalization per gene 
+
 
    
     
     
     gvar = apply(vst, 1, sd) 
-    mostvargenes = order(gvar, decreasing=TRUE)[1:as.numeric(input$nb_gene)] # Keep most variable gene
+    mostvargenes = order(gvar, decreasing=TRUE)[1:min(as.numeric(input$nb_gene),nrow(vst))] # Keep most variable gene
 
     # Run pca 
     notif <<- showNotification("PCA in progress", duration = 0)
+
 
     res_pca = prcomp(t(vst[mostvargenes,]), scale. = TRUE)
     removeNotification(notif)
