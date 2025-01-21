@@ -1478,6 +1478,44 @@ output$downloadHeatmapdata<- downloadHandler(
        write.table(HeatmapDataplot(),file,sep=sep,quote=F)
       })
 
+
+dendrogramGeneHM <- reactive({
+  normalized_counts = HeatmapDataplot()
+  if(input$goHeat == 0){
+    hc <- hclust(dist(normalized_counts))
+  }
+  else{
+    hc <- hclust(dist(normalized_counts,method = input$hm_dist),method=input$hm_hclust)
+
+  }
+  return(hc)
+
+  })
+
+output$treePlot_hm <- renderPlot({
+      dend <- as.dendrogram(dendrogramGeneHM()) 
+      par(cex = 0.6, mar = c(6, 1, 1, 60))
+      dend %>% set("branches_k_color", k = min(as.numeric(input$k_hm), length(dendrogramGeneHM()$labels))) %>% set("labels_cex", min(max(200/length(dendrogramGeneHM()$labels),0.4),1) ) %>% plot(horiz = TRUE)
+
+      
+    }, width = 1200, height = 1300, res = 96)
+
+
+
+output$downloadTreePlotHMData<- downloadHandler(
+      filename = function() {
+            paste0("gene_tree_plot.csv")
+      },
+      content = function(file) { 
+        df = data.frame(cutree(dendrogramGeneHM(),k=as.numeric(input$k_hm)))
+        colnames(df) = c('cluster')
+        write.table(df,file,sep=",",quote=F)
+        
+       
+      })
+
+
+
 #PCA
   pcaVST <- reactive({
 
