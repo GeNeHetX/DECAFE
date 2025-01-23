@@ -515,8 +515,10 @@ library(shinyBS)
         box(width=12, status = 'success', solidHeader = TRUE, title = h3("Gene clustered", icon('chart-simple')),
           fluidRow(column(width = 8, sliderInput("k_hm",label = "Number of different groups", min = 1, max = 50,value = 2,step=1)),
             
-            column(width=2, downloadButton("downloadTreePlotHMData","Download the table",icon('download')))),
-          column(width=12,withSpinner(plotOutput('treePlot_hm', inline=F, width = 1200, height=1500), type = 8, color = "#CDCDE6", size = 1))
+            column(width=2, downloadButton("downloadTreePlotHMData","Download the table",icon('download')))),fluidRow(
+          column(width=6,withSpinner(plotOutput('treePlot_hm', inline=F, width = 1200, height=1500), type = 8, color = "#CDCDE6", size = 1)),
+          column(width=6, fluidRow(DT::dataTableOutput('cluster_genes')), fluidRow(plotOutput('treePlot_legend'))))
+
         , style = 'display:block;width:100%;overflow-y: scroll')
         )),
 

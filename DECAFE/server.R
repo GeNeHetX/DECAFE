@@ -13,7 +13,7 @@
 #   install.packages("BiocManager")
 # BiocManager::install(new_packages,update=FALSE)
 packages <- c("shiny", "DT", "shinydashboard", "shinycssloaders", "BiocManager", "ggplot2", "plotly", "reshape2", "factoextra", "FactoMineR", "devtools", "ggupset", 
-"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ggdendro", "dendextend","gplots","svglite", "shinyBS","grid","gridExtra","ROTS", "circlize")
+"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ggdendro", "dendextend","gplots","svglite", "shinyBS","grid","gridExtra","ROTS", "circlize","scales")
 new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
 if(length(new_packages)) {
   if (!requireNamespace("BiocManager", quietly = TRUE)) {
@@ -47,6 +47,7 @@ library(grid)
 library(ROTS)
 library(svglite)
 library(circlize)
+library(scales)
 
 
 
@@ -1495,11 +1496,21 @@ dendrogramGeneHM <- reactive({
 output$treePlot_hm <- renderPlot({
       dend <- as.dendrogram(dendrogramGeneHM()) 
       par(cex = 0.6, mar = c(6, 1, 1, 60))
-      dend %>% set("branches_k_color", k = min(as.numeric(input$k_hm), length(dendrogramGeneHM()$labels))) %>% set("labels_cex", min(max(200/length(dendrogramGeneHM()$labels),0.4),1) ) %>% plot(horiz = TRUE)
+      dend %>% 
+        set("branches_k_color", k = min(as.numeric(input$k_hm), length(dendrogramGeneHM()$labels))) %>% 
+        set("labels_cex", min(max(200/length(dendrogramGeneHM()$labels),0.4),1) ) %>% 
+        plot(horiz = TRUE) 
+      
 
       
     }, width = 1200, height = 1300, res = 96)
 
+output$treePlot_legend<- renderPlot({
+
+  par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
+  plot.new()
+  legend("right", legend = paste0("cluster",as.numeric(1:input$k_hm)), fill = hue_pal()(as.numeric(input$k_hm)))
+  })
 
 
 output$downloadTreePlotHMData<- downloadHandler(
@@ -1513,6 +1524,15 @@ output$downloadTreePlotHMData<- downloadHandler(
         
        
       })
+output$cluster_genes <- DT::renderDT(server = FALSE, {
+
+  df = data.frame(t(data.frame(table(cutree(dendrogramGeneHM(),k=as.numeric(input$k_hm))))))
+  rownames(df) = c("cluster","Number of gene")
+  colnames(df) = NULL
+
+  return(df)})
+
+
 
 
 
