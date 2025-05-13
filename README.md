@@ -9,6 +9,9 @@ DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentia
 
   - **Principal Component Analysis (PCA)**<br>
   PCA is a statistical method used to explore relationships between variables in a dataset and reduce its dimensionality.<br><br>
+  
+  - **Heatmap Visualization**<br>
+  Heatmaps display gene expression across samples to reveal patterns and clusters. They can be customized with sample annotations.<br><br>
 
   - **Differential Expression Analysis by DESeq2**<br>
   DESeq2 is a method used in genomics for identifying genes with significantly different expression levels between sample groups, particularly suited for RNA-Seq datasets.<br><br>
@@ -16,6 +19,12 @@ DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentia
   - **Gene Set Enrichment Analysis (GSEA)**<br>
   GSEA is a bioinformatics method used to interpret functional genomics studies by comparing sets of functionally related genes for coordinated expression changes.<br><br>
 
+  - **Over-Representation Analysis (ORA)**<br>
+  ORA is used to determine whether predefined sets of genes (e.g., pathways or functional categories) are over-represented among a list of differentially expressed genes, helping to reveal enriched biological processes.<br><br>
+
+  - **MCP-counter Analysis**<br>
+  MCP-counter is a method for quantifying the abundance of eight immune and two stromal cell populations in tissues using transcriptomic data. It has been validated through mRNA mixtures and immunohistochemistry, outperforming previous methods. MCP-counter helps analyze immune infiltrates in healthy tissues and tumors, supporting 
+  patient stratification and survival prediction in certain cancers.<br><br>
 
 
 ## Prerequisites : 
