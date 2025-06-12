@@ -45,6 +45,7 @@ With internet :
 ```R
     install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT", "shinyBS", "devtools"))
     devtools::install_github('GeNeHetX/CancerRNASig')
+    devtools::install_github("nicolash2/gggsea")
 ```
 
 2- Then, run this command :
@@ -68,6 +69,7 @@ Without internet, (use just to download and run the following commands without a
 ```R
   install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT", "shinyBS", "devtools"))
   devtools::install_github('GeNeHetX/CancerRNASig')
+  devtools::install_github("nicolash2/gggsea")
   shiny::runApp()
 ```
 or

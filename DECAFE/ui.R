@@ -30,7 +30,7 @@ library(shinyBS)
   dashboardPage(skin = "purple",
   dashboardHeader(
             
-    title = "DECAFE",titleWidth=300
+    title = "DECAFE",titleWidth=200
  
     #textOutput('title')
     
@@ -38,7 +38,7 @@ library(shinyBS)
   
 ),
   dashboardSidebar(
-    width=300,
+    width=200,
     sidebarMenu(
       selectInput('lcms', 'Choose your data type', choices = list(RNASeq='rna', "LC-MS/MS"='lcms')),
 
@@ -655,11 +655,14 @@ library(shinyBS)
         uiOutput('pathwaysSelect'),
         box(width=6,status='success',title = h1('Dotplot',icon('chart-simple')),solidHeader = TRUE, collapsible=TRUE,
           #fluidRow(column(width = 8, sliderInput("nbDotplot",label = "Number of pathways to display", min = 1, max =20, value = 10,step=1))),
-         fluidRow( column(width=12,withSpinner(plotlyOutput("dotplot",height=1000), type = 8, color = "#CDCDE6", size = 1)))),
+         fluidRow(column(width=12,withSpinner(plotlyOutput("dotplot",height=1000), type = 8, color = "#CDCDE6", size = 1)))),
         box(width=6,status='success',title = h1('GSEA plot',icon('chart-simple')),solidHeader = TRUE, collapsible=TRUE,
           downloadButton("downloadGSEA", "Download the GSEA plot", icon('download')),
           #fluidRow(column(width = 8, sliderInput("nbGseaPlot",label = "Number of pathways to display", min = 1, max =20, value = 10,step=1))),
-          fluidRow(column(width=12,withSpinner(plotOutput("gseaPlot", height=1000,width="90%"), type = 8, color = "#CDCDE6", size = 1))))
+          fluidRow(column(width=12,withSpinner(plotOutput("gseaPlot", height=1000,width="90%"), type = 8, color = "#CDCDE6", size = 1)))),
+        box(width=12,status='success',title = h1('Enrich plot',icon('chart-simple')),solidHeader = TRUE, collapsible=TRUE,
+          downloadButton("downloadEnrich_ggplot", "Download enrichGSEA ggplot", icon('download')),
+          fluidRow(column(width=12,withSpinner(plotOutput("enrichplot",height=1000), type = 8, color = "#CDCDE6", size = 1))))
       )
       ),
       fluidRow(

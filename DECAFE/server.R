@@ -23,6 +23,7 @@ if(length(new_packages)) {
 }
 source("heatmap3_func.R")
 
+
 options(shiny.maxRequestSize=100000*1024^2)
 library(shiny)
 library(shinyBS)
@@ -48,6 +49,7 @@ library(ROTS)
 library(svglite)
 library(circlize)
 library(scales)
+library(gggsea)
 
 
 
@@ -2282,6 +2284,7 @@ output$downloadboxplot <- downloadHandler(
     'mm' = 'mouse_pathays.rds',
     )
     pathways_list = readRDS(pathwayfile)
+
     return(list(namesp=names(pathways_list), pathways=pathways_list))
   })
 
@@ -2711,6 +2714,56 @@ pathSigCollection <- reactive({
         ggsave(file, plot, width = 8, height = 16, units = "in", dpi = 300, device = input$format,bg='white')
       })
 
+  gseaEnrichplot<- reactive({
+    gsea = gsea()
+    vec = gsea$vec
+    pathways_list = appendCollection()$pathways
+    pathwaySelect = input$path_list
+    pathways_list = pathways_list[pathwaySelect]
+    collection_pathways =pathways_list[[1]]
+    xgsea = gsea$sort
+    xgsea=xgsea[which(as.numeric(xgsea$pval) < 0.05),]
+
+    if(!is.null(input$path_plot)){
+
+      splitcolpath = strsplit(xgsea$pathway, '_:_')
+      pathway = sapply(splitcolpath, function(x) x[2])
+      clean_names <- sub("GOMF_|HP_|GOBP_|GOCC_", "", pathway)
+      pathway = str_replace_all(pathway, '_', ' ')
+ 
+      num = which(pathway %in% input$path_plot )
+      xgsea_sub=xgsea[as.numeric(num),]
+      xgsea_clean <- gsub(" ", "_", input$path_plot)
+      list_path <- paste(xgsea_clean, collapse = "|")  
+      decision = names(collection_pathways)[grepl(list_path, names(collection_pathways))]
+       
+      xgsea$pathway = gsub(" ", "_", xgsea$pathway)
+      df_enrich <- gseaCurve(vec, collection_pathways[decision], xgsea)
+      df_enrich$set = gsub('_', ' ', df_enrich$set)
+  
+    }else{
+      xgsea_sub =  head(xgsea[order(abs(xgsea$NES),decreasing=T),], 9)
+      xgsea_clean <- gsub(" ", "_", xgsea_sub$pathway)
+      list_pathw <- paste(xgsea_clean, collapse = "|")
+      decision = names(collection_pathways)[grepl(list_pathw, names(collection_pathways))]
+      xgsea$pathway = gsub(" ", "_", xgsea$pathway)
+      df_enrich <- gseaCurve(vec, collection_pathways[decision], xgsea)
+      df_enrich$set = gsub('_', ' ', df_enrich$set)
+    }
+    eplot = ggplot() + geom_gsea(df_enrich, replaceUnderscores = FALSE,titlelength = 15) +theme_gsea()
+    return(eplot)
+  })
+
+  output$enrichplot <-renderPlot({gseaEnrichplot()})
+
+  output$downloadEnrich_ggplot <- downloadHandler(
+      filename = function() {
+            paste0("enrichGSEA_ggplot",'_', Sys.Date(), ".",input$format)
+      },
+      content = function(file) {
+         plot=gseaEnrichplot()
+          ggsave(file, plot, width = 20, height = 16, units = "in", dpi = 300, device = input$format,bg='white')
+      })
 
 
 
