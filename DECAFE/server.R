@@ -1,4 +1,4 @@
-#
+#r
 # This is the server logic of a Shiny web application. You can run the
 # application by clicking 'Run App' above.
 #
@@ -1926,7 +1926,7 @@ pca_alldownload <- reactive({
       dds = DESeq(dds,parallel = FALSE)
     }
     
-    table = results(dds)
+    table =  DESeq2::results(dds)
     removeNotification(notif)
     table$name = as.vector(geneannot[rownames(table), 'GeneName'])
     table = as.data.frame(table)
