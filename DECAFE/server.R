@@ -1,4 +1,4 @@
-#
+#r
 # This is the server logic of a Shiny web application. You can run the
 # application by clicking 'Run App' above.
 #
@@ -13,7 +13,7 @@
 #   install.packages("BiocManager")
 # BiocManager::install(new_packages,update=FALSE)
 packages <- c("shiny", "DT", "shinydashboard", "shinycssloaders", "BiocManager", "ggplot2", "plotly", "reshape2", "factoextra", "FactoMineR", "devtools", "ggupset", 
-"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ggdendro", "dendextend","gplots","svglite", "shinyBS","grid","gridExtra","ROTS", "circlize")
+"fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ggdendro", "dendextend","gplots","svglite", "shinyBS","grid","gridExtra","ROTS", "circlize","scales")
 new_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
 if(length(new_packages)) {
   if (!requireNamespace("BiocManager", quietly = TRUE)) {
@@ -22,6 +22,7 @@ if(length(new_packages)) {
   BiocManager::install(new_packages, update = FALSE)
 }
 source("heatmap3_func.R")
+
 
 options(shiny.maxRequestSize=100000*1024^2)
 library(shiny)
@@ -47,6 +48,8 @@ library(grid)
 library(ROTS)
 library(svglite)
 library(circlize)
+library(scales)
+library(gggsea)
 
 
 
@@ -801,7 +804,7 @@ output$downloadUpsetPlot <- downloadHandler(
     annot_intersect= as.data.frame(annot[intersect(rownames(annot), colnames(count)), ])
 
     # annot_intersect$condshiny = apply(annot_intersect,1,function(x) paste(colnames(annot_intersect), "_", x, collapse=','))
-    print(annot)
+
     res = list(
       annot=annot_intersect,
       count=count_intersect[,rownames(annot_intersect)]
@@ -926,13 +929,25 @@ output$downloadUpsetPlot <- downloadHandler(
   })
 
   geneFiltered <- reactive({
+    if(input$data_heat =="all"){
+      count_intersect =  vstAll()$normalized_counts
+    annot_intersect = vstAll()$annot_intersect
+
+    normalized_counts = t(scale(t(count_intersect), scale=FALSE)) # Normalization per gene 
+    gvar = apply(normalized_counts, 1, sd) 
+    zero_threshold = as.numeric(input$zero_threshold)
+    countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
+
+
+
+    }else{
     intersect = intersectCond()
 
     count_intersect = intersect$count
     annot_intersect = intersect$annot
 
     zero_threshold = as.numeric(input$zero_threshold)
-    countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
+    countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]}
 
     return(list(filtered=nrow(countfilt),total=nrow(count_intersect)))
 
@@ -1068,11 +1083,11 @@ heatmapData <- reactive({
     normalized_counts = t(scale(t(normalized_counts), scale=FALSE)) # Normalization per gene 
     gvar = apply(normalized_counts, 1, sd) 
 
-    print(normalized_counts)
-    print(annot_intersect)
+
     
 
   }
+
   return(list(gvar=gvar, normalized_counts = normalized_counts,condition=condition))
 
 
@@ -1201,12 +1216,16 @@ output$heatMap <- renderPlot({
     color_palette <- colorRampPalette(c("blue", "white", "red"))(100)
     breaks <- seq(-max_abs_value, max_abs_value, length.out = length(color_palette) + 1)
 
+    labCol = FALSE
+    if(input$colnames_hetmap)
+      labCol = colnames(normalized_counts)
+
     # Plot
     heatmap.3(
           normalized_counts, na.rm = TRUE, scale = "none", dendrogram = input$hm_dendro,
           distfun = input$hm_dist, hclustfun = input$hm_hclust, key = TRUE, density.info = "none",
           trace = "none", KeyValueName = "Gene Expression", ColSideColors = csc,
-          Rowv = TRUE, Colv = TRUE, symbreaks = FALSE, labCol = FALSE,
+          Rowv = TRUE, Colv = TRUE, symbreaks = FALSE, labCol = labCol,
           labRow = rownames(normalized_counts), cexRow = 1,keysize=0.8,
           col = color_palette, breaks = breaks, ColSideColorsSize = 2, RowSideColorsSize = 1
     )
@@ -1371,11 +1390,16 @@ output$downloadHeatmap <- downloadHandler(
     breaks <- seq(-max_abs_value, max_abs_value, length.out = length(color_palette) + 1)
 
     # Plot
+    labCol = FALSE
+    if(input$colnames_hetmap)
+      labCol = colnames(normalized_counts)
+
+    # Plot
     heatmap.3(
           normalized_counts, na.rm = TRUE, scale = "none", dendrogram = input$hm_dendro,
           distfun = input$hm_dist, hclustfun = input$hm_hclust, key = TRUE, density.info = "none",
           trace = "none", KeyValueName = "Gene Expression", ColSideColors = csc,
-          Rowv = TRUE, Colv = TRUE, symbreaks = FALSE, labCol = FALSE,
+          Rowv = TRUE, Colv = TRUE, symbreaks = FALSE, labCol = labCol,
           labRow = rownames(normalized_counts), cexRow = 1,keysize=0.8,
           col = color_palette, breaks = breaks, ColSideColorsSize = 2, RowSideColorsSize = 1
     )
@@ -1414,6 +1438,104 @@ output$downloadHeatmap <- downloadHandler(
   dev.off()
       })
 
+HeatmapDataplot <- reactive({
+
+          
+        data_heatmap = heatmapData()
+        gvar = data_heatmap$gvar
+        normalized_counts = data_heatmap$normalized_counts
+        condition = data_heatmap$condition
+        mostvargenes = order(gvar, decreasing=TRUE)[1:as.numeric(input$nb_gene_heat)]
+
+   
+
+    normalized_counts=normalized_counts[mostvargenes,]
+
+
+    
+
+    if("name" == input$hm_gene && input$goHeat != 0 ) { # Convert GeneID to GeneName
+      genefile = switch(input$org, 
+        'hs' = 'humanGeneannot.rds',
+        'mm' = 'mouseGeneannot.rds',
+      )
+      
+      geneannot = readRDS(genefile)
+      normalized_counts = normalized_counts[intersect(geneannot$GeneID,rownames(normalized_counts)),]
+      normalized_counts = getUniqueGeneMat(normalized_counts, geneannot$GeneName[which(geneannot$GeneID %in% rownames(normalized_counts))], rowMeans(normalized_counts))
+    }
+    return(normalized_counts)
+
+})
+
+
+
+
+output$downloadHeatmapdata<- downloadHandler(
+      filename = function() {
+            paste0("heatmap_data",'.csv')
+      },
+      content = function(file) { 
+        sep= ","
+          
+       write.table(HeatmapDataplot(),file,sep=sep,quote=F)
+      })
+
+
+dendrogramGeneHM <- reactive({
+  normalized_counts = HeatmapDataplot()
+  if(input$goHeat == 0){
+    hc <- hclust(dist(normalized_counts))
+  }
+  else{
+    hc <- hclust(dist(normalized_counts,method = input$hm_dist),method=input$hm_hclust)
+
+  }
+  return(hc)
+
+  })
+
+output$treePlot_hm <- renderPlot({
+      dend <- as.dendrogram(dendrogramGeneHM()) 
+      par(cex = 0.6, mar = c(6, 1, 1, 60))
+      dend %>% 
+        set("branches_k_color", k = min(as.numeric(input$k_hm), length(dendrogramGeneHM()$labels))) %>% 
+        set("labels_cex", min(max(200/length(dendrogramGeneHM()$labels),0.4),1) ) %>% 
+        plot(horiz = TRUE) 
+      
+
+      
+    }, width = 1200, height = 1300, res = 96)
+
+output$treePlot_legend<- renderPlot({
+
+  par(mar=c(5.1, 4.1, 4.1, 8.1), xpd=TRUE)
+  plot.new()
+  legend("right", legend = paste0("cluster",as.numeric(1:input$k_hm)), fill = hue_pal()(as.numeric(input$k_hm)))
+  })
+
+
+output$downloadTreePlotHMData<- downloadHandler(
+      filename = function() {
+            paste0("gene_tree_plot.csv")
+      },
+      content = function(file) { 
+        df = data.frame(cutree(dendrogramGeneHM(),k=as.numeric(input$k_hm)))
+        colnames(df) = c('cluster')
+        write.table(df,file,sep=",",quote=F)
+        
+       
+      })
+output$cluster_genes <- DT::renderDT(server = FALSE, {
+
+  df = data.frame(t(data.frame(table(cutree(dendrogramGeneHM(),k=as.numeric(input$k_hm))))))
+  rownames(df) = c("cluster","Number of gene")
+  colnames(df) = NULL
+
+  return(df)})
+
+
+
 
 
 #PCA
@@ -1424,16 +1546,19 @@ output$downloadHeatmap <- downloadHandler(
     annot_intersect= intersect$annot
 
     vst = vstNormalization_cond()
+
     vst = t(scale(t(vst), scale=FALSE)) # Normalization per gene 
+
 
    
     
     
     gvar = apply(vst, 1, sd) 
-    mostvargenes = order(gvar, decreasing=TRUE)[1:as.numeric(input$nb_gene)] # Keep most variable gene
+    mostvargenes = order(gvar, decreasing=TRUE)[1:min(as.numeric(input$nb_gene),nrow(vst))] # Keep most variable gene
 
     # Run pca 
     notif <<- showNotification("PCA in progress", duration = 0)
+
 
     res_pca = prcomp(t(vst[mostvargenes,]), scale. = TRUE)
     removeNotification(notif)
@@ -1801,7 +1926,7 @@ pca_alldownload <- reactive({
       dds = DESeq(dds,parallel = FALSE)
     }
     
-    table = results(dds)
+    table =  DESeq2::results(dds)
     removeNotification(notif)
     table$name = as.vector(geneannot[rownames(table), 'GeneName'])
     table = as.data.frame(table)
@@ -2159,6 +2284,7 @@ output$downloadboxplot <- downloadHandler(
     'mm' = 'mouse_pathays.rds',
     )
     pathways_list = readRDS(pathwayfile)
+
     return(list(namesp=names(pathways_list), pathways=pathways_list))
   })
 
@@ -2588,6 +2714,56 @@ pathSigCollection <- reactive({
         ggsave(file, plot, width = 8, height = 16, units = "in", dpi = 300, device = input$format,bg='white')
       })
 
+  gseaEnrichplot<- reactive({
+    gsea = gsea()
+    vec = gsea$vec
+    pathways_list = appendCollection()$pathways
+    pathwaySelect = input$path_list
+    pathways_list = pathways_list[pathwaySelect]
+    collection_pathways =pathways_list[[1]]
+    xgsea = gsea$sort
+    xgsea=xgsea[which(as.numeric(xgsea$pval) < 0.05),]
+
+    if(!is.null(input$path_plot)){
+
+      splitcolpath = strsplit(xgsea$pathway, '_:_')
+      pathway = sapply(splitcolpath, function(x) x[2])
+      clean_names <- sub("GOMF_|HP_|GOBP_|GOCC_", "", pathway)
+      pathway = str_replace_all(pathway, '_', ' ')
+ 
+      num = which(pathway %in% input$path_plot )
+      xgsea_sub=xgsea[as.numeric(num),]
+      xgsea_clean <- gsub(" ", "_", input$path_plot)
+      list_path <- paste(xgsea_clean, collapse = "|")  
+      decision = names(collection_pathways)[grepl(list_path, names(collection_pathways))]
+       
+      xgsea$pathway = gsub(" ", "_", xgsea$pathway)
+      df_enrich <- gseaCurve(vec, collection_pathways[decision], xgsea)
+      df_enrich$set = gsub('_', ' ', df_enrich$set)
+  
+    }else{
+      xgsea_sub =  head(xgsea[order(abs(xgsea$NES),decreasing=T),], 9)
+      xgsea_clean <- gsub(" ", "_", xgsea_sub$pathway)
+      list_pathw <- paste(xgsea_clean, collapse = "|")
+      decision = names(collection_pathways)[grepl(list_pathw, names(collection_pathways))]
+      xgsea$pathway = gsub(" ", "_", xgsea$pathway)
+      df_enrich <- gseaCurve(vec, collection_pathways[decision], xgsea)
+      df_enrich$set = gsub('_', ' ', df_enrich$set)
+    }
+    eplot = ggplot() + geom_gsea(df_enrich, replaceUnderscores = FALSE,titlelength = 15) +theme_gsea()
+    return(eplot)
+  })
+
+  output$enrichplot <-renderPlot({gseaEnrichplot()})
+
+  output$downloadEnrich_ggplot <- downloadHandler(
+      filename = function() {
+            paste0("enrichGSEA_ggplot",'_', Sys.Date(), ".",input$format)
+      },
+      content = function(file) {
+         plot=gseaEnrichplot()
+          ggsave(file, plot, width = 20, height = 16, units = "in", dpi = 300, device = input$format,bg='white')
+      })
 
 
 

@@ -30,7 +30,7 @@ library(shinyBS)
   dashboardPage(skin = "purple",
   dashboardHeader(
             
-    title = "DECAFE",titleWidth=300
+    title = "DECAFE",titleWidth=200
  
     #textOutput('title')
     
@@ -38,7 +38,7 @@ library(shinyBS)
   
 ),
   dashboardSidebar(
-    width=300,
+    width=200,
     sidebarMenu(
       selectInput('lcms', 'Choose your data type', choices = list(RNASeq='rna', "LC-MS/MS"='lcms')),
 
@@ -427,15 +427,19 @@ library(shinyBS)
       fluidRow(
         box(class = "map_container",width=12,status='success',title = h2('Heatmap of normalize count',icon('chart-simple')),solidHeader = TRUE,
             
-            column(width=3,
+            column(width=2,
               uiOutput('geneTargetHeatmap'),
               uiOutput('nbGene2')),
-            column(width=3,
+            column(width=2,
               selectInput("data_heat", label = "Choose sample to visualize",
                   choices = list("All" = "all", "Just the two conditions" = "cond"),selected = "cond"
               )),
             column(width=2,br(),
               downloadButton("downloadHeatmap", "Download heatmap", icon('download'))),
+            column(width=2,br(),
+              downloadButton("downloadHeatmapdata", "Download Data", icon('download'))
+
+              ),
             column(width=1),
               
 
@@ -489,6 +493,12 @@ library(shinyBS)
                         "Gene Name"='name'
                       ), selected= "name"
                     ),
+                    selectInput('colnames_hetmap', 'Write samples names', 
+                      choices = list(
+                        "Yes"=TRUE, 
+                        "No"=FALSE
+                      ), selected= "Yes"
+                    ),
 
                     actionButton('goHeat', label='Run custom', icon('play'))
                             
@@ -498,7 +508,22 @@ library(shinyBS)
         
             column(width=12, 
           withSpinner(plotOutput("heatMap", width = "95%", height=1200), type = 8, color = "#CDCDE6", size = 1), style = 'display:block;width:100%'
-        )
+        )),
+        conditionalPanel("input.lcms=='lcms'",
+          column(width=12,
+        fluidRow(
+        box(width=12, status = 'success', solidHeader = TRUE, title = h3("Gene clustered", icon('chart-simple')),
+          fluidRow(column(width = 8, sliderInput("k_hm",label = "Number of different groups", min = 1, max = 50,value = 2,step=1)),
+            
+            column(width=2, downloadButton("downloadTreePlotHMData","Download the table",icon('download')))),fluidRow(
+          column(width=6,withSpinner(plotOutput('treePlot_hm', inline=F, width = 1200, height=1500), type = 8, color = "#CDCDE6", size = 1)),
+          column(width=6, fluidRow(DT::dataTableOutput('cluster_genes')), fluidRow(plotOutput('treePlot_legend'))))
+
+        , style = 'display:block;width:100%;overflow-y: scroll')
+        )),
+
+
+        
         )),
         
     ),
@@ -630,17 +655,21 @@ library(shinyBS)
         uiOutput('pathwaysSelect'),
         box(width=6,status='success',title = h1('Dotplot',icon('chart-simple')),solidHeader = TRUE, collapsible=TRUE,
           #fluidRow(column(width = 8, sliderInput("nbDotplot",label = "Number of pathways to display", min = 1, max =20, value = 10,step=1))),
-         fluidRow( column(width=12,withSpinner(plotlyOutput("dotplot",height=1000), type = 8, color = "#CDCDE6", size = 1)))),
+         fluidRow(column(width=12,withSpinner(plotlyOutput("dotplot",height=1000), type = 8, color = "#CDCDE6", size = 1)))),
         box(width=6,status='success',title = h1('GSEA plot',icon('chart-simple')),solidHeader = TRUE, collapsible=TRUE,
           downloadButton("downloadGSEA", "Download the GSEA plot", icon('download')),
           #fluidRow(column(width = 8, sliderInput("nbGseaPlot",label = "Number of pathways to display", min = 1, max =20, value = 10,step=1))),
-          fluidRow(column(width=12,withSpinner(plotOutput("gseaPlot", height=1000,width="90%"), type = 8, color = "#CDCDE6", size = 1))))
+          fluidRow(column(width=12,withSpinner(plotOutput("gseaPlot", height=1000,width="90%"), type = 8, color = "#CDCDE6", size = 1)))),
+        box(width=12,status='success',title = h1('Enrich plot',icon('chart-simple')),solidHeader = TRUE, collapsible=TRUE,
+          downloadButton("downloadEnrich_ggplot", "Download enrichGSEA ggplot", icon('download')),
+          fluidRow(column(width=12,withSpinner(plotOutput("enrichplot",height=1000), type = 8, color = "#CDCDE6", size = 1))))
       )
       ),
       fluidRow(
       column(width=12,
         box(width=12,status='success',title = h1('Tree Pathways',icon('square-poll-horizontal')),solidHeader = TRUE, 
-          column(width = 8, sliderInput("k",label = "Number of different groups", min = 1, max =20, value = 5,step=1)),
+          fluidRow(column(width = 8, sliderInput("k",label = "Number of different groups", min = 1, max =20, value = 5,step=1))
+            ),
           withSpinner(plotOutput("treePlot", inline=F, width = 1200, height=1500), type = 8, color = "#CDCDE6", size = 1), style = 'display:block;width:100%;overflow-y: scroll')
       ))),
       

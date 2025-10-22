@@ -2,13 +2,16 @@
 
 **Authors:** [@AudreyBeaufils](https://github.com/AudreyBeaufils) & [@CamillePignolet](https://github.com/CamillePignolet) (GeNeHetX)  
 **Date:** February 2024  
-**Contact:** [audrey1.beaufils@inserm.fr](mailto:audrey1.beaufils@inserm.fr), [camille.pignolet@inserm.fr](mailto:camille.pignolet@inserm.fr)  
+**Contact:** [audrey.beaufils@inserm.fr](mailto:audrey.beaufils@inserm.fr), [camille.pignolet@inserm.fr](mailto:camille.pignolet@inserm.fr)  
 
 ## Overview
 DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentially expressed genes and annotating them with functional information.<br><br>
 
   - **Principal Component Analysis (PCA)**<br>
   PCA is a statistical method used to explore relationships between variables in a dataset and reduce its dimensionality.<br><br>
+  
+  - **Heatmap Visualization**<br>
+  Heatmaps display gene expression across samples to reveal patterns and clusters. They can be customized with sample annotations.<br><br>
 
   - **Differential Expression Analysis by DESeq2**<br>
   DESeq2 is a method used in genomics for identifying genes with significantly different expression levels between sample groups, particularly suited for RNA-Seq datasets.<br><br>
@@ -16,6 +19,12 @@ DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentia
   - **Gene Set Enrichment Analysis (GSEA)**<br>
   GSEA is a bioinformatics method used to interpret functional genomics studies by comparing sets of functionally related genes for coordinated expression changes.<br><br>
 
+  - **Over-Representation Analysis (ORA)**<br>
+  ORA is used to determine whether predefined sets of genes (e.g., pathways or functional categories) are over-represented among a list of differentially expressed genes, helping to reveal enriched biological processes.<br><br>
+
+  - **MCP-counter Analysis**<br>
+  MCP-counter is a method for quantifying the abundance of eight immune and two stromal cell populations in tissues using transcriptomic data. It has been validated through mRNA mixtures and immunohistochemistry, outperforming previous methods. MCP-counter helps analyze immune infiltrates in healthy tissues and tumors, supporting 
+  patient stratification and survival prediction in certain cancers.<br><br>
 
 
 ## Prerequisites : 
@@ -36,6 +45,7 @@ With internet :
 ```R
     install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT", "shinyBS", "devtools"))
     devtools::install_github('GeNeHetX/CancerRNASig')
+    devtools::install_github("nicolash2/gggsea")
 ```
 
 2- Then, run this command :
@@ -59,6 +69,7 @@ Without internet, (use just to download and run the following commands without a
 ```R
   install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT", "shinyBS", "devtools"))
   devtools::install_github('GeNeHetX/CancerRNASig')
+  devtools::install_github("nicolash2/gggsea")
   shiny::runApp()
 ```
 or
