@@ -2324,6 +2324,7 @@ output$downloadboxplot <- downloadHandler(
     table = resDeseq()$res
     vec = table$stat
     names(vec) = table$name
+    vec = vec[unique(names(vec))]
 
     notif <<- showNotification("GSEA in progress", duration = 0)
     nb_thread = as.numeric(input$nb_thread)
