@@ -4,6 +4,8 @@
 **Date:** February 2024  
 **Contact:** [audrey.beaufils@inserm.fr](mailto:audrey.beaufils@inserm.fr), [camille.pignolet@inserm.fr](mailto:camille.pignolet@inserm.fr)  
 
+![](https://github.com/GeNeHetX/DECAFE/DECAFE/main/pres_readme.png)
+
 ## Overview
 DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentially expressed genes and annotating them with functional information.<br><br>
 
@@ -31,57 +33,77 @@ DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentia
 DECAFE requires the R language (at least version 4.0).<br>
 If R is installed, you can launch the application directly via a command terminal or work on Rstudio.
 
-- install R: [download](https://cran.r-project.org/)
-
-- You can find Rstudio here : [download](https://posit.co/download/rstudio-desktop/)
+- **REQUIRED** install R: [download](https://cran.r-project.org/)
+- **REQUIRED** install the Rtools compiler : [download](https://cran.r-project.org/bin/windows/Rtools/)
+- Not required, but if you want an IDE (integrated development environment), you can install Rstudio : [download](https://posit.co/download/rstudio-desktop/)
 <br>
-
+<br> 
+   
 
 ## Installation 
 
-With internet : 
+### YOU HAVE AN INTERNET ACCES : 
 
-1 - First-time use DECAFE, run this command in a R terminal
+1 - Install all the tools of DECAFE, run this command in a R terminal :
 ```R
     install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT", "shinyBS", "devtools"))
     devtools::install_github('GeNeHetX/CancerRNASig')
     devtools::install_github("nicolash2/gggsea")
 ```
 
-2- Then, run this command :
+2- Then, run this command to open the interactive application :
 ```R
    shiny::runGitHub('DECAFE', 'GeNeHetX', subdir='DECAFE' ,ref='main')
 ```
-ps : you can precise the version thanks to ref='', for example : ref='v.1.0.0'
-___________________________________________________
+ps : you can precise the version of DECAFE thanks to ref='', for example : ref='v.1.0.0'
+<br> 
+<br> 
+   
 
-Without internet, (use just to download and run the following commands without a connection) : 
-
-1- If you are a git user, clone the DECAFE folder, otherwise download the DECAFE code zip via the green "<>Code" button.
-
+### OTHER OPTION
+If you are familiar with GIT, you can also download DECAFE with : 
 ```bash
   git clone https://github.com/GeNeHetX/DECAFE.git
 ```
-
-2- Open an R terminal or Rstudio where the DECAFE codes are stored
-     
-- First-time use DECAFE
+Then run :
 ```R
-  install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT", "shinyBS", "devtools"))
-  devtools::install_github('GeNeHetX/CancerRNASig')
-  devtools::install_github("nicolash2/gggsea")
+    install.packages(c("shiny", "shinydashboard", "shinycssloaders", "plotly", "DT", "shinyBS", "devtools"))
+    devtools::install_github('GeNeHetX/CancerRNASig')
+    devtools::install_github("nicolash2/gggsea")
+    setwd('<put the path of you git clone repository>/DECAFE/')
+    shiny::runApp()
+```
+<br> 
+<br> 
+
+### YOU WANT TO USE DECAFE WITHOUT AN INTERNET ACCES :  
+
+You need to download everything in advance : 
+
+1- install the R packages required for the app : "shiny", "shinydashboard", "shinycssloaders", "plotly", "DT", "shinyBS", "devtools", "GeNeHetX/CancerRNASig", "nicolash2/gggsea", "BiocManager", "ggplot2", ,"reshape2", "factoextra", "FactoMineR", "devtools", "ggupset", "fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ggdendro", "dendextend","gplots","svglite", "grid","gridExtra","ROTS", "circlize","scales".
+
+2-Then you need to download DECAFE thanks to green button "<> Code" then "Download ZIP" ![](https://github.com/GeNeHetX/DECAFE/DECAFE/main/install.png)
+
+3-Run the app without internet connexion :
+```R
+  setwd('<put the path where the zip are>/DECAFE/')
   shiny::runApp()
 ```
-or
+<br> 
+<br> 
+   
 
-- Use DECAFE 
-```R
-  shiny::runApp()
-```
-<br>
+## DESIGN YOUR DATA TO UPLOAD THEM IN THE APP
 
-## Upload data
+### **Count matrix :**  
+Upload the **FULL** RNA-seq count matrix as a **.tsv.gz** file (compress format).  
+- Columns must be **Sample_IDs**.  
+- Rows must be **genes**.  
+- Upload the **entire** matrix — you don't need to subset it to include only the samples you plan to analyze.
 
-**Count matrix:**  It must be a .tsv file. You need to upload the entire RNA-Seq count matrix with Sample_ID as column names and genes as row names.<br>
+---
 
-**Annotation file:** It must be a .tsv file or .txt file with tabulation separator. It should contain only the samples to be studied, with Sample_ID in the first column and other columns for annotations used to create groups in the analysis.
+### **Annotation txt file :**  
+Provide a **.tsv** or **.txt** file using **tabulation separator**.  
+- The **first column** must contain *only* the IDs of the samples you want to study. **Do not add a header to this first column.**  
+- The following column(s) should contain the annotations you want to use for grouping samples in the analysis (DECAFE will use them to subset and create comparison groups).
