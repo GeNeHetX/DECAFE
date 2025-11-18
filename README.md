@@ -4,7 +4,7 @@
 **Date:** February 2024  
 **Contact:** [audrey.beaufils@inserm.fr](mailto:audrey.beaufils@inserm.fr), [camille.pignolet@inserm.fr](mailto:camille.pignolet@inserm.fr)  
 
-![](https://github.com/GeNeHetX/DECAFE/DECAFE/main/pres_readme.png)
+![](https://github.com/GeNeHetX/DECAFE/blob/main/DECAFE/pres_readme.png)
 
 ## Overview
 DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentially expressed genes and annotating them with functional information.<br><br>
@@ -82,7 +82,7 @@ You need to download everything in advance :
 
 1- install the R packages required for the app : "shiny", "shinydashboard", "shinycssloaders", "plotly", "DT", "shinyBS", "devtools", "GeNeHetX/CancerRNASig", "nicolash2/gggsea", "BiocManager", "ggplot2", ,"reshape2", "factoextra", "FactoMineR", "devtools", "ggupset", "fgsea", "DESeq2", "ggpubr", "stringr", "ggrepel", "UpSetR", "ggdendro", "dendextend","gplots","svglite", "grid","gridExtra","ROTS", "circlize","scales".
 
-2-Then you need to download DECAFE thanks to green button "<> Code" then "Download ZIP" ![](https://github.com/GeNeHetX/DECAFE/DECAFE/main/install.png)
+2-Then you need to download DECAFE thanks to green button "<> Code" then "Download ZIP" ![](https://github.com/GeNeHetX/DECAFE/blob/main/DECAFE/install.png)
 
 3-Run the app without internet connexion :
 ```R
