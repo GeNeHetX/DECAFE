@@ -1,10 +1,11 @@
-# DECAFE: Differential Expression for Count Data Analysis with Functional Enrichment
-
-**Authors:** [@AudreyBeaufils](https://github.com/AudreyBeaufils) & [@CamillePignolet](https://github.com/CamillePignolet) (GeNeHetX)  
-**Date:** February 2024  
-**Contact:** [audrey.beaufils@inserm.fr](mailto:audrey.beaufils@inserm.fr), [camille.pignolet@inserm.fr](mailto:camille.pignolet@inserm.fr)  
-
 ![](https://github.com/GeNeHetX/DECAFE/blob/main/DECAFE/pres_readme.png)
+
+**Date:** February 2024  
+**DECAFE Authors :** [Audrey BEAUFILS](https://github.com/AudreyBeaufils) [(audrey.beaufils@inserm.fr)](mailto:audrey.beaufils@inserm.fr) & [Camille PIGNOLET](https://github.com/CamillePignolet) [(camille.pignolet@inserm.fr)](mailto:camille.pignolet@inserm.fr) 
+<br> From GeNeHetX Team [website](https://www.genehetx.fr/)
+
+<br>
+<br> 
 
 ## Overview
 DECAFE is a tool for analyzing RNA-Seq data, focusing on identifying differentially expressed genes and annotating them with functional information.<br><br>
