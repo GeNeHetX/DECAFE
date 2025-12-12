@@ -840,7 +840,7 @@ output$downloadUpsetPlot <- downloadHandler(
         #annot_intersect$sex<- as.factor(annot_intersect$sex)
         dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
                                       colData = annot_intersect[,c('condshiny','sex')],
-                                      design = ~condshiny + sex)
+                                      design = ~ sex + condshiny)
       }
       else{
         dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
