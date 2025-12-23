@@ -364,7 +364,8 @@ library(shinyBS)
           fluidRow(
             column(width = 3,
               fileInput('file', 'Load Count Matrix .tsv'),
-              fileInput('annot-file',"Load the annot file .tsv")
+              fileInput('annot-file',"Load the annot file .tsv"),
+              conditionalPanel(condition="input.indep=='TRUE'", fileInput('indepAnnot','Load your variables that you want to remove the effect .tsv'))
               
             ),
             column(width = 3,
@@ -374,7 +375,9 @@ library(shinyBS)
               bsTooltip("coding",title="Remove all non-coding genes from analysis"),
               radioButtons('sex', label=div('Sex-independent analysis',icon('circle-info')), choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = FALSE),
               bsTooltip('sex',title="Remove all gene in chrs X/Y from analysis"),
-              conditionalPanel(condition="input.sex=='TRUE'", fileInput('sexAnnot','Load sex information'))),
+              radioButtons('indep', label=div('Independent differential analysis',icon('circle-info')), choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = FALSE),
+              bsTooltip('indep',title="Remove the effect of new variable during the differential analysis between groups of your condition of interest")),
+              
               conditionalPanel("input.lcms=='lcms'",
                 radioButtons('normalized', 'Matrix already normalized', choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = TRUE),
                 radioButtons('paired', 'Data paired', choices = list(YES=TRUE, NO=FALSE), inline=TRUE, selected = TRUE),
@@ -569,6 +572,13 @@ library(shinyBS)
       )),
 
     tabPanel("Differential Analysis",
+    fluidRow(column(width=12,
+    
+    
+      conditionalPanel(condition="input.indep=='TRUE'",
+      box(width=NULL,status='info',title = h1('Indepedant Analysis',icon('cogs')),solidHeader = TRUE,
+       fluidRow(column(width=3,uiOutput('variable_name')), column(width = 3, uiOutput('variable_modality1')), column(width = 3, uiOutput('variable_modality2')),column(width=3,actionButton('goDA', label='Run Differential Analysis', icon('play')))),
+        uiOutput('phraseindep'))))),
         fluidRow(
         column(width=12,
       box(class = "map_container", width=NULL,status='success',solidHeader=TRUE,title=h1("Volcano Plot",icon('chart-simple')),
@@ -578,8 +588,10 @@ library(shinyBS)
                         min = 0, max =0.8, value = 0.5,step=0.1),
             sliderInput("ts_padj",label = "p-Value cutoff from output ",
                         min = 0, max =0.1, value = 0.05,step=0.01),br(),
-            downloadButton("downloadVolcanoPlot", "Download VolcanoPlot with gene label", icon('download')),
-              uiOutput('sens1')
+                        conditionalPanel(condition="input.indep!='TRUE'",actionButton('goDA', label='Run Differential Analysis', icon('play'))),br(),
+            
+              uiOutput('sens1'), br(),
+              downloadButton("downloadVolcanoPlot", "Download VolcanoPlot with gene label", icon('download'))
             
           ),
           column(width=1),
@@ -592,6 +604,7 @@ library(shinyBS)
     fluidRow(
     column(width=12,
       box(width=NULL,status='info',title = h1('Table of results',icon('table')),solidHeader = TRUE, 
+        
         downloadButton('downloadAD_CSV',"CSV"),downloadButton('downloadAD_TXT',"TXT"),
         withSpinner(DT::dataTableOutput("degTable"), type = 8, color = "#CDCDE6", size = 1)
       )

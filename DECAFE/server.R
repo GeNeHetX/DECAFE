@@ -557,16 +557,16 @@ output$downloadCustomDT_XLSX <- downloadHandler(
     }
 
     if( input$sex) {
-          observeEvent(input$sex, {
-          showModal(modalDialog(
-        title = "Upload Sex Information",
-        "Upload a TSV file with 1 column representing the sex of your samples in the same order as your metadata TSV file.",
-        footer = tagList(
-          actionButton("dismiss_modal", "Dismiss")
-        ),
-        easyClose = FALSE 
-      ))
-    })
+    #       observeEvent(input$sex, {
+    #       showModal(modalDialog(
+    #     title = "Upload Sex Information",
+    #     "Upload a TSV file with 1 column representing the sex of your samples in the same order as your metadata TSV file.",
+    #     footer = tagList(
+    #       actionButton("dismiss_modal", "Dismiss")
+    #     ),
+    #     easyClose = FALSE 
+    #   ))
+    # })
 
     observeEvent(input$dismiss_modal, {
       removeModal()  
@@ -606,6 +606,76 @@ output$downloadCustomDT_XLSX <- downloadHandler(
     return(choix)
   })
 
+
+#### independant variable annot 
+  indepFile <-reactive({
+    annotprocess =  intersectCond()$annot
+    req(input$indepAnnot)
+      annoti = read.delim(input$indepAnnot$datapath, row.names = 1)
+      annoti = annoti[rownames(annotprocess), , drop = FALSE]
+      if(!all(rownames(annoti)==rownames(annotprocess)))
+        showModal(modalDialog(
+            title = "Invalid input",
+            "Your variables for the independance analysis must be in the same order as your annotation file!",
+            easyClose = TRUE
+          ))
+      annoti = as.data.frame(cbind(condshiny=annotprocess$condshiny, annoti))
+      return(annoti)
+  })
+
+
+### return modalities of indep annot
+  varvector <- reactive({
+    indepannot= indepFile()
+    colnames(indepannot) = colnames(indepannot)
+    variable_name = colnames(indepannot)
+    num  = c(1:length(unique(variable_name)))
+
+    choice_table = data.frame(variable_name, num)
+    choix = setNames(as.numeric(choice_table$num), choice_table$variable_name)
+
+    return(choix)
+  })
+  output$variable_name = renderUI({
+    selectInput("variable_name", label = "Choose your variable of interest",
+                  choices = varvector(), selected=1)
+  })
+
+    mod1vector <- reactive({
+    indepannot= indepFile()
+    mod_name = unique(as.vector(indepannot[,as.numeric(input$variable_name)]))
+    num  = c(1:length(unique(mod_name)))
+
+    choice_table = data.frame(mod_name, num)
+    choix = setNames(as.numeric(choice_table$num), choice_table$mod_name)
+    return(choix)
+  })
+
+  output$variable_modality1 = renderUI({
+    selectInput("variable_modality1", label = "Choose your first modalities (UP genes)",
+                  choices = mod1vector(), selected=1)
+  })
+
+  output$variable_modality2 = renderUI({
+    selectInput("variable_modality2", label = "Choose your second modalities (DOWN genes)",
+                  choices = mod1vector(), selected=2)
+  })
+
+  phraseindep <-reactive({
+    
+    indepannot= indepFile()
+    variable_name = names(varvector())[as.numeric(input$variable_name)]
+   
+    mod1 = names(mod1vector())[as.numeric(input$variable_modality1)]
+    
+    mod2 = names(mod1vector())[as.numeric(input$variable_modality2)]
+   
+    other_vars = names(varvector())[-as.numeric(input$variable_name)]
+    other_vars = paste0(other_vars, collapse = ", ")
+    return(p(icon('circle-info'),paste0("you observe the ", variable_name," between ", mod1, " and ", mod2, " independently of the effect of ", other_vars)))
+    })
+
+  output$phraseindep<- renderUI(phraseindep())
   
 ## Output 
 
@@ -814,12 +884,19 @@ output$downloadUpsetPlot <- downloadHandler(
   })
 
 
-  DDS_cond <- reactive({
+  DDS_cond <- eventReactive(input$goDA,{
     intersect = intersectCond()
 
-    count_intersect = intersect$count
-    annot_intersect = intersect$annot
+   
 
+    count_intersect = intersect$count
+
+     if(input$indep){
+      annot_intersect = indepFile()
+     }
+     else{
+      annot_intersect = intersect$annot
+     }
     zero_threshold = as.numeric(input$zero_threshold)
     countfilt = count_intersect[rowMeans(count_intersect == 0) <= (zero_threshold ), ]
      condshiny = annot_intersect$condshiny
@@ -834,13 +911,13 @@ output$downloadUpsetPlot <- downloadHandler(
 
     if( input$lcms =="rna"){
      
+      if(input$indep){
+        design_formula <- as.formula(paste("~", paste(colnames(annot_intersect), collapse = " + ")))
 
-
-      if(input$sex){
         #annot_intersect$sex<- as.factor(annot_intersect$sex)
         dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
-                                      colData = annot_intersect[,c('condshiny','sex')],
-                                      design = ~ sex + condshiny)
+                                      colData = annot_intersect,
+                                      design = design_formula)
       }
       else{
         dds = DESeqDataSetFromMatrix(countData = data.matrix(countfilt),
@@ -1908,7 +1985,7 @@ pca_alldownload <- reactive({
 
 # Dispersion analysis panel 
 
-  resDeseq <- reactive({
+  resDeseq <- eventReactive(input$goDA,{
 
     dds = DDS_cond()
 
@@ -1926,7 +2003,17 @@ pca_alldownload <- reactive({
       dds = DESeq(dds,parallel = FALSE)
     }
     
+    if(input$indep){
+      variable_name = names(varvector())[as.numeric(input$variable_name)]
+      mod1 = names(mod1vector())[as.numeric(input$variable_modality1)]
+      mod2 = names(mod1vector())[as.numeric(input$variable_modality2)]
+   
+      table=DESeq2::results(dds, contrast=c(variable_name,mod1,mod2))
+      }
+    else{
     table =  DESeq2::results(dds)
+    }
+
     removeNotification(notif)
     table$name = as.vector(geneannot[rownames(table), 'GeneName'])
     table = as.data.frame(table)
