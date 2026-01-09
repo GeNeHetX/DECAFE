@@ -884,7 +884,7 @@ output$downloadUpsetPlot <- downloadHandler(
   })
 
 
-  DDS_cond <- eventReactive(input$goDA,{
+  DDS_cond <- eventReactive(input$goDA || input$goPCA || input$goHM ,{
     intersect = intersectCond()
 
    
@@ -1139,7 +1139,7 @@ output$nbGene2 <- renderUI({
     })
 
 
-heatmapData <- reactive({
+heatmapData <- eventReactive(input$goHM,{
 
   if(input$data_heat =="all"){
     normalized_counts =  vstAll()$normalized_counts
@@ -1616,7 +1616,7 @@ output$cluster_genes <- DT::renderDT(server = FALSE, {
 
 
 #PCA
-  pcaVST <- reactive({
+  pcaVST <- eventReactive(input$goPCA,{
 
     intersect = intersectCond()
     count_intersect = intersect$count
@@ -1667,7 +1667,7 @@ output$cluster_genes <- DT::renderDT(server = FALSE, {
 
   })
 
-  pcaGraph <- reactive({
+  pcaGraph <- eventReactive(input$goPCA,{
 
     res.pca = pcaVST()
     pca_df = res.pca$pca_df

@@ -438,15 +438,17 @@ library(shinyBS)
                   choices = list("All" = "all", "Just the two conditions" = "cond"),selected = "cond"
               )),
             column(width=2,br(),
+              actionButton('goHM', label='Run Heatmap', icon('play'))),
+            column(width=2,br(),
               downloadButton("downloadHeatmap", "Download heatmap", icon('download'))),
             column(width=2,br(),
               downloadButton("downloadHeatmapdata", "Download Data", icon('download'))
 
               ),
-            column(width=1),
+            
               
 
-              column(width=3, br(),actionButton("custom_heat","Design your heatmap"),
+              column(width=2, br(),actionButton("custom_heat","Design your heatmap"),
                br(), br(),
                conditionalPanel("input.custom_heat %2 == 1",
             
@@ -541,6 +543,7 @@ library(shinyBS)
               # p(icon('circle-info'),paste0(" You have ",dim_matrix, " genes in your matrix")),
               selectInput("dim2", label = "Choose your second PCA dimension",
                   choices = list( "Dim2" = 2,"Dim3" = 3, "Dim4" =4, "Dim5" = 5),selected = 2),
+              actionButton('goPCA', label='Run PCA', icon('play')),
               downloadButton("downloadPCAPlot", "Download PCA plot with all conditions", icon('download')),
           
             ),
