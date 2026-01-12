@@ -543,6 +543,10 @@ library(shinyBS)
               # p(icon('circle-info'),paste0(" You have ",dim_matrix, " genes in your matrix")),
               selectInput("dim2", label = "Choose your second PCA dimension",
                   choices = list( "Dim2" = 2,"Dim3" = 3, "Dim4" =4, "Dim5" = 5),selected = 2),
+
+              selectInput("data_pca", label = "Choose sample to visualize",
+                  choices = list("All" = "all", "Just the two conditions" = "cond"),selected = "cond"
+              ),
               actionButton('goPCA', label='Run PCA', icon('play')),
               downloadButton("downloadPCAPlot", "Download PCA plot with all conditions", icon('download')),
           

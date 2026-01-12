@@ -1671,7 +1671,7 @@ output$cluster_genes <- DT::renderDT(server = FALSE, {
   })
 
   pcaGraph <- eventReactive(input$goPCA,{
-
+    if(input$data_pca =="cond"){
     res.pca = pcaVST()
     pca_df = res.pca$pca_df
     eigen_value =res.pca$eig
@@ -1688,7 +1688,26 @@ output$cluster_genes <- DT::renderDT(server = FALSE, {
       scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
       geom_vline(xintercept=0, linetype="dashed", color = "grey") +
       geom_hline(yintercept=0, linetype="dashed", color = "grey") +
-      theme(legend.position="bottom")
+      theme(legend.position="bottom")}
+    else{
+      res.pca = pca_alldownload()
+        pca_df = res.pca$pca_df
+        eigen_value =res.pca$eig
+
+        pca_sub = pca_df[,c(as.numeric(input$dim1), as.numeric(input$dim2), 6, 7, 8)]
+        colnames(pca_sub)= c("x","y","sample","Group","NumberGene")
+        pca_sub$x = as.numeric(pca_sub$x)
+        pca_sub$y = as.numeric(pca_sub$y)
+        pca_sub$Sample= paste(pca_sub$sample,'\nNumber gene : ',pca_sub$NumberGene)
+        
+        plot=ggplot(data=pca_sub, aes(x=x, y=y, col=Group, tooltip=Sample)) +
+          geom_point(size=1) + theme_minimal() +
+          labs(x = paste0("Dimension ", input$dim1," (",eigen_value[as.numeric(input$dim1)],"%)"),
+               y = paste0("Dimension ", input$dim2," (",eigen_value[as.numeric(input$dim2)],"%)")) + 
+          geom_vline(xintercept=0, linetype="dashed", color = "grey") +
+          geom_hline(yintercept=0, linetype="dashed", color = "grey")
+
+    }
     return(plot)
   })
 
