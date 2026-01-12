@@ -549,6 +549,7 @@ output$downloadCustomDT_XLSX <- downloadHandler(
     
     geneannot = readRDS(genefile)
     if(input$lcms=="rna"){
+   
     geneannot =  geneannot[rownames(count),]
 
     if (input$coding) {
@@ -581,6 +582,7 @@ output$downloadCustomDT_XLSX <- downloadHandler(
         'mm' = 'mmuY',
       )
       geneannot = geneannot[-which(geneannot$seqname == X |geneannot$seqname == Y) , ]
+
       count = count[geneannot$GeneID  , ]
     
     }}
@@ -838,11 +840,12 @@ output$downloadUpsetPlot <- downloadHandler(
   
  
 # create annot filter by input group1 and 2
- annotationName <- reactive({
+ annotationName <- function(){
 
     annot = annotProcess()
     annot_name_cond1 = unique(annot$condshiny)[as.numeric(input$cond1)]
     annot_name_cond2 = unique(annot$condshiny)[as.numeric(input$cond2)]
+
     annot_gp1 = rownames(annot)[which(annot$condshiny == annot_name_cond1)]
     annot_gp2 = rownames(annot)[which(annot$condshiny == annot_name_cond2)]
 
@@ -855,10 +858,10 @@ output$downloadUpsetPlot <- downloadHandler(
 
     return(res)
 
-  })
+  }
 
 # filter count and annot by annotationName
-  intersectCond <-reactive({
+  intersectCond <-function(){
     
     annot_name = annotationName()
     count = countFile()$count
@@ -881,10 +884,10 @@ output$downloadUpsetPlot <- downloadHandler(
     )
 
     return(res)
-  })
+  }
 
 
-  DDS_cond <- eventReactive(input$goDA || input$goPCA || input$goHM ,{
+  DDS_cond <- eventReactive(c(input$goDA , input$goPCA , input$goHM ),{
     intersect = intersectCond()
 
    
@@ -1139,7 +1142,7 @@ output$nbGene2 <- renderUI({
     })
 
 
-heatmapData <- eventReactive(input$goHM,{
+heatmapData <- eventReactive(input$goHM ,{
 
   if(input$data_heat =="all"){
     normalized_counts =  vstAll()$normalized_counts
@@ -3003,8 +3006,14 @@ mcpcount_f =function(newexp,geneSymbols){
                     "NK", "B.lineage", "Mono.lineage", "Myeloid.dendritic",
                     "Neutrophils", "Endothelial", "Fibroblasts")
   markers <- CancerRNASig:::mcpgenes
+
+  geneannot = countFile()$geneannot
+
+
   features = subset(markers, markers$HUGO.symbols %in%rownames(genemat))
+
   features = split(features[, "HUGO.symbols"], features[,"Cell.population"])
+
   missing.populations = setdiff(markers.names, names(features))
   features = features[intersect(markers.names, names(features))]
   if (length(missing.populations) > 0) {
@@ -3032,7 +3041,7 @@ mcpcount_f =function(newexp,geneSymbols){
     normalized_counts=na.omit(normalized_counts)
     rownames(normalized_counts)=normalized_counts$name
     normalized_counts$name=NULL}
- 
+
     mcp = mcpcount_f(normalized_counts,rownames(normalized_counts))
 
     A = as.character(unique(annot_intersect$condshiny)[1])
