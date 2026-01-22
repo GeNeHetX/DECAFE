@@ -621,7 +621,8 @@ library(shinyBS)
 
     tabPanel("Boxplot",
       fluidRow(column(width=3,uiOutput('geneTarget')),
-              column(width=7),
+          column(width=3,actionButton('goBP', label='Run Boxplot', icon('play'))),
+              column(width=4),
               column(width = 1, downloadButton("downloadboxplot", "Download Plots", icon('download')))),br(),
         fluidRow(
         column(width=6,

@@ -887,7 +887,7 @@ output$downloadUpsetPlot <- downloadHandler(
   }
 
 
-  DDS_cond <- eventReactive(c(input$goDA , input$goPCA , input$goHM ),{
+  DDS_cond <- eventReactive(c(input$goDA , input$goPCA , input$goHM,input$goBP ),{
     intersect = intersectCond()
 
    
@@ -1096,7 +1096,7 @@ output$downloadUpsetPlot <- downloadHandler(
 
 
 
-  desqNormalization_cond <- reactive({
+  desqNormalization_cond <- eventReactive(input$goBP,{
     dds = DDS_cond()
 
     if(input$lcms =="rna"){
@@ -1109,8 +1109,9 @@ output$downloadUpsetPlot <- downloadHandler(
 
   })
 
-countNormGenePlot <-reactive({
-  
+  test<-eventReactive(input$goBP,{
+
+    
     normalized_counts =  desqNormalization_cond()
     annotName = annotationName()
 
@@ -1118,7 +1119,20 @@ countNormGenePlot <-reactive({
     annot_name_cond2 = annotName$annotName2
     annot_gp1 = annotName$annotGP1
     annot_gp2 = annotName$annotGP2
+    return( list(annot_name_cond1=annot_name_cond1,annot_name_cond2 =annot_name_cond2,annot_gp1=annot_gp1,annot_gp2=annot_gp2,normalized_counts=normalized_counts ))
+    })
 
+countNormGenePlot <-reactive({
+
+    req(input$geneTarget)
+    notif <<- showNotification("Boxplot Generation in progress", duration = 0)
+    output = test()
+    annot_name_cond1=output$annot_name_cond1
+    annot_name_cond2 =output$annot_name_cond2
+    annot_gp1=output$annot_gp1
+    annot_gp2=output$annot_gp2
+    normalized_counts=output$normalized_counts
+    
     norm1 = normalized_counts[as.numeric(input$geneTarget),intersect(annot_gp1, colnames(normalized_counts))]
     norm2 = normalized_counts[as.numeric(input$geneTarget),intersect(annot_gp2, colnames(normalized_counts))]
     
@@ -1130,7 +1144,7 @@ countNormGenePlot <-reactive({
       condition = c(rep(annot_name_cond1,length(norm1_rm)), rep(annot_name_cond2,length(norm2_rm))),
       sampleID = c(intersect(annot_gp1, colnames(normalized_counts)), intersect(annot_gp2, colnames(normalized_counts)))
     ))
-
+    removeNotification(notif)
     return(res)
   })
 
@@ -2007,7 +2021,7 @@ pca_alldownload <- reactive({
 
 # Dispersion analysis panel 
 
-  resDeseq <- eventReactive(input$goDA,{
+  resDeseq <- eventReactive(c(input$goDA,input$goBP),{
 
     dds = DDS_cond()
 
@@ -2188,7 +2202,7 @@ output$downloadAD_TXT <- downloadHandler(
       })
 
   # Boxplot Panel
-  geneTargetChoice <- reactive({
+  geneTargetChoice <- eventReactive(input$goBP,{
     # count= countFile()$count
     # geneannot = countFile()$geneannot
     # genename_list = as.vector(geneannot[rownames(count),'GeneName'])
