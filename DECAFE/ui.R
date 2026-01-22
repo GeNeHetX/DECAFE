@@ -644,10 +644,38 @@ library(shinyBS)
         ),
 
 
-          )
+          )),
+          
+           br(),
 
-      
-    )),
+        fluidRow(
+          column(
+            width = 8, offset = 4, 
+            # Radio buttons
+            radioButtons(
+              inputId = 'pvalboxplot',
+              label = div(
+                "Choose your test for p-value", 
+                icon('circle-info')
+              ),
+              choices = list("Wilcoxon 2-by-2" = TRUE, "Kruskal-Wallis" = FALSE),
+              inline = TRUE,
+              selected = FALSE
+            ),
+            # Tooltip séparé
+            bsTooltip('pvalboxplot', 
+                      title = "For more than two groups, we recommend using the Kruskal-Wallis test, as it is more powerful than multiple pairwise Wilcoxon tests"),
+            
+            # Boxplot
+            box(
+              width = 12, status = "success", solidHeader = TRUE,
+              title = h3("Gene Target Boxplot All condition", icon("chart-simple")),
+              withSpinner(plotOutput("bpallGeneTarget"), type = 8, color = "#CDCDE6", size = 1)
+            )
+          )
+        )
+
+        ),
 
 
     tabPanel("GSEA",

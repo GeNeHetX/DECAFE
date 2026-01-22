@@ -1073,7 +1073,9 @@ output$downloadUpsetPlot <- downloadHandler(
 
      notif <<- showNotification("VST", duration = 0)
     normalized_counts =  assay(vst(dds))
-    
+
+    geneannot = countFile()$geneannot
+    normalized_count_gs = getUniqueGeneMat(normalized_counts, geneannot$GeneName[which(geneannot$GeneID %in% rownames(normalized_counts))], rowMeans(normalized_counts))
       
     #normalized_counts = t(scale(t(normalized_counts), scale=FALSE)) # Normalization per gene 
     removeNotification(notif)}
@@ -1089,7 +1091,7 @@ output$downloadUpsetPlot <- downloadHandler(
 
 
     }
-    return(list(normalized_counts=normalized_counts, annot_intersect=annot_intersect, count_intersect=count_intersect))
+    return(list(normalized_counts=normalized_counts, annot_intersect=annot_intersect, count_intersect=count_intersect, normalized_count_gs=normalized_count_gs))
 
 
     })
@@ -2334,6 +2336,51 @@ output$densityPlotgene <- renderPlot({
     
  
 })
+## boxplot all conditions
+  output$bpallGeneTarget <- renderPlot({
+
+  normalized_counts <- vstAll()$normalized_count_gs
+  annot_intersect   <- vstAll()$annot_intersect
+
+  genetarget <- geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
+
+  samples <- intersect(colnames(normalized_counts), rownames(annot_intersect))
+  res <- data.frame(
+    count     = as.numeric(normalized_counts[genetarget, samples]),
+    condition = annot_intersect[samples, "condshiny"],
+    stringsAsFactors = FALSE
+  )
+  # print(res)
+
+  res$condition <- factor(res$condition, levels = unique(res$condition))
+  my_comparisons <- combn(levels(res$condition), 2, simplify = FALSE)
+
+   if(as.logical(input$pvalboxplot)){
+        my_comparisons <- combn(levels(res$condition), 2, simplify = FALSE)
+        stat_layer <- stat_compare_means(comparisons = my_comparisons, method = "wilcox.test", label = "p.format",show.legend = FALSE)
+      } else {
+        stat_layer <- stat_compare_means(method = "kruskal.test", label = "p.format", show.legend = FALSE)
+      }
+
+
+  ggplot(res, aes(x = condition, y = count, color = condition)) +
+    geom_boxplot(outlier.shape = NA) +
+    stat_summary(fun = mean, geom = "point", shape = 20, size = 4, color = "#262686") +
+    rotate_x_text(45) +
+    labs(
+      x = "Condition",
+      y = paste0("Normalized VST of ", genetarget)
+    ) +
+    theme_minimal() +
+    stat_layer +
+    theme(
+      legend.position="bottom", legend.text=element_text(size=12),
+      axis.text.x = element_text(size = 11),
+      axis.text.y = element_text(size = 11)
+    )
+})
+
+
 
 
   
@@ -2387,22 +2434,54 @@ output$downloadboxplot <- downloadHandler(
                   annotate("text", x = sampletarget, y = Inf, label = paste("Sample =", id),
                     color = "#262696", vjust = 1.5, hjust = -0.1)+ theme(legend.position="bottom", legend.text=element_text(size=10))
 
+          normalized_counts <- vstAll()$normalized_count_gs
+          annot_intersect   <- vstAll()$annot_intersect
+
+          genetarget <- geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
+
+          samples <- intersect(colnames(normalized_counts), rownames(annot_intersect))
+          res <- data.frame(
+            count     = as.numeric(normalized_counts[genetarget, samples]),
+            condition = annot_intersect[samples, "condshiny"],
+            stringsAsFactors = FALSE
+          )
+          # print(res)
+
+          res$condition <- factor(res$condition, levels = unique(res$condition))
+           if(as.logical(input$pvalboxplot)){
+              my_comparisons <- combn(levels(res$condition), 2, simplify = FALSE)
+              stat_layer <- stat_compare_means(comparisons = my_comparisons, method = "wilcox.test", label = "p.format", show.legend = FALSE)
+            } else {
+              stat_layer <- stat_compare_means(method = "kruskal.test", label = "p.format", show.legend = FALSE)
+            }
+
+          boxplot_all = ggplot(res, aes(x = condition, y = count, color = condition)) +
+                        geom_boxplot(outlier.shape = NA) +
+                        stat_summary(fun = mean, geom = "point", shape = 20, size = 4, color = "#262686") +
+                        rotate_x_text(45) +
+                        labs(x = "Condition", y = paste0("Normalized VST of ", genetarget)) +
+                        theme_minimal() +
+                        stat_layer +
+                        theme(legend.position="bottom", legend.text=element_text(size=12),
+                          axis.text.x = element_text(size = 11),
+                          axis.text.y = element_text(size = 11))
+
         if(input$format == 'png'){
             pdf(file, width = 10, height = 8)
               print(histo)
               print(boxplot)
+              print(boxplot_all)
             dev.off()}   
         else{
-          svglite(file, width = 10, height = 8)
-            print(ggarrange(histo, boxplot,
-          labels = c("A", "B"),
-          ncol = 2, nrow = 1))
+          svglite(file, width = 15, height = 10)
+            print(ggarrange(histo, boxplot, boxplot_all,
+          labels = c("A", "B", "C"),
+          ncol = 2, nrow = 2))
             dev.off()}
 
       })
 
-
-
+  
   # select collection pathway
   appendCollection <- reactive({
     pathwayfile = switch(input$org, 
