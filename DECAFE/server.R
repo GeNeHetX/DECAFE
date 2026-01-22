@@ -2230,7 +2230,8 @@ output$downloadAD_TXT <- downloadHandler(
     res = countNormGenePlot()
 
     res$count = as.numeric(res$count)
-    
+    res$condition <- factor(res$condition, levels = c(unique(res$condition)[1], unique(res$condition)[2] ))
+
     res$genetarget = geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
     padj = resDeseq()$res$padj[which(resDeseq()$res$name == res$genetarget)]
    
@@ -2240,6 +2241,7 @@ output$downloadAD_TXT <- downloadHandler(
       label = padj,
       y.position = max(res$count)*1.1
     )
+    
     if(input$lcms=="rna"){
       ylab = paste0('count normDESq2 of target gene : ',res$genetarget)}
     else{
@@ -2347,6 +2349,7 @@ output$downloadboxplot <- downloadHandler(
           res = countNormGenePlot()
           res$genetarget = geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
           res$count = as.numeric(res$count)
+          res$condition <- factor(res$condition, levels = c(unique(res$condition)[1], unique(res$condition)[2] ))
           padj = resDeseq()$res$padj[which(resDeseq()$res$name == res$genetarget)]
 
           df_p_val <- data.frame(
