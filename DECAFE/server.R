@@ -2337,31 +2337,54 @@ output$densityPlotgene <- renderPlot({
  
 })
 ## boxplot all conditions
+
+observe({
+  annot_intersect <- vstAll()$annot_intersect
+  conds <- unique(annot_intersect$condshiny)
+  updateSelectInput(session, "order_boxplot",
+                    choices = conds,
+                    selected = conds) # par défaut, même ordre que les données
+})
+
+
+
   output$bpallGeneTarget <- renderPlot({
 
   normalized_counts <- vstAll()$normalized_count_gs
   annot_intersect   <- vstAll()$annot_intersect
 
   genetarget <- geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
-
   samples <- intersect(colnames(normalized_counts), rownames(annot_intersect))
+
   res <- data.frame(
     count     = as.numeric(normalized_counts[genetarget, samples]),
     condition = annot_intersect[samples, "condshiny"],
     stringsAsFactors = FALSE
   )
-  # print(res)
 
-  res$condition <- factor(res$condition, levels = unique(res$condition))
-  my_comparisons <- combn(levels(res$condition), 2, simplify = FALSE)
+  # appliquer l'ordre choisi
+  if(!is.null(input$order_boxplot)){
+    res$condition <- factor(res$condition, levels = input$order_boxplot)
+  } else {
+    res$condition <- factor(res$condition, levels = unique(res$condition))
+  }
 
-   if(as.logical(input$pvalboxplot)){
-        my_comparisons <- combn(levels(res$condition), 2, simplify = FALSE)
-        stat_layer <- stat_compare_means(comparisons = my_comparisons, method = "wilcox.test", label = "p.format",show.legend = FALSE)
-      } else {
-        stat_layer <- stat_compare_means(method = "kruskal.test", label = "p.format", show.legend = FALSE)
-      }
-
+  # Comparisons pour Wilcoxon 2-by-2
+  if(as.logical(input$pvalboxplot)){
+    my_comparisons <- combn(levels(res$condition), 2, simplify = FALSE)
+    stat_layer <- stat_compare_means(
+      comparisons = my_comparisons, 
+      method = "wilcox.test", 
+      label = "p.format",
+      show.legend = FALSE
+    )
+  } else {
+    stat_layer <- stat_compare_means(
+      method = "kruskal.test", 
+      label = "p.format",
+      show.legend = FALSE
+    )
+  }
 
   ggplot(res, aes(x = condition, y = count, color = condition)) +
     geom_boxplot(outlier.shape = NA) +
@@ -2416,7 +2439,8 @@ output$downloadboxplot <- downloadHandler(
           boxplot = ggplot(res, aes(x=condition,y=count, color=condition)) + geom_boxplot() +
                     rotate_x_text(45)+ labs(x = "condition", y = ylab) +
                     scale_color_manual(values=c("lightcoral", '#4ab3d6')) + 
-                    scale_x_discrete(labels=NULL) +  theme_minimal() + theme(legend.position="right", legend.text=element_text(size=10)) + 
+                    scale_x_discrete(labels=NULL) +  theme_minimal() + theme(legend.position="right", legend.text=element_text(size=10),
+                    axis.line = element_line(color = "black", linewidth = 0.6)) + 
                     stat_pvalue_manual(df_p_val, xmin = "group1", xmax = "group2", label = "label", y.position = "y.position") + 
                     stat_summary(fun.y=mean, geom="point", shape=20, size=5, color="#262686", fill="#262686")
           
@@ -2438,33 +2462,48 @@ output$downloadboxplot <- downloadHandler(
           annot_intersect   <- vstAll()$annot_intersect
 
           genetarget <- geneTargetChoice()$choix_name[as.numeric(input$geneTarget)]
-
           samples <- intersect(colnames(normalized_counts), rownames(annot_intersect))
+
           res <- data.frame(
             count     = as.numeric(normalized_counts[genetarget, samples]),
             condition = annot_intersect[samples, "condshiny"],
             stringsAsFactors = FALSE
           )
-          # print(res)
 
-          res$condition <- factor(res$condition, levels = unique(res$condition))
-           if(as.logical(input$pvalboxplot)){
-              my_comparisons <- combn(levels(res$condition), 2, simplify = FALSE)
-              stat_layer <- stat_compare_means(comparisons = my_comparisons, method = "wilcox.test", label = "p.format", show.legend = FALSE)
-            } else {
-              stat_layer <- stat_compare_means(method = "kruskal.test", label = "p.format", show.legend = FALSE)
-            }
+          # appliquer l'ordre choisi
+          if(!is.null(input$order_boxplot)){
+            res$condition <- factor(res$condition, levels = input$order_boxplot)
+          } else {
+            res$condition <- factor(res$condition, levels = unique(res$condition))
+          }
+
+          # Comparisons pour Wilcoxon 2-by-2
+          if(as.logical(input$pvalboxplot)){
+            my_comparisons <- combn(levels(res$condition), 2, simplify = FALSE)
+            stat_layer <- stat_compare_means(
+              comparisons = my_comparisons, 
+              method = "wilcox.test", 
+              label = "p.format",
+              show.legend = FALSE
+            )
+          } else {
+            stat_layer <- stat_compare_means(
+              method = "kruskal.test", 
+              label = "p.format",
+              show.legend = FALSE
+            )
+          }
 
           boxplot_all = ggplot(res, aes(x = condition, y = count, color = condition)) +
-                        geom_boxplot(outlier.shape = NA) +
-                        stat_summary(fun = mean, geom = "point", shape = 20, size = 4, color = "#262686") +
-                        rotate_x_text(45) +
-                        labs(x = "Condition", y = paste0("Normalized VST of ", genetarget)) +
-                        theme_minimal() +
-                        stat_layer +
-                        theme(legend.position="bottom", legend.text=element_text(size=12),
-                          axis.text.x = element_text(size = 11),
-                          axis.text.y = element_text(size = 11))
+                      geom_boxplot(outlier.shape = NA) +
+                      stat_summary(fun = mean, geom = "point", shape = 20, size = 4, color = "#262686") +
+                      rotate_x_text(45) +
+                      labs(x = "Condition",  y = paste0("Normalized VST of ", genetarget)) +
+                      theme_minimal() +  stat_layer +
+                      theme(legend.position="bottom", legend.text=element_text(size=12),
+                        axis.text.x = element_text(size = 11),
+                        axis.text.y = element_text(size = 11),
+                        axis.line = element_line(color = "black", linewidth = 0.6))
 
         if(input$format == 'png'){
             pdf(file, width = 10, height = 8)
