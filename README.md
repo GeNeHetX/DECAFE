@@ -1,9 +1,12 @@
 ![](https://github.com/GeNeHetX/DECAFE/blob/main/DECAFE/pres_readme.png)
 
-**Date:** February 2024  
+**Date:** February 2024 
 **DECAFE Authors :** [Audrey BEAUFILS](https://github.com/AudreyBeaufils) [(audrey.beaufils@inserm.fr)](mailto:audrey.beaufils@inserm.fr) & [Camille PIGNOLET](https://github.com/CamillePignolet) [(camille.pignolet@inserm.fr)](mailto:camille.pignolet@inserm.fr) 
 <br> From GeNeHetX Team [website](https://www.genehetx.fr/)
 
+DECAFE is an open-source tool developed by Audrey Beaufils and Camille Pignolet (GeNeHetX Team, INSERM, 2024). If you use it in your work, please cite it as: DECAFE © 2024 by Audrey Beaufils and Camille Pignolet.
+
+DECAFE is licensed : non-commercial use, sharing, and adaptation with appropriate attribution to the authors (for additional details, please check the License tab).
 <br>
 <br> 
 
