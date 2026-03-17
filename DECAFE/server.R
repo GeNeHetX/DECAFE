@@ -2536,8 +2536,22 @@ output$downloadboxplot <- downloadHandler(
     selectInput('path_list', label = 'Select list of pathways', choices= appendCollection()$namesp, multiple = TRUE)
   })
 
+  output$dbpath2 <- renderUI({
+    selectInput('path_list', label = 'Select list of pathways', choices= appendCollection()$namesp, multiple = TRUE)
+  })
+
   # photo pathways
   output$path_Image <- renderImage({
+    imagepath = switch(input$org, 
+    'hs' = 'human_pathway.png',
+    'mm' = 'mouse_pathway.png',
+    )
+    list(src = imagepath,
+      width = 800,
+         alt = "image_pathways")
+  }, deleteFile = FALSE)
+
+  output$path_Image2 <- renderImage({
     imagepath = switch(input$org, 
     'hs' = 'human_pathway.png',
     'mm' = 'mouse_pathway.png',
@@ -2699,6 +2713,33 @@ browse2 <- eventReactive(input$browsebutton2, {
 
   output$comment2 <- renderText({
     clickpath = browse2()
+    clickpath = str_replace_all(clickpath, '_', ' ')
+    return(paste0('Opening url for : ', clickpath))
+  })
+
+  browse3 <- eventReactive(input$browsebutton3, {
+    species = switch(input$org, 
+    'hs' = 'human',
+    'mm' = 'mouse',
+    )
+    indice_clickpath = input$gsea_rows_selected
+    if (length(indice_clickpath) == 1){
+    clickpath = gsea()$sort[indice_clickpath, 'pathway']
+    clickpath = str_replace_all(clickpath, ' ', '_')
+    if(gsea()$sort[indice_clickpath, 'collection']=='sigGeNeHetX'){
+      load('signatures.rda')
+      annot = signatures$annotation
+      pmid = strsplit(strsplit(annot[clickpath,'src'],';')[[1]][2],'[.]')[[1]][2]
+      url = paste0('https://pubmed.ncbi.nlm.nih.gov/',pmid,'/')
+    }else{
+      url = paste0("https://www.gsea-msigdb.org/gsea/msigdb/", species, "/geneset/", clickpath ,".html")
+    }
+    browseURL(url)
+    return(clickpath)
+}})
+
+  output$comment3 <- renderText({
+    clickpath = browse3()
     clickpath = str_replace_all(clickpath, '_', ' ')
     return(paste0('Opening url for : ', clickpath))
   })

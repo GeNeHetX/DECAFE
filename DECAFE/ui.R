@@ -758,7 +758,27 @@ library(shinyBS)
 
       
     tabPanel("GESECA",
+
       fluidRow(
+        column(width=7,
+        imageOutput('path_Image2')),
+        
+        column(width = 3,
+        uiOutput('dbpath2')),
+
+        column(width = 2,
+        
+        actionButton('gogeseca', label='Run GSEA', icon('play')))
+      ),
+      fluidRow(br(),br(),br(),br(),
+        box(width=12,status='info',title = h1('Table of GESECA results',icon('table')),solidHeader = TRUE, 
+        actionButton('browsebutton3', 'More info about selected pathway', icon('globe')),
+        textOutput('comment2'),br(),
+         
+        withSpinner(DT::dataTableOutput("geseca"), type = 8, color = "#CDCDE6", size = 1)
+      )
+
+
            )),
       
 
