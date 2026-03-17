@@ -2537,7 +2537,7 @@ output$downloadboxplot <- downloadHandler(
   })
 
   output$dbpath2 <- renderUI({
-    selectInput('path_list', label = 'Select list of pathways', choices= appendCollection()$namesp, multiple = TRUE)
+    selectInput('path_list2', label = 'Select list of pathways', choices= appendCollection()$namesp, multiple = TRUE)
   })
 
   # photo pathways
@@ -3190,6 +3190,109 @@ pathSigCollection <- reactive({
     theme(axis.text.y = element_text(size = 10))
   
 })
+
+# ###geseca
+
+#   geseca <- eventReactive(input$gogeseca,{
+
+#     pathways_list = appendCollection()$pathways
+#     pathwaySelect = input$path_list2
+#     pathways_list = pathways_list[pathwaySelect]
+    
+#     pathways = pathways_list[[1]]
+#     names(pathways) = paste0(pathwaySelect[1], '_:_', names(pathways))
+#     if (length(pathways_list) > 1){
+#     for (i in 2:length(pathways_list)){
+#       path_temp = pathways_list[[i]]
+#       names(path_temp) = paste0(pathwaySelect[i], '_:_', names(path_temp))
+#       pathways = append(pathways, path_temp)
+#     }}
+    
+#     normalized_counts = vstNormalization_cond()
+
+#     notif <<- showNotification("GESECA in progress", duration = 0)
+
+#     res = geseca(pathways, normalized_counts, minSize = 15, maxSize = 100000)
+
+#     return(list(geseca_res=res, pathways=pathways))
+#   })
+
+
+# output$geseca <- DT::renderDT(server = FALSE, {
+#       DT::datatable(
+#         geseca()$geseca_res,
+#         extensions = c("Buttons"),
+#         caption= "Pathways enrichment",
+#         selection = 'single',
+#         options = list(
+#           dom = 'Bfrtip',
+#           scrollX = TRUE,
+#           buttons = list(
+#             list(extend = "copy", text = "Copy", filename = "gsea",
+#                  exportOptions = list(
+#                    modifier = list(page = "current")
+#                  )
+#             ),
+#             list(extend = "csv", text = "CSV", filename = "gsea",
+#                  exportOptions = list(
+#                    modifier = list(page = "all")
+#                  )
+#             ),
+#             list(extend = "excel", text = "Excel", filename = "gsea",
+#                  exportOptions = list(
+#                    modifier = list(page = "all")
+#                  )
+#             )
+#           )
+#         )
+#       )
+#     })
+
+
+
+# output$heatmap_geseca <- renderPlot({
+#   data_heatmap = heatmapData()
+#   gvar = data_heatmap$gvar
+#   normalized_counts = data_heatmap$normalized_counts
+#   mostvargenes = order(gvar, decreasing=TRUE)[1:as.numeric(input$nb_gene_heat)]
+
+#   if(input$goHeat == 0 ){ # Default Heatmap 
+
+#     condition = data_heatmap$condition
+  
+  
+#     if (length(unique(condition)) == 2){
+#       palette.annot =c("#CDCDE6", '#262686')
+#     }
+#     else {
+#       set.seed(Sys.Date())
+#       palette.annot = sapply(1:length(unique(condition)),function(x) paste0('#',paste0(sample(c(0:9,LETTERS[1:6]),6,T),collapse='')))
+#     }
+
+#     condition.colors = palette.annot
+
+
+#     gplots::heatmap.2(
+#       x=normalized_counts[mostvargenes,], 
+#       dendrogram="column",
+#       srtCol=45,
+#       col = "bluered",
+#       scale="none",
+#       trace="none",
+#       ColSideColors=condition.colors[ as.factor(condition)],
+#       labRow=FALSE,
+#       #ylab="Genes",
+#       xlab=NULL,margins = c(15, 3),
+#       keysize = 0.5,
+#       key.par = list(cex=1),key.title = "Gene Expression"
+#     )
+
+#     legend("left",
+#       legend=paste0(sapply(strsplit(unique(condition),','),paste,collapse = '\n'),'\n'),
+#       fill=condition.colors[ unique(as.factor(condition))], 
+#       cex=0.7
+#     )
+#     }})
 
 
 mcpcount_f =function(newexp,geneSymbols){

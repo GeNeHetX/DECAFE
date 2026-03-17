@@ -363,8 +363,8 @@ library(shinyBS)
         box(width = 12, status = 'info', title = h1("Settings", icon('cogs')), solidHeader = TRUE, collapsible=TRUE,
           fluidRow(
             column(width = 3,
-              fileInput('file', 'Load Count Matrix .tsv'),
-              fileInput('annot-file',"Load the annot file .tsv"),
+              fileInput('file', 'Load Count Matrix .tsv.gz'),
+              fileInput('annot-file',"Load the annot file .tsv or .txt"),
               conditionalPanel(condition="input.indep=='TRUE'", fileInput('indepAnnot','Load your variables that you want to remove the effect .tsv'))
               
             ),
@@ -701,7 +701,7 @@ library(shinyBS)
         actionButton('gogsea', label='Run GSEA', icon('play')))
       ),
       fluidRow(
-        column(width=12,br(),br(),br(),br(),
+        column(width=12,br(),br(),br(),br(),br(),
         box(width=12,status='info',title = h1('Table of GSEA results',icon('table')),solidHeader = TRUE, 
         actionButton('browsebutton', 'More info about selected pathway', icon('globe')),
           uiOutput('sens2'),
@@ -757,29 +757,29 @@ library(shinyBS)
         withSpinner(plotlyOutput("oraplot", height = 1000, width = "90%"), type = 8, color = "#CDCDE6", size = 1))))),
 
       
-    tabPanel("GESECA",
+    # tabPanel("GESECA",
 
-      fluidRow(
-        column(width=7,
-        imageOutput('path_Image2')),
+    #   fluidRow(
+    #     column(width=7,
+    #     imageOutput('path_Image2')),
         
-        column(width = 3,
-        uiOutput('dbpath2')),
+    #     column(width = 3,
+    #     uiOutput('dbpath2')),
 
-        column(width = 2,
+    #     column(width = 2,
         
-        actionButton('gogeseca', label='Run GSEA', icon('play')))
-      ),
-      fluidRow(br(),br(),br(),br(),
-        box(width=12,status='info',title = h1('Table of GESECA results',icon('table')),solidHeader = TRUE, 
-        actionButton('browsebutton3', 'More info about selected pathway', icon('globe')),
-        textOutput('comment2'),br(),
+    #     actionButton('gogeseca', label='Run GESECA', icon('play')))
+    #   ),
+    #   fluidRow(br(),br(),br(),br(),br(),
+    #     box(width=12,status='info',title = h1('Table of GESECA results',icon('table')),solidHeader = TRUE, 
+    #     actionButton('browsebutton3', 'More info about selected pathway', icon('globe')),
+    #     textOutput('comment2'),br(),
          
-        withSpinner(DT::dataTableOutput("geseca"), type = 8, color = "#CDCDE6", size = 1)
-      )
+    #     withSpinner(DT::dataTableOutput("geseca"), type = 8, color = "#CDCDE6", size = 1)
+    #   )
 
 
-           )),
+    #        )),
       
 
       tabPanel("MCPcounter",
