@@ -1807,10 +1807,10 @@ pca_alldownload <- reactive({
     tab = as.data.frame(
       cbind(
         name = colnames(count_intersect),
-        contrib = contrib
+        score = contrib
       )
     )
-    tab = tab[order(abs(as.numeric(tab$contrib)),decreasing=TRUE),]
+    tab = tab[order(abs(as.numeric(tab$score)),decreasing=TRUE),]
     rownames(tab)= NULL
 
     # return(tab[1:min(10,nrow(tab)),]) # In the case where number sample least than 10
@@ -1858,10 +1858,10 @@ pca_alldownload <- reactive({
     tab = as.data.frame(
       cbind(
         name = colnames(count_intersect),
-        contrib = contrib
+        score = contrib
       )
     )
-    tab = tab[order(abs(as.numeric(tab$contrib)),decreasing=TRUE),]
+    tab = tab[order(abs(as.numeric(tab$score)),decreasing=TRUE),]
     rownames(tab)= NULL
 
     # return(tab[1:min(10,nrow(tab)),]) # In the case where number sample least than 10
@@ -1900,7 +1900,7 @@ pca_alldownload <- reactive({
 
    res.pca = pcaVST()
     pca_gene = res.pca$pca_gene
-    contrib = pca_gene$contrib[,as.numeric(input$dim1)]
+    contrib = pca_gene$cor[,as.numeric(input$dim1)]
     intersect = intersectCond()
     count_intersect = intersect$count
     geneannot = countFile()$geneannot
@@ -1909,20 +1909,20 @@ pca_alldownload <- reactive({
     tab = as.data.frame(
       cbind(
         name = as.vector(geneannot[rownames(count_intersect),'GeneName']),
-        contrib = contrib
+        score = contrib
       )
     )}
     else{
       tab = as.data.frame(
       cbind(
         name = as.vector(rownames(count_intersect)),
-        contrib = contrib
+        score = contrib
       )
     )
 
 
     }
-    tab = tab[order(abs(as.numeric(tab$contrib)),decreasing=TRUE),]
+    tab = tab[order(abs(as.numeric(tab$score)),decreasing=TRUE),]
     rownames(tab)= NULL
 
     # return(tab[1:min(10,nrow(tab)),]) # In the case where number sample least than 10
@@ -1960,7 +1960,7 @@ pca_alldownload <- reactive({
 
     res.pca = pcaVST()
     pca_gene = res.pca$pca_gene
-    contrib = pca_gene$contrib[,as.numeric(input$dim2)]
+    contrib = pca_gene$cor[,as.numeric(input$dim2)]
     intersect = intersectCond()
     count_intersect = intersect$count
     geneannot = countFile()$geneannot
@@ -1970,20 +1970,20 @@ pca_alldownload <- reactive({
     tab = as.data.frame(
       cbind(
         name = as.vector(geneannot[rownames(count_intersect),'GeneName']),
-        contrib = contrib
+        score = contrib
       )
     )}
     else{
       tab = as.data.frame(
       cbind(
         name = as.vector(rownames(count_intersect)),
-        contrib = contrib
+        score = contrib
       )
     )
 
 
     }
-    tab = tab[order(abs(as.numeric(tab$contrib)),decreasing=TRUE),]
+    tab = tab[order(abs(as.numeric(tab$score)),decreasing=TRUE),]
     rownames(tab)= NULL
 
     # return(tab[1:min(10,nrow(tab)),]) # In the case where number sample least than 10
@@ -2095,21 +2095,21 @@ pca_alldownload <- reactive({
     tsPadj = as.numeric(input$ts_padj)
     table$log2FoldChange= as.numeric(table$log2FoldChange)
 
-    tsFC = 1
+    tsFC = 0
 
     table$diffexpressed = "NO"
     table$diffexpressed[table$log2FoldChange > tsFC & table$padj < tsPadj] = "UP"
     table$diffexpressed[table$log2FoldChange < -tsFC & table$padj < tsPadj] = "DOWN"
 
-    cols=c("lightcoral", "lightgrey","#4ab3d6")
+    cols=c( "#4ab3d6","lightgrey","lightcoral")
 
     if(nrow(table[table$diffexpressed == 'NO', ])   == 0) { cols = c('lightcoral' , '#4ab3d6')}
-    if(nrow(table[table$diffexpressed == 'DOWN',]) == 0) { cols = c('lightgrey', '#4ab3d6')}
-    if(nrow(table[table$diffexpressed == 'UP',])   == 0)  { cols = c('lightcoral', 'lightgrey')}
+    if(nrow(table[table$diffexpressed == 'DOWN',]) == 0) { cols = c('lightcoral', 'lightgrey')}
+    if(nrow(table[table$diffexpressed == 'UP',])   == 0)  { cols = c('lightgrey', '#4ab3d6')}
 
     plot = ggplot(data=as.data.frame(table), aes(x=log2FoldChange, y=-log10(padj), col=diffexpressed, tooltip=name)) +
       geom_point(size=1) + theme_minimal()+
-      geom_vline(xintercept=c(-tsFC, tsFC), col="#919191") +
+      # geom_vline(xintercept=c(-tsFC, tsFC), col="#919191") +
       geom_hline(yintercept=-log10(tsPadj), col="#919191")+
       scale_color_manual(values=cols)
      
@@ -2139,7 +2139,7 @@ pca_alldownload <- reactive({
         volcanoplot = volcano()  + ggtitle(paste(group1, "vs", group2)) +
         geom_label_repel(
                   data = head(as.data.frame(table[which(table$diffexpressed != "NO"),]), 15),
-                  aes(label = name),show.legend=FALSE,
+                  aes(label = name),show.legend=FALSE, fontface="italic",
                   box.padding = 1, max.overlaps = Inf,
                   segment.color = "#919191",fill="white",arrow = arrow(
       length = unit(0.01, "npc"), type = "closed", ends = "first"

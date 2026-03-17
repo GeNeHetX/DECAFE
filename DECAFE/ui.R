@@ -756,6 +756,11 @@ library(shinyBS)
         fluidRow(column(width = 8, sliderInput("nbBarplot",label = "Number of pathways to display", min = 1, max =100, value = 50,step=1))),
         withSpinner(plotlyOutput("oraplot", height = 1000, width = "90%"), type = 8, color = "#CDCDE6", size = 1))))),
 
+      
+    tabPanel("GESECA",
+      fluidRow(
+           )),
+      
 
       tabPanel("MCPcounter",
       actionButton('gomcp',label="Run MCPcounter",icon('play')),br(),br(),br(),
